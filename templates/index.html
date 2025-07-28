@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beranda Aplikasi</title>
+    <link
+      href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <div class="jumbotron">
+        <h1 class="display-4">Aplikasi Flask Anda Berjalan!</h1>
+        <p class="lead">Ini adalah halaman beranda aplikasi Anda.</p>
+        <hr class="my-4" />
+        {% if logged_in %}
+        <p>Halo, {{ username }}! Anda sudah login.</p>
+        <a
+          class="btn btn-primary btn-lg"
+          href="{{ url_for('main.dashboard') }}"
+          role="button"
+          >Pergi ke Dashboard</a
+        >
+        <a
+          class="btn btn-danger btn-lg"
+          href="{{ url_for('auth.logout') }}"
+          role="button"
+          >Logout</a
+        >
+        {% else %}
+        <p>Silakan login atau daftar untuk mengakses fitur lengkap.</p>
+        <a
+          class="btn btn-success btn-lg"
+          href="{{ url_for('auth.register') }}"
+          role="button"
+          >Daftar</a
+        >
+        <a
+          class="btn btn-primary btn-lg"
+          href="{{ url_for('auth.login') }}"
+          role="button"
+          >Login</a
+        >
+        {% endif %}
+      </div>
+    </div>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </body>
+</html>

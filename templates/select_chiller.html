@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JTI BAS Dashboard - Chillers</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      /* CSS Ditempatkan di Sini */
+      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+
+      :root {
+        --sidebar-bg: #1f2937; /* Dark blue-grey */
+        --sidebar-text: #ecf0f1; /* Light grey */
+        --sidebar-hover: #34495e; /* Slightly darker blue-grey */
+        --header-bg: #1f2937;
+        --header-border: #dfe6e9;
+        --main-bg: #f4f7f6; /* Light background for main content */
+        --card-bg: #ffffff;
+        --card-border: #e0e0e0;
+        --text-color: #ffffff;
+        --light-text-color: #7f8c8d; /* Grey text for descriptions */
+        --button-bg: #3498db; /* Blue */
+        --button-hover: #2980b9; /* Darker blue */
+        --active-link: #3498db; /* Blue for active link */
+
+        /* Warna khusus untuk Chiller Card */
+        --chiller-card-bg: #283747; /* Darker blue-grey for chiller cards */
+        --chiller-text-color: #ecf0f1;
+        --chiller-light-text-color: #bdc3c7;
+        --chiller-stop-color: #e74c3c; /* Red for Stop button */
+        --chiller-model-serial-bg: #34495e; /* Background for model/serial info */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", sans-serif;
+        background-image: url("/static/images/logo-3.jpg"); /* Pastikan logo-3.jpg ada di static/images/ */
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: fixed;
+
+        display: flex;
+        min-height: 100vh;
+        color: var(--text-color);
+      }
+
+      .dashboard-container {
+        display: flex;
+        width: 100%;
+      }
+
+      /* Sidebar Styling (Sama seperti sebelumnya) */
+      .sidebar {
+        width: 250px;
+        background-color: var(--sidebar-bg);
+        color: var(--sidebar-text);
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease;
+        flex-shrink: 0;
+      }
+
+      .sidebar.collapsed {
+        width: 60px;
+      }
+
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 0 15px 20px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .menu-toggle {
+        background: none;
+        border: none;
+        color: var(--sidebar-text);
+        font-size: 20px;
+        cursor: pointer;
+        margin-right: 15px;
+        padding: 5px;
+        border-radius: 4px;
+      }
+
+      .menu-toggle:hover {
+        background-color: var(--sidebar-hover);
+      }
+
+      .sidebar.collapsed .menu-toggle {
+        margin-right: 0;
+        width: 100%;
+        text-align: center;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        font-size: 1.2em;
+        font-weight: 500;
+      }
+
+      .logo img {
+        height: 30px;
+        width: 30px;
+        margin-right: 10px;
+        border-radius: 4px;
+      }
+
+      .sidebar.collapsed .logo span {
+        display: none;
+      }
+      .sidebar.collapsed .logo img {
+        margin-right: 0;
+      }
+
+      .sidebar-nav ul {
+        list-style: none;
+      }
+
+      .sidebar-nav ul li a {
+        display: flex;
+        align-items: center;
+        color: var(--sidebar-text);
+        text-decoration: none;
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+      }
+
+      .sidebar-nav ul li a:hover {
+        background-color: var(--sidebar-hover);
+      }
+
+      .sidebar-nav ul li.active a {
+        background-color: var(--active-link);
+        font-weight: 500;
+      }
+
+      .sidebar-nav ul li a i {
+        margin-right: 15px;
+        font-size: 1.1em;
+        width: 20px;
+        text-align: center;
+      }
+
+      .sidebar.collapsed .sidebar-nav ul li a span {
+        display: none;
+      }
+      .sidebar.collapsed .sidebar-nav ul li a i {
+        margin-right: 0;
+        width: auto;
+      }
+      .sidebar.collapsed .sidebar-nav ul li a {
+        justify-content: center;
+        padding: 12px 0;
+      }
+
+      /* Main Content Styling (Sama seperti sebelumnya) */
+      .main-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: rgba(244, 247, 246, 0.9);
+      }
+
+      /* Header Styling (Sama seperti sebelumnya) */
+      .header {
+        background-color: var(--header-bg);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--header-border);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .header-left h1 {
+        font-size: 1.5em;
+        color: var(--text-color);
+        font-weight: 500;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        color: var(--light-text-color);
+        font-size: 0.9em;
+      }
+
+      .user-profile i {
+        font-size: 2em;
+        color: var(--sidebar-bg);
+      }
+
+      /* Dashboard Cards Styling - Umum untuk grid */
+      .dashboard-cards {
+        padding: 30px;
+        display: grid;
+        grid-template-columns: repeat(
+          auto-fit,
+          minmax(450px, 1fr)
+        ); /* Lebar card lebih besar */
+        gap: 25px;
+        flex-grow: 1;
+        align-content: flex-start;
+        background-image: url("/static/images/logo-3.jpg");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+      }
+
+      /* Style untuk Chiller Card */
+      .chiller-card {
+        background-color: var(--chiller-card-bg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        color: var(--chiller-text-color);
+      }
+
+      .chiller-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+      }
+
+      .chiller-card-image {
+        width: 100%;
+        height: 150px; /* Tinggi gambar mungkin lebih kecil */
+        overflow: hidden;
+      }
+
+      .chiller-card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .chiller-card-content {
+        padding: 15px 20px; /* Padding disesuaikan */
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .chiller-card-title {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 10px;
+      }
+
+      .chiller-card-title h2 {
+        font-size: 1.4em;
+        margin: 0;
+        font-weight: 500;
+        color: var(--chiller-text-color);
+      }
+
+      .chiller-status {
+        background-color: var(--chiller-stop-color);
+        color: white;
+        padding: 4px 10px;
+        border-radius: 4px;
+        font-size: 0.8em;
+        font-weight: bold;
+        text-transform: uppercase;
+      }
+
+      .chiller-info-row {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 10px;
+        font-size: 0.9em;
+        color: var(--chiller-light-text-color);
+      }
+
+      .chiller-info-row .info-label {
+        background-color: var(--chiller-model-serial-bg);
+        padding: 5px 10px;
+        border-radius: 4px;
+        font-weight: bold;
+        color: var(--chiller-text-color);
+      }
+
+      .chiller-info-row .info-value {
+        flex-grow: 1;
+        color: var(--chiller-light-text-color);
+      }
+      .chiller-info-row .fas {
+        margin-right: 5px;
+      }
+
+      .chiller-description {
+        font-size: 0.9em;
+        color: var(--chiller-light-text-color);
+        margin-bottom: 15px;
+        line-height: 1.4;
+      }
+
+      .chiller-footer {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding-top: 15px;
+        border-top: 1px solid rgba(255, 255, 255, 0.05);
+      }
+
+      .chiller-stats {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 1.1em;
+        color: var(--chiller-text-color);
+        font-weight: 500;
+      }
+
+      .chiller-stats i {
+        font-size: 1.2em;
+        color: var(--active-link); /* Gunakan warna biru untuk ikon statistik */
+      }
+
+      .monitor-btn {
+        background-color: var(--button-bg);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s ease;
+      }
+
+      .monitor-btn:hover {
+        background-color: var(--button-hover);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 1200px) {
+        /* Adjust for larger cards */
+        .dashboard-cards {
+          grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+        }
+      }
+
+      @media (max-width: 992px) {
+        .dashboard-cards {
+          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+          padding: 20px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 60px;
+        }
+
+        .sidebar .logo span,
+        .sidebar-nav ul li a span {
+          display: none;
+        }
+
+        .sidebar-header {
+          padding: 0 10px 20px 10px;
+          justify-content: center;
+        }
+
+        .sidebar .logo img {
+          margin-right: 0;
+        }
+
+        .sidebar-nav ul li a {
+          justify-content: center;
+          padding: 12px 0;
+        }
+
+        .sidebar-nav ul li a i {
+          margin-right: 0;
+        }
+
+        .menu-toggle {
+          display: none;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 15px 20px;
+        }
+
+        .header-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .dashboard-cards {
+          grid-template-columns: 1fr;
+          padding: 15px;
+        }
+
+        .chiller-info-row {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 5px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .header-left h1 {
+          font-size: 1.3em;
+        }
+
+        .header-right span {
+          font-size: 0.8em;
+        }
+
+        .chiller-card-image {
+          height: 120px;
+        }
+
+        .chiller-card-content {
+          padding: 10px 15px;
+        }
+
+        .chiller-card-title h2 {
+          font-size: 1.2em;
+        }
+
+        .chiller-status {
+          font-size: 0.7em;
+          padding: 3px 8px;
+        }
+
+        .chiller-info-row {
+          font-size: 0.8em;
+        }
+
+        .chiller-description {
+          font-size: 0.85em;
+        }
+
+        .chiller-stats {
+          font-size: 1em;
+          gap: 10px;
+        }
+
+        .monitor-btn {
+          padding: 8px 12px;
+          font-size: 0.85em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="logo">
+            <img
+              src="{{ url_for('static', filename='images/jaya_logo.png') }}"
+              alt="JAYA Logo"
+            />
+            <span>JTI BAS Dashboard</span>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li>
+              <a href="{{ url_for('home') }}"
+                ><i class="fas fa-home"></i> <span>Home</span></a
+              >
+            </li>
+            <li class="active">
+              <a href="{{ url_for('chillers_page') }}"
+                ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
+              >
+            </li>
+            <li>
+              <a href="#"
+                ><i class="fas fa-project-diagram"></i> <span>Project</span></a
+              >
+            </li>
+            <li>
+              <a href="#"
+                ><i class="fas fa-file-alt"></i> <span>Report</span></a
+              >
+            </li>
+            <li>
+              <a href="#"
+                ><i class="fas fa-users-cog"></i> <span>Manage User</span></a
+              >
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="header">
+          <div class="header-left">
+            <h1>CHILLER MONITORING</h1>
+          </div>
+          <div class="header-right">
+            <span>{{ current_time }}</span>
+            <div class="user-profile">
+              <i class="fas fa-user-circle"></i>
+            </div>
+          </div>
+        </header>
+
+        <section class="dashboard-cards">
+          <div class="chiller-card">
+            <div class="chiller-card-image">
+              <img
+                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
+                alt="Bintaro Exchange Mall"
+              />
+            </div>
+            <div class="chiller-card-content">
+              <div class="chiller-card-title">
+                <h2>Chiller 1</h2>
+                <span class="chiller-status">Stop</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Model:</span>
+                <span class="info-value">YKKEXLH95ETH</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Serial Number:</span>
+                <span class="info-value">50612C31908796</span>
+              </div>
+              <p class="chiller-description">
+                Bintaro Exchange Mall 2 Chiller Monitoring
+              </p>
+              <div class="chiller-footer">
+                <button class="monitor-btn">
+                  Monitor <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="chiller-stats">
+                  <span><i class="fas fa-bolt"></i> 3516 kW</span>
+                  <span><i class="fas fa-snowflake"></i> 1000 TR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chiller-card">
+            <div class="chiller-card-image">
+              <img
+                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
+                alt="Bintaro Exchange Mall"
+              />
+            </div>
+            <div class="chiller-card-content">
+              <div class="chiller-card-title">
+                <h2>Chiller 2</h2>
+                <span class="chiller-status">Stop</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Model:</span>
+                <span class="info-value">YKKEXLH95ETH</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Serial Number:</span>
+                <span class="info-value">50612C31908796</span>
+              </div>
+              <p class="chiller-description">
+                Bintaro Exchange Mall 2 Chiller Monitoring
+              </p>
+              <div class="chiller-footer">
+                <button class="monitor-btn">
+                  Monitor <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="chiller-stats">
+                  <span><i class="fas fa-bolt"></i> 3516 kW</span>
+                  <span><i class="fas fa-snowflake"></i> 1000 TR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chiller-card">
+            <div class="chiller-card-image">
+              <img
+                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
+                alt="Bintaro Exchange Mall"
+              />
+            </div>
+            <div class="chiller-card-content">
+              <div class="chiller-card-title">
+                <h2>Chiller 3</h2>
+                <span class="chiller-status">Stop</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Model:</span>
+                <span class="info-value">YKHCFLP83EMH</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Serial Number:</span>
+                <span class="info-value">50612C31908797</span>
+              </div>
+              <p class="chiller-description">
+                Bintaro Exchange Mall 2 Chiller Monitoring
+              </p>
+              <div class="chiller-footer">
+                <button class="monitor-btn">
+                  Monitor <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="chiller-stats">
+                  <span><i class="fas fa-bolt"></i> 2109.6 kW</span>
+                  <span><i class="fas fa-snowflake"></i> 600 TR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="chiller-card">
+            <div class="chiller-card-image">
+              <img
+                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
+                alt="Bintaro Exchange Mall"
+              />
+            </div>
+            <div class="chiller-card-content">
+              <div class="chiller-card-title">
+                <h2>Chiller 4</h2>
+                <span class="chiller-status">Stop</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Model:</span>
+                <span class="info-value">YKHCFLP83EMH</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Serial Number:</span>
+                <span class="info-value">50612C31908798</span>
+              </div>
+              <p class="chiller-description">
+                Bintaro Exchange Mall 2 Chiller Monitoring
+              </p>
+              <div class="chiller-footer">
+                <button class="monitor-btn">
+                  Monitor <i class="fas fa-arrow-right"></i>
+                </button>
+                <div class="chiller-stats">
+                  <span><i class="fas fa-bolt"></i> 2109.6 kW</span>
+                  <span><i class="fas fa-snowflake"></i> 600 TR</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      /* JavaScript Ditempatkan di Sini (Sama seperti sebelumnya) */
+      document.addEventListener("DOMContentLoaded", () => {
+        const menuToggle = document.getElementById("menuToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const sidebarNavLinks = document.querySelectorAll(
+          ".sidebar-nav ul li a"
+        );
+
+        // Toggle sidebar collapse
+        menuToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("collapsed");
+        });
+
+        // Add active class to clicked navigation item for sidebar
+        // This is important for navigating between home and chillers pages
+        sidebarNavLinks.forEach((link) => {
+          link.addEventListener("click", function (event) {
+            // Remove active class from all links
+            sidebarNavLinks.forEach((item) =>
+              item.parentElement.classList.remove("active")
+            );
+            // Add active class to the parent li of the clicked link
+            this.parentElement.classList.add("active");
+          });
+        });
+
+        // Set initial active link based on current URL path
+        const currentPath = window.location.pathname;
+        sidebarNavLinks.forEach((link) => {
+          // Get the href attribute and ensure it's a valid path
+          const linkHref = link.getAttribute("href");
+          if (linkHref && linkHref.startsWith("/")) {
+            // Only process internal links
+            if (
+              currentPath === linkHref ||
+              (currentPath === "/" && linkHref === '{{ url_for("home") }}')
+            ) {
+              link.parentElement.classList.add("active");
+            }
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

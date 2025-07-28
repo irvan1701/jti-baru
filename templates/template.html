@@ -1,0 +1,32 @@
+<script
+  type="text/javascript"
+  src="https://www.gstatic.com/charts/loader.js"
+></script>
+
+<script type="text/javascript">
+  google.charts.load("current", { packages: ["gauge"] });
+  google.charts.setOnLoadCallback(drawGauge);
+
+  function drawGauge() {
+    var data = google.visualization.arrayToDataTable([
+      ["Label", "Value"],
+      ["Evap Pressure", 120],
+    ]);
+
+    var options = {
+      width: 250, // Make it smaller, e.g., from 400 to 250
+      height: 125, // Make it smaller, e.g., from 200 to 125
+      min: 0,
+      max: 400,
+      greenFrom: 220.64,
+      greenTo: 275.8,
+      minorTicks: 5,
+    };
+
+    var chart = new google.visualization.Gauge(
+      document.getElementById("chart_div")
+    );
+    chart.draw(data, options);
+  }
+</script>
+<div id="chart_div" style="width: 400px; height: 200px"></div>

@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>JTI BAS Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+    />
+    <style>
+      /* CSS Ditempatkan di Sini */
+      @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap");
+
+      :root {
+        --sidebar-bg: #1f2937; /* Dark blue-grey */
+        --sidebar-text: #ecf0f1; /* Light grey */
+        --sidebar-hover: #34495e; /* Slightly darker blue-grey */
+        --header-bg: #ffffff;
+        --header-border: #dfe6e9;
+        --main-bg: #f4f7f6; /* Light background for main content */
+        --card-bg: #1f2937;
+        --card-border: #e0e0e0;
+        --text-color: #ffffff;
+        --light-text-color: #7f8c8d; /* Grey text for descriptions */
+        --button-bg: #3498db; /* Blue */
+        --button-hover: #2980b9; /* Darker blue */
+        --active-link: #3498db; /* Blue for active link */
+      }
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: "Roboto", sans-serif;
+        /* **Penting:** Path relatif dari root aplikasi Flask (atau dari 'templates' jika diakses langsung) */
+        /* Flask akan menyajikan folder 'static' sebagai '/static/' */
+        background-image: url("/static/images/logo-3.jpg");
+        background-size: cover;
+        background-repeat: no-repeat;
+        background-position: center center;
+        background-attachment: fixed;
+
+        display: flex;
+        min-height: 100vh;
+        color: var(--text-color);
+      }
+
+      .dashboard-container {
+        display: flex;
+        width: 100%;
+      }
+
+      /* Sidebar Styling */
+      .sidebar {
+        width: 250px;
+        background-color: var(--sidebar-bg);
+        color: var(--sidebar-text);
+        padding: 20px 0;
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease;
+        flex-shrink: 0; /* Prevent sidebar from shrinking */
+      }
+
+      .sidebar.collapsed {
+        width: 60px; /* Adjust based on icon width + padding */
+      }
+
+      .sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 0 15px 20px 15px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        margin-bottom: 20px;
+      }
+
+      .menu-toggle {
+        background: none;
+        border: none;
+        color: var(--sidebar-text);
+        font-size: 20px;
+        cursor: pointer;
+        margin-right: 15px;
+        padding: 5px;
+        border-radius: 4px;
+      }
+
+      .menu-toggle:hover {
+        background-color: var(--sidebar-hover);
+      }
+
+      .sidebar.collapsed .menu-toggle {
+        margin-right: 0;
+        width: 100%;
+        text-align: center;
+      }
+
+      .logo {
+        display: flex;
+        align-items: center;
+        font-size: 1.2em;
+        font-weight: 500;
+      }
+
+      .logo img {
+        height: 30px;
+        width: 30px;
+        margin-right: 10px;
+        border-radius: 4px;
+      }
+
+      .sidebar.collapsed .logo span {
+        display: none;
+      }
+      .sidebar.collapsed .logo img {
+        margin-right: 0;
+      }
+
+      .sidebar-nav ul {
+        list-style: none;
+      }
+
+      .sidebar-nav ul li a {
+        display: flex;
+        align-items: center;
+        color: var(--sidebar-text);
+        text-decoration: none;
+        padding: 12px 15px;
+        margin-bottom: 5px;
+        border-radius: 4px;
+        transition: background-color 0.2s ease;
+      }
+
+      .sidebar-nav ul li a:hover {
+        background-color: var(--sidebar-hover);
+      }
+
+      .sidebar-nav ul li.active a {
+        background-color: var(--active-link);
+        font-weight: 500;
+      }
+
+      .sidebar-nav ul li a i {
+        margin-right: 15px;
+        font-size: 1.1em;
+        width: 20px; /* Fixed width for icons */
+        text-align: center;
+      }
+
+      .sidebar.collapsed .sidebar-nav ul li a span {
+        display: none;
+      }
+      .sidebar.collapsed .sidebar-nav ul li a i {
+        margin-right: 0;
+        width: auto;
+      }
+      .sidebar.collapsed .sidebar-nav ul li a {
+        justify-content: center;
+        padding: 12px 0;
+      }
+
+      /* Main Content Styling */
+      .main-content {
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        background-color: rgba(244, 247, 246, 0.9);
+      }
+
+      /* Header Styling */
+      .header {
+        background-color: var(--sidebar-bg);
+        padding: 15px 30px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 1px solid var(--header-border);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+      }
+
+      .header-left h1 {
+        font-size: 1.5em;
+        color: var(--text-color);
+        font-weight: 500;
+      }
+
+      .header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        color: var(--light-text-color);
+        font-size: 0.9em;
+      }
+
+      .user-profile i {
+        font-size: 2em;
+        color: var(--sidebar-bg); /* Use sidebar-bg color for user icon */
+      }
+
+      /* Dashboard Cards Styling */
+      .dashboard-cards {
+        padding: 30px;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 25px;
+        flex-grow: 1;
+        align-content: flex-start;
+        background-image: url("/static/images/logo-3.jpg");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-attachment: fixed;
+      }
+
+      .card {
+        background-color: var(--card-bg);
+        border: 1px solid var(--card-border);
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.08);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
+      }
+
+      .card-image {
+        width: 100%;
+        height: 180px;
+        overflow: hidden;
+      }
+
+      .card-image img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        display: block;
+      }
+
+      .card-content {
+        padding: 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+      }
+
+      .card-content h2 {
+        font-size: 1.3em;
+        margin-bottom: 8px;
+        color: var(--text-color);
+        font-weight: 500;
+      }
+
+      .card-content p {
+        font-size: 0.9em;
+        color: var(--light-text-color);
+        margin-bottom: 15px;
+        line-height: 1.4;
+      }
+
+      .monitor-btn {
+        background-color: var(--button-bg);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        text-decoration: none;
+
+        font-size: 0.9em;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s ease;
+        align-self: flex-start;
+      }
+
+      .monitor-btn:hover {
+        background-color: var(--button-hover);
+      }
+
+      /* Responsive Design */
+      @media (max-width: 992px) {
+        .dashboard-cards {
+          grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+          padding: 20px;
+        }
+      }
+
+      @media (max-width: 768px) {
+        .sidebar {
+          width: 60px;
+        }
+
+        .sidebar .logo span,
+        .sidebar-nav ul li a span {
+          display: none;
+        }
+
+        .sidebar-header {
+          padding: 0 10px 20px 10px;
+          justify-content: center;
+        }
+
+        .sidebar .logo img {
+          margin-right: 0;
+        }
+
+        .sidebar-nav ul li a {
+          justify-content: center;
+          padding: 12px 0;
+        }
+
+        .sidebar-nav ul li a i {
+          margin-right: 0;
+        }
+
+        .menu-toggle {
+          display: none;
+        }
+
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 15px 20px;
+        }
+
+        .header-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+
+        .dashboard-cards {
+          grid-template-columns: 1fr;
+          padding: 15px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .header-left h1 {
+          font-size: 1.3em;
+        }
+
+        .header-right span {
+          font-size: 0.8em;
+        }
+
+        .card-image {
+          height: 150px;
+        }
+
+        .card-content {
+          padding: 15px;
+          max-width: 40vh;
+        }
+
+        .card-content h2 {
+          font-size: 1.1em;
+        }
+
+        .card-content p {
+          font-size: 0.85em;
+        }
+
+        .monitor-btn {
+          padding: 8px 12px;
+          font-size: 0.85em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="dashboard-container">
+      <aside class="sidebar">
+        <div class="sidebar-header">
+          <button class="menu-toggle" id="menuToggle">
+            <i class="fas fa-bars"></i>
+          </button>
+          <div class="logo">
+            <img
+              src="{{ url_for('static', filename='images/jaya_logo.png') }}"
+              alt="JAYA Logo"
+            />
+            <span>JTI BAS Dashboard</span>
+          </div>
+        </div>
+        <nav class="sidebar-nav">
+          <ul>
+            <li class="active">
+              <a href="{{ url_for('home') }}"
+                ><i class="fas fa-home"></i> <span>Home</span></a
+              >
+            </li>
+            <li>
+              <a href="{{ url_for('chillers_page') }}"
+                ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
+              >
+            </li>
+            <li>
+              <a href="#"
+                ><i class="fas fa-project-diagram"></i> <span>Project</span></a
+              >
+            </li>
+            <li>
+              <a href="#"
+                ><i class="fas fa-file-alt"></i> <span>Report</span></a
+              >
+            </li>
+            <li>
+              <a href="#"
+                ><i class="fas fa-users-cog"></i> <span>Manage User</span></a
+              >
+            </li>
+          </ul>
+        </nav>
+      </aside>
+
+      <main class="main-content">
+        <header class="header">
+          <div class="header-left">
+            <h1>HOME DASHBOARD</h1>
+          </div>
+          <div class="header-right">
+            <span>{{ current_time }}</span>
+            <div class="user-profile">
+              <i class="fas fa-user-circle"></i>
+            </div>
+          </div>
+        </header>
+
+        <section class="dashboard-cards">
+          <div class="card">
+            <div class="card-image">
+              <img
+                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
+                alt="Bintaro Exchange Mall"
+              />
+            </div>
+            <div class="card-content">
+              <h2>Bintaro Exchange Mall</h2>
+              <p>Bintaro Exchange Mall 2 Chiller Monitoring</p>
+              <a href="{{ url_for('chillers_page') }}" class="monitor-btn">
+                Monitor <i class="fas fa-arrow-right"></i>
+              </a>
+            </div>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <script>
+      /* JavaScript Ditempatkan di Sini */
+      document.addEventListener("DOMContentLoaded", () => {
+        const menuToggle = document.getElementById("menuToggle");
+        const sidebar = document.querySelector(".sidebar");
+        const sidebarNavLinks = document.querySelectorAll(
+          ".sidebar-nav ul li a"
+        );
+
+        // Toggle sidebar collapse
+        menuToggle.addEventListener("click", () => {
+          sidebar.classList.toggle("collapsed");
+        });
+
+        // Optional: Add active class to clicked navigation item
+        sidebarNavLinks.forEach((link) => {
+          link.addEventListener("click", function (event) {
+            // event.preventDefault(); // Uncomment if you want to prevent actual link navigation
+
+            // Remove active class from all links
+            sidebarNavLinks.forEach((item) =>
+              item.parentElement.classList.remove("active")
+            );
+            // Add active class to the parent li of the clicked link
+            this.parentElement.classList.add("active");
+          });
+        });
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,213 @@
+/* General Layout & Theme */
+/* No need for body background here, as it's defined in sidebar.html */
+
+.parent {
+  display: grid;
+  margin-left: 10px;
+  margin-right: 10px;
+  margin-top: 10px;
+  grid-template-columns: repeat(6, 1fr);
+  grid-template-rows: repeat(6, 1fr);
+  gap: 8px;
+  /* Add padding to the grid itself if you want spacing around the edges within the main-content */
+  /* padding: 8px; */
+}
+
+/* Base styling for the top 3 divs (Fault Cards) */
+.div1,
+.div2,
+.div3 {
+  background-color: #1a2a47; /* A dark blue-grey that matches the image */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex; /* Use flexbox for internal content alignment */
+  align-items: center; /* Vertically center content */
+  justify-content: flex-start; /* Align content to the start */
+  /* For the subtle circular background pattern, you would typically use a background-image.
+     Example: background-image: url('path/to/your/circular-pattern.svg');
+     background-repeat: no-repeat;
+     background-position: center;
+     background-size: cover; */
+}
+
+.div1 {
+  grid-column: span 2 / span 2;
+}
+
+.div2 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 3;
+}
+
+.div3 {
+  grid-column: span 2 / span 2;
+  grid-column-start: 5;
+}
+
+/* --- CSS for div4 (Component Information) --- */
+.div4 {
+  grid-column: span 6 / span 6;
+  grid-row: span 2 / span 2;
+  grid-row-start: 2;
+  background-color: #1a2a47; /* Background color for the entire div4, matching the other cards */
+  border-radius: 10px;
+  padding: 20px; /* Add padding to div4 itself */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  display: flex; /* Use flexbox to arrange image and data grid horizontally */
+  align-items: center; /* Vertically align items in div4 */
+  gap: 20px; /* Space between the image and the data grid */
+}
+
+.chiller-image-container {
+  flex-shrink: 0; /* Prevent image container from shrinking */
+  width: 250px; /* Adjust width as needed */
+  height: auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.chiller-image-container img {
+  max-width: 100%;
+  height: auto;
+  display: block; /* Remove extra space below image */
+  border-radius: 5px; /* Optional: slight border-radius for the image itself */
+}
+
+.data-grid {
+  flex-grow: 1; /* Allow the data grid to take up remaining space */
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* 5 columns as per image */
+  gap: 10px; /* Space between data cards */
+}
+
+.data-card {
+  background-color: #2a3b5c; /* Slightly lighter background for data cards */
+  border-radius: 8px;
+  padding: 10px 15px; /* Adjust padding as needed */
+  text-align: center;
+  color: white; /* Default text color */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+
+.data-card .label {
+  font-size: 14px;
+  color: #cccccc; /* Lighter grey for labels */
+  margin-bottom: 5px; /* Space between label and value */
+  white-space: nowrap; /* Prevent label from wrapping */
+}
+
+.data-card .value {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* Specific style for the "Running" status */
+.status-running {
+  background-color: #4caf50; /* Green color for running status */
+  color: white;
+}
+
+/* --- Remaining Divs (placeholders for now) --- */
+.div5 {
+  grid-column: span 2 / span 2;
+  grid-row: span 2 / span 2;
+  grid-row-start: 4;
+  background-color: #1a2a47; /* Example background */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-align: center;
+  display: flex; /* Added for default styling */
+  justify-content: center;
+  align-items: center;
+}
+
+.div7 {
+  grid-column: span 2 / span 2;
+  grid-row: span 2 / span 2;
+  grid-column-start: 3;
+  grid-row-start: 4;
+  background-color: #1a2a47; /* Example background */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-align: center;
+  display: flex; /* Added for default styling */
+  justify-content: center;
+  align-items: center;
+}
+
+.div8 {
+  grid-column: span 2 / span 2;
+  grid-row: span 2 / span 2;
+  grid-column-start: 5;
+  grid-row-start: 4;
+  background-color: #1a2a47; /* Example background */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-align: center;
+  display: flex; /* Added for default styling */
+  justify-content: center;
+  align-items: center;
+}
+
+.div9 {
+  grid-column: span 6 / span 6;
+  grid-row-start: 6;
+  background-color: #1a2a47; /* Example background */
+  border-radius: 10px;
+  padding: 20px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-align: center;
+  display: flex; /* Added for default styling */
+  justify-content: center;
+  align-items: center;
+}
+
+/* Styles for the inner content of div1, div2, div3 */
+.icon-circle {
+  background-color: white;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-right: 15px;
+  flex-shrink: 0;
+}
+
+.icon-circle svg {
+  width: 28px;
+  height: 28px;
+  fill: #1a2a47;
+}
+
+.text-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.text-content .main-text {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  white-space: nowrap;
+  margin-bottom: 2px;
+}
+
+.text-content .dash {
+  color: white;
+  font-size: 16px;
+}
