@@ -1,8 +1,8 @@
-{% extends 'sidebar.html' %} {# Ini menunjukkan bahwa template ini mewarisi dari base.html #}
+{% extends 'sidebar.html' %} {# This indicates that this template inherits from base.html #}
 
-{% block title %}Chiller 1 Dashboard - JTI BAS Dashboard{% endblock %} {# Mengganti judul spesifik halaman ini #}
+{% block title %}Chiller 1 Dashboard - JTI BAS Dashboard{% endblock %} {# Replaces the specific title for this page #}
 
-{% block content %} {# Ini adalah blok di mana konten unik chiller dashboard akan ditempatkan #}
+{% block content %} {# This is the block where the unique chiller dashboard content will be placed #}
 <div class="chiller-content-wrapper">
     <div class="dashboard-grid">
         <div class="faults-section">
@@ -57,7 +57,7 @@
                     <p class="value">485.00</p>
                 </div>
                 <div class="info-card">
-                    <p class="label">Input KWh</p>
+                    <p class="label">Input KWh</
                     <p class="value">1356120.00</p>
                 </div>
                 <div class="info-card">
@@ -71,12 +71,130 @@
             {# Section Evaporator with 5 smaller thermometers #}
             <div class="section-card">
                 <p>Section Evaporator</p>
-                <div class="thermometer-group"> {# Wrapper untuk mengelompokkan termometer #}
+                <div class="thermometer-group"> {# Wrapper to group thermometers #}
                     <div class="single-thermometer">
                         <p class="thermometer-label">LWT</p>
                         <canvas data-type="linear-gauge"
                                 data-width="200"
-                            data-height="350"
+                                data-height="350"
+                                data-border-radius="10"
+                                data-borders="0"
+                                data-bar-stroke-width="15"
+                                data-minor-ticks="5"
+                                data-major-ticks="0,5,10,15,20,25"
+                                data-min-value="0"
+                                data-max-value="25"
+                                data-highlights='[
+                                    {"from": 5.50, "to": 8.80, "color": "rgba(0, 255, 0)"}
+                                ]'
+                                data-value="7.11"
+                                data-units="°C"
+                                data-color-value-box-shadow="false"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">RWT</p>
+                        <canvas data-type="linear-gauge"
+                                data-width="200"
+                                data-height="350"
+                                data-border-radius="10"
+                                data-borders="0"
+                                data-bar-stroke-width="15"
+                                data-minor-ticks="5"
+                                data-major-ticks="0,5,10,15,20,25"
+                                data-min-value="0"
+                                data-max-value="25"
+                                data-highlights='[
+                                    {"from": 11.11, "to": 14.44, "color": "rgba(0, 255, 0, .5)"}
+                                    
+                                ]'
+                                data-value="7.11"
+                                data-units="°C"
+                                data-color-value-box-shadow="false"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">SATUR</p>
+                        <canvas data-type="linear-gauge"
+                                data-width="200"
+                                data-height="350"
+                                data-border-radius="10"
+                                data-borders="0"
+                                data-bar-stroke-width="15"
+                                data-minor-ticks="5"
+                                data-major-ticks="-5,0,5,10,15"
+                                data-min-value="-5"
+                                data-max-value="15"
+                                data-highlights='[
+                                    {"from": 3.33, "to": 6.67, "color": "rgba(0, 255, 0 )"},
+                                    
+                                ]'
+                                data-value="0.78"
+                                data-units="°C"
+                                data-color-value-box-shadow="false"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">refri</p>
+                        <canvas data-type="linear-gauge"
+                                data-width="200"
+                                data-height="350"
+                                data-border-radius="10"
+                                data-borders="0"
+                                data-bar-stroke-width="15"
+                                data-minor-ticks="5"
+                                data-major-ticks="0,20,40,60,80,100"
+                                data-min-value="0"
+                                data-max-value="100"
+                                data-highlights='[
+                                    {"from": 0, "to": 19.9, "color": "rgba(255, 0, 0, .5)"},
+                                    {"from": 20, "to": 25, "color": "rgba(0, 128, 0, .5)"},
+                                    {"from": 25.1, "to": 100, "color": "rgba(255, 0, 0, .5)"}
+                                ]'
+                                data-value="30.1"
+                                data-units="°C"
+                                data-color-value-box-shadow="false"></canvas>
+                    </div>
+                    <div class="single-thermometer"> {# Wrapper for the radial gauge #}
+    <p class="thermometer-label">Pressure</p>
+    <canvas data-type="radial-gauge"
+            data-width="200"
+            data-height="200"
+            data-units="PSI"
+            data-title="false"
+            data-value="264.07" {# Sesuaikan nilai ini dengan data aktual Anda #}
+            data-min-value="235" {# Rentang minimum baru #}
+            data-max-value="520" {# Rentang maksimum baru #}
+            data-major-ticks="235,260,285,310,335,360,385,410,435,460,485,510,520" {# Sesuaikan major ticks untuk rentang baru #}
+            data-minor-ticks="5" {# Jumlah minor ticks antar major ticks #}
+            data-stroke-ticks="false"
+            data-highlights='[
+                { "from": 235, "to": 220.63, "color": "rgba(255, 0, 0, .5)" }, {# Merah untuk di bawah safe range #}
+                { "from": 220.64, "to": 275.80, "color": "rgba(0, 255, 0, .5)" }, {# Hijau untuk safe range #}
+                { "from": 275.81, "to": 520, "color": "rgba(255, 0, 0, .5)" }  {# Merah untuk di atas safe range #}
+            ]'
+            data-color-plate="#222"
+            data-color-major-ticks="#f5f5f5"
+            data-color-minor-ticks="#ddd"
+            data-color-title="#fff"
+            data-color-units="#ccc"
+            data-color-numbers="#eee"
+            data-color-needle-start="rgba(240, 128, 128, 1)"
+            data-color-needle-end="rgba(255, 160, 122, .9)"
+            data-value-box="true"
+            data-animation-rule="bounce"
+            data-animation-duration="500"
+            data-font-value="Led"
+            data-animated-value="true"
+    ></canvas>
+</div>
+                </div>
+            </div>
+            <div class="section-card">
+                <p>Section Condenser</p>
+                <div class="thermometer-group"> {# Wrapper to group thermometers #}
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">LWT</p>
+                        <canvas data-type="linear-gauge"
+                                data-width="200"
+                                data-height="350"
                                 data-border-radius="10"
                                 data-borders="0"
                                 data-bar-stroke-width="15"
@@ -97,7 +215,7 @@
                         <p class="thermometer-label">RWT</p>
                         <canvas data-type="linear-gauge"
                                 data-width="200"
-                            data-height="350"
+                                data-height="350"
                                 data-border-radius="10"
                                 data-borders="0"
                                 data-bar-stroke-width="15"
@@ -118,7 +236,7 @@
                         <p class="thermometer-label">SATUR</p>
                         <canvas data-type="linear-gauge"
                                 data-width="200"
-                            data-height="350"
+                                data-height="350"
                                 data-border-radius="10"
                                 data-borders="0"
                                 data-bar-stroke-width="15"
@@ -139,7 +257,7 @@
                         <p class="thermometer-label">refri</p>
                         <canvas data-type="linear-gauge"
                                 data-width="200"
-                            data-height="350"
+                                data-height="350"
                                 data-border-radius="10"
                                 data-borders="0"
                                 data-bar-stroke-width="15"
@@ -156,53 +274,165 @@
                                 data-units="°C"
                                 data-color-value-box-shadow="false"></canvas>
                     </div>
-                    <canvas data-type="radial-gauge"
-        data-width="200"
-        data-height="200"
-        data-units="PSI"
-        data-title="false"
-        data-value="0"
-        data-min-value="0"
-        data-max-value="220"
-        data-major-ticks="0,20,40,60,80,100,120,140,160,180,200,220"
-        data-minor-ticks="2"
-        data-stroke-ticks="false"
-        data-highlights='[
-            { "from": 0, "to": 50, "color": "rgba(0,255,0,.15)" },
-            { "from": 50, "to": 100, "color": "rgba(255,255,0,.15)" },
-            { "from": 100, "to": 150, "color": "rgba(255,30,0,.25)" },
-            { "from": 150, "to": 200, "color": "rgba(255,0,225,.25)" },
-            { "from": 200, "to": 220, "color": "rgba(0,0,255,.25)" }
-        ]'
-        data-color-plate="#222"
-        data-color-major-ticks="#f5f5f5"
-        data-color-minor-ticks="#ddd"
-        data-color-title="#fff"
-        data-color-units="#ccc"
-        data-color-numbers="#eee"
-        data-color-needle-start="rgba(240, 128, 128, 1)"
-        data-color-needle-end="rgba(255, 160, 122, .9)"
-        data-value-box="true"
-        data-animation-rule="bounce"
-        data-animation-duration="500"
-        data-font-value="Led"
-        data-animated-value="true"
-></canvas>
+                    <div class="single-thermometer"> {# Wrapper for the radial gauge #}
+                        <p class="thermometer-label">Cond PSI</p>
+                        <canvas data-type="radial-gauge"
+                                data-width="200"
+                                data-height="200"
+                                data-units="PSI"
+                                data-title="false"
+                                data-value="0"
+                                data-min-value="0"
+                                data-max-value="220"
+                                data-major-ticks="0,20,40,60,80,100,120,140,160,180,200,220"
+                                data-minor-ticks="2"
+                                data-stroke-ticks="false"
+                                data-highlights='[
+                                    { "from": 0, "to": 50, "color": "rgba(0,255,0,.15)" },
+                                    { "from": 50, "to": 100, "color": "rgba(255,255,0,.15)" },
+                                    { "from": 100, "to": 150, "color": "rgba(255,30,0,.25)" },
+                                    { "from": 150, "to": 200, "color": "rgba(255,0,225,.25)" },
+                                    { "from": 200, "to": 220, "color": "rgba(0,0,255,.25)" }
+                                ]'
+                                data-color-plate="#222"
+                                data-color-major-ticks="#f5f5f5"
+                                data-color-minor-ticks="#ddd"
+                                data-color-title="#fff"
+                                data-color-units="#ccc"
+                                data-color-numbers="#eee"
+                                data-color-needle-start="rgba(240, 128, 128, 1)"
+                                data-color-needle-end="rgba(255, 160, 122, .9)"
+                                data-value-box="true"
+                                data-animation-rule="bounce"
+                                data-animation-duration="500"
+                                data-font-value="Led"
+                                data-animated-value="true"
+                        ></canvas>
+                    </div>
                 </div>
             </div>
             <div class="section-card">
-                <p>Section Condenserz</p>
-                {# Anda bisa menambahkan gauge atau konten lain di sini #}
-            </div>
-            <div class="section-card">
                 <p>Section Oil and Discharge</p>
-                {# Anda bisa menambahkan gauge atau konten lain di sini #}
+                <div class="thermometer-group">
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Discharge Temp</p>
+                        <canvas data-type="linear-gauge"
+                                data-width="200"
+                                data-height="350"
+                                data-border-radius="10"
+                                data-borders="0"
+                                data-bar-stroke-width="15"
+                                data-minor-ticks="5"
+                                data-major-ticks="0,20,40,60,80,100"
+                                data-min-value="0"
+                                data-max-value="100"
+                                data-highlights='[
+                                    {"from": 0, "to": 19.9, "color": "rgba(255, 0, 0, .5)"},
+                                    {"from": 20, "to": 25, "color": "rgba(0, 128, 0, .5)"},
+                                    {"from": 25.1, "to": 100, "color": "rgba(255, 0, 0, .5)"}
+                                ]'
+                                data-value="22.3"
+                                data-units="°C"
+                                data-color-value-box-shadow="false"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Oil Sump Temp</p>
+                        <canvas data-type="linear-gauge"
+                                data-width="200"
+                                data-height="350"
+                                data-border-radius="10"
+                                data-borders="0"
+                                data-bar-stroke-width="15"
+                                data-minor-ticks="5"
+                                data-major-ticks="0,20,40,60,80,100"
+                                data-min-value="0"
+                                data-max-value="100"
+                                data-highlights='[
+                                    {"from": 0, "to": 19.9, "color": "rgba(255, 0, 0, .5)"},
+                                    {"from": 20, "to": 70, "color": "rgba(0, 128, 0, .5)"},
+                                    {"from": 70.1, "to": 100, "color": "rgba(255, 0, 0, .5)"}
+                                ]'
+                                data-value="25.0"
+                                data-units="°C"
+                                data-color-value-box-shadow="false"></canvas>
+                    </div>
+                    <div class="single-thermometer"> {# Wrapper for the radial gauge #}
+                        <p class="thermometer-label">Oil Discharge PSI</p>
+                        <canvas data-type="radial-gauge"
+                                data-width="200"
+                                data-height="200"
+                                data-units="PSI"
+                                data-title="false"
+                                data-value="0"
+                                data-min-value="0"
+                                data-max-value="220"
+                                data-major-ticks="0,20,40,60,80,100,120,140,160,180,200,220"
+                                data-minor-ticks="2"
+                                data-stroke-ticks="false"
+                                data-highlights='[
+                                    { "from": 0, "to": 50, "color": "rgba(0,255,0,.15)" },
+                                    { "from": 50, "to": 100, "color": "rgba(255,255,0,.15)" },
+                                    { "from": 100, "to": 150, "color": "rgba(255,30,0,.25)" },
+                                    { "from": 150, "to": 200, "color": "rgba(255,0,225,.25)" },
+                                    { "from": 200, "to": 220, "color": "rgba(0,0,255,.25)" }
+                                ]'
+                                data-color-plate="#222"
+                                data-color-major-ticks="#f5f5f5"
+                                data-color-minor-ticks="#ddd"
+                                data-color-title="#fff"
+                                data-color-units="#ccc"
+                                data-color-numbers="#eee"
+                                data-color-needle-start="rgba(240, 128, 128, 1)"
+                                data-color-needle-end="rgba(255, 160, 122, .9)"
+                                data-value-box="true"
+                                data-animation-rule="bounce"
+                                data-animation-duration="500"
+                                data-font-value="Led"
+                                data-animated-value="true"
+                        ></canvas>
+                    </div>
+                    <div class="single-thermometer"> {# Wrapper for the radial gauge #}
+                        <p class="thermometer-label">Refrigerant Pressure</p>
+                        <canvas data-type="radial-gauge"
+                                data-width="200"
+                                data-height="200"
+                                data-units="PSI"
+                                data-title="false"
+                                data-value="0"
+                                data-min-value="0"
+                                data-max-value="220"
+                                data-major-ticks="0,20,40,60,80,100,120,140,160,180,200,220"
+                                data-minor-ticks="2"
+                                data-stroke-ticks="false"
+                                data-highlights='[
+                                    { "from": 0, "to": 50, "color": "rgba(0,255,0,.15)" },
+                                    { "from": 50, "to": 100, "color": "rgba(255,255,0,.15)" },
+                                    { "from": 100, "to": 150, "color": "rgba(255,30,0,.25)" },
+                                    { "from": 150, "to": 200, "color": "rgba(255,0,225,.25)" },
+                                    { "from": 200, "to": 220, "color": "rgba(0,0,255,.25)" }
+                                ]'
+                                data-color-plate="#222"
+                                data-color-major-ticks="#f5f5f5"
+                                data-color-minor-ticks="#ddd"
+                                data-color-title="#fff"
+                                data-color-units="#ccc"
+                                data-color-numbers="#eee"
+                                data-color-needle-start="rgba(240, 128, 128, 1)"
+                                data-color-needle-end="rgba(255, 160, 122, .9)"
+                                data-value-box="true"
+                                data-animation-rule="bounce"
+                                data-animation-duration="500"
+                                data-font-value="Led"
+                                data-animated-value="true"
+                        ></canvas>
+                    </div>
+                </div>
             </div>
         </div>
 
         <div class="chart-section">
             <p>Chart</p>
-            </div>
+        </div>
     </div>
 </div>
 {% endblock %}

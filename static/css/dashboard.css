@@ -142,43 +142,44 @@
     color: #48bb78;
 }
 
-/* Sections Below Chiller Details */
+/* Sections Below Chiller */
 .sections-below-chiller {
     grid-area: sections;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); /* Min-width lebih kecil */
-    gap: 15px; /* Gap antar kolom kartu */
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* Min-width yang lebih besar untuk mencegah terlalu kecil */
+    gap: 20px; /* Gap antar kolom kartu */
 }
 
 .section-card {
     background-color: #2d3748;
     border-radius: 8px;
-    padding: 15px; /* Padding lebih kecil */
+    padding: 15px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-    
+
     display: flex;
-    flex-direction: column;
-    align-items: center;
+    flex-direction: column; /* Tetap column agar judul di atas konten */
+    align-items: center; /* Tengahkan konten secara horizontal */
     justify-content: flex-start;
     text-align: center;
-    min-height: auto; /* Biarkan tinggi menyesuaikan konten */
-    /* Remove margin-bottom if gap is handled by grid directly */
+    min-height: auto;
 }
 
 .section-card p {
-    font-size: 1em; /* Ukuran font judul lebih kecil */
+    font-size: 1.1em; /* Ukuran font judul */
     font-weight: bold;
-    margin-bottom: 10px; /* Jarak antara judul dan konten */
+    margin-bottom: 15px; /* Jarak antara judul dan konten */
+    color: #ecf0f1; /* Warna judul */
 }
 
 /* Styling for the group of thermometers */
 .thermometer-group {
     display: flex;
-    flex-wrap: wrap;
-    justify-content: center;
-    align-items: flex-start; /* Mengubah ini ke flex-start agar label tidak didorong ke bawah */
-    gap: 10px;
-    width: 100%;
+    flex-wrap: wrap; /* Izinkan wrapping */
+    justify-content: center; /* Tengahkan item jika ada ruang sisa */
+    align-items: flex-start;
+    gap: 15px 10px; /* Gap vertikal dan horizontal antar termometer */
+    width: 100%; /* Pastikan mengambil lebar penuh parent */
+    box-sizing: border-box; /* Pastikan padding/border dihitung dalam lebar */
 }
 
 /* Styling for each individual thermometer unit (label + canvas) */
@@ -186,24 +187,38 @@
     display: flex;
     flex-direction: column; /* Label di atas canvas */
     align-items: center; /* Tengahkan label dan canvas */
-    margin-bottom: 10px; /* Sedikit ruang antar unit termometer jika wrapping */
+    /* Mengatur lebar agar 2 termometer bisa sebaris pada lebar yang cukup */
+    flex: 0 0 calc(50% - 10px); /* 50% lebar dikurangi setengah dari gap horizontal */
+    max-width: calc(50% - 10px); /* Batasi juga max-width */
+    box-sizing: border-box;
+    /* margin-bottom dihapus, pakai gap dari thermometer-group */
 }
 
 .thermometer-label {
-    font-size: 0.85em; /* Ukuran font label */
+    font-size: 0.9em; /* Ukuran font label */
     font-weight: 500;
     color: #a0aec0; /* Warna label */
     margin-bottom: 5px; /* Jarak antara label dan termometer */
     text-align: center;
-    white-space: nowrap; /* Pastikan label tidak putus baris */
+    /* white-space: nowrap; /* Pertimbangkan untuk menghapus ini jika label terlalu panjang dan menyebabkan overflow */
+    padding: 0 5px; /* Sedikit padding agar tidak terlalu mepet */
 }
 
 /* Styling for individual linear gauge canvas (tetap sama) */
 .single-thermometer canvas[data-type="linear-gauge"] {
-    max-width: 80px;
-    height: 250px;
+    width: 100%; /* Gunakan lebar penuh dari single-thermometer */
+    max-width: 90px; /* Batasi lebar maksimum agar tidak terlalu besar */
+    height: 250px; /* Tinggi yang konsisten */
     display: block;
-    margin: 0; /* Hapus margin otomatis, gunakan gap dari flexbox */
+    margin: 0;
+}
+
+.single-thermometer canvas[data-type="radial-gauge"] {
+    width: 100%; /* Gunakan lebar penuh dari single-thermometer */
+    max-width: 150px; /* Batasi lebar maksimum agar tidak terlalu besar */
+    height: 150px; /* Tinggi yang konsisten */
+    display: block;
+    margin-top: 10px; /* Beri jarak dari termometer di atasnya jika wrap */
 }
 
 
@@ -217,6 +232,9 @@
     justify-content: center;
     align-items: center;
     min-height: 200px;
+    background-color: #2d3748; /* Added background for consistency */
+    border-radius: 8px; /* Added border-radius for consistency */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Added box-shadow for consistency */
 }
 
 /* Responsive Adjustments for Chiller Dashboard */
@@ -236,17 +254,27 @@
     }
 
     .sections-below-chiller {
-        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); /* Sesuaikan untuk layar menengah */
-        gap: 10px; /* Kurangi gap pada layar menengah */
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Sesuaikan untuk layar menengah */
+        gap: 15px; /* Kurangi gap pada layar menengah */
     }
 
-    .section-card canvas[data-type="linear-gauge"] {
-        max-width: 70px; /* Sedikit lebih kecil pada layar menengah */
+    .single-thermometer {
+        flex: 0 0 calc(50% - 7.5px); /* Sesuaikan lebar 50% dengan gap baru */
+        max-width: calc(50% - 7.5px);
+    }
+
+    .single-thermometer canvas[data-type="linear-gauge"] {
+        max-width: 80px; /* Sedikit lebih kecil pada layar menengah */
         height: 200px; /* Sedikit lebih pendek */
     }
 
+    .single-thermometer canvas[data-type="radial-gauge"] {
+        max-width: 120px;
+        height: 120px;
+    }
+
     .thermometer-group {
-        gap: 5px; /* Kurangi gap antar termometer pada layar menengah */
+        gap: 10px 5px; /* Kurangi gap antar termometer pada layar menengah */
     }
 }
 
@@ -255,7 +283,10 @@
         gap: 15px;
     }
     .faults-section,
-    .chiller-info-grid,
+    .chiller-info-grid {
+        grid-template-columns: 1fr; /* Stack all cards on very small screens */
+    }
+
     .sections-below-chiller {
         grid-template-columns: 1fr; /* Stack all cards on very small screens */
     }
@@ -264,13 +295,25 @@
         min-height: auto; /* Biarkan tinggi menyesuaikan konten */
     }
 
-    .section-card canvas[data-type="linear-gauge"] {
-        max-width: 60px; /* Lebih kecil lagi pada layar kecil */
-        height: 180px; /* Lebih pendek lagi */
+    .single-thermometer {
+        flex: 0 0 100%; /* Jadikan 1 per baris pada layar sangat kecil */
+        max-width: 100%;
+        margin-bottom: 15px; /* Beri jarak antar termometer jika stacked */
     }
 
     .thermometer-group {
-        justify-content: space-around; /* Distribusi termometer merata */
-        gap: 5px;
+        flex-direction: column; /* Stack vertically on small screens */
+        align-items: center;
+        gap: 15px; /* Uniform gap when stacked */
+    }
+
+    .single-thermometer canvas[data-type="linear-gauge"] {
+        max-width: 70px; /* Lebih kecil lagi pada layar kecil */
+        height: 180px; /* Lebih pendek lagi */
+    }
+
+    .single-thermometer canvas[data-type="radial-gauge"] {
+        max-width: 100px;
+        height: 100px;
     }
 }
