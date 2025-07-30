@@ -1,0 +1,75 @@
+{% extends 'sidebar.html' %}
+
+{% block title %}Add New Account - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}TAMBAH AKUN BARU{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h2 style="color: var(--text-color); margin-bottom: 20px;">Tambah Akun Baru (Untuk Site Anda)</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash-message {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="form-card" style="background-color: var(--sidebar-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+        <form method="POST" action="{{ url_for('user_add_account') }}">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="nama" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Nama Lengkap:</label>
+                <input type="text" id="nama" name="nama" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="email" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Email:</label>
+                <input type="email" id="email" name="email" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="jabatan" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Jabatan:</label>
+                <input type="text" id="jabatan" name="jabatan" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="password" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Password:</label>
+                <input type="password" id="password" name="password" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="site_id" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Pilih Site:</label>
+                <select id="site_id" name="site_id" required
+                        style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+                    {% if assigned_sites %}
+                        {% if assigned_sites|length == 1 %}
+                            <option value="{{ assigned_sites[0].id }}" selected>{{ assigned_sites[0].nama_site }}</option>
+                        {% else %}
+                            <option value="">-- Pilih Site --</option>
+                            {% for site in assigned_sites %}
+                                <option value="{{ site.id }}">{{ site.nama_site }}</option>
+                            {% endfor %}
+                        {% endif %}
+                    {% else %}
+                        <option value="">Tidak ada site yang tersedia</option>
+                    {% endif %}
+                </select>
+            </div>
+            <button type="submit" class="monitor-btn"
+                style="background-color: #28a745; /* Green for save */
+                       color: white;
+                       padding: 12px 20px;
+                       border: none;
+                       border-radius: 5px;
+                       cursor: pointer;
+                       font-size: 1em;
+                       transition: background-color 0.2s ease;">
+                Tambah Akun
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

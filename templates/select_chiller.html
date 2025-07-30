@@ -43,7 +43,7 @@
 
       body {
         font-family: "Roboto", sans-serif;
-        background-image: url("/static/images/logo-3.jpg"); /* Pastikan logo-3.jpg ada di static/images/ */
+        background-image: url("{{ url_for('static', filename='images/logo-3.jpg')}}"); /* Pastikan logo-3.jpg ada di static/images/ */
         background-size: cover;
         background-repeat: no-repeat;
         background-position: center center;
@@ -217,10 +217,6 @@
         gap: 25px;
         flex-grow: 1;
         align-content: flex-start;
-        background-image: url("/static/images/logo-3.jpg");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-attachment: fixed;
       }
 
       /* Style untuk Chiller Card */
@@ -492,15 +488,15 @@
         <nav class="sidebar-nav">
           <ul>
             <li>
-              <a href="{{ url_for('home') }}"
+              <a href="{{ url_for('select_site') }}"
                 ><i class="fas fa-home"></i> <span>Home</span></a
               >
             </li>
-            <li class="active">
-              <a href="{{ url_for('chillers_page') }}"
+            <!-- <li class="active">
+              <a href="{{ url_for('select_chiller', site_id=session.get('current_site_id')) if session.get('current_site_id') else url_for('select_site') }}"
                 ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
               >
-            </li>
+            </li> -->
             <li>
               <a href="#"
                 ><i class="fas fa-project-diagram"></i> <span>Project</span></a
@@ -512,8 +508,13 @@
               >
             </li>
             <li>
-              <a href="#"
+              <a href="/manage_users"
                 ><i class="fas fa-users-cog"></i> <span>Manage User</span></a
+              >
+            </li>
+            <li>
+              <a href="{{ url_for('auth.logout') }}"
+                ><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a
               >
             </li>
           </ul>
@@ -523,7 +524,7 @@
       <main class="main-content">
         <header class="header">
           <div class="header-left">
-            <h1>CHILLER MONITORING</h1>
+            <h1>CHILLER MONITORING - {{ site_name }}</h1>
           </div>
           <div class="header-right">
             <span>{{ current_time }}</span>
@@ -534,191 +535,73 @@
         </header>
 
         <section class="dashboard-cards">
+          {% if chillers %} {% for chiller in chillers %}
           <div class="chiller-card">
             <div class="chiller-card-image">
               <img
-                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
-                alt="Bintaro Exchange Mall"
+                src="{{ url_for('static', filename='images/' + chiller.gambar_url) }}"
+                alt="{{ chiller.nama_chiller }}"
+                onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/placeholder.jpg') }}';"
               />
             </div>
             <div class="chiller-card-content">
               <div class="chiller-card-title">
-                <h2>Chiller 1</h2>
+                <h2>{{ chiller.nama_chiller }}</h2>
                 <span class="chiller-status">Stop</span>
               </div>
               <div class="chiller-info-row">
                 <span class="info-label">Model:</span>
-                <span class="info-value">YKKEXLH95ETH</span>
+                <span class="info-value">{{ chiller.model }}</span>
               </div>
               <div class="chiller-info-row">
                 <span class="info-label">Serial Number:</span>
-                <span class="info-value">50612C31908796</span>
+                <span class="info-value">{{ chiller.serial_number }}</span>
               </div>
-              <p class="chiller-description">
-                Bintaro Exchange Mall 2 Chiller Monitoring
-              </p>
+              <!-- Mengganti deskripsi dengan Power dan Ton -->
+              <div class="chiller-info-row">
+                <span class="info-label">Power:</span>
+                <span class="info-value">{{ "%.2f" | format(chiller.power_kW) }} kW</span>
+              </div>
+              <div class="chiller-info-row">
+                <span class="info-label">Ton:</span>
+                <span class="info-value">{{ "%.2f" | format(chiller.ton_of_refrigeration) }} TR</span>
+              </div>
               <div class="chiller-footer">
-                <button class="monitor-btn">
+                <a
+                  href="{{ url_for('monitor_chiller', chiller_id=chiller.id) }}"
+                  class="monitor-btn"
+                >
                   Monitor <i class="fas fa-arrow-right"></i>
-                </button>
+                </a>
                 <div class="chiller-stats">
-                  <span><i class="fas fa-bolt"></i> 3516 kW</span>
-                  <span><i class="fas fa-snowflake"></i> 1000 TR</span>
+                  <!-- Menggunakan data dinamis dari database -->
+                  <span><i class="fas fa-bolt"></i> {{ "%.2f" | format(chiller.power_kW) }} kW</span>
+                  <span><i class="fas fa-snowflake"></i> {{ "%.2f" | format(chiller.ton_of_refrigeration) }} TR</span>
                 </div>
               </div>
             </div>
           </div>
-
-          <div class="chiller-card">
-            <div class="chiller-card-image">
-              <img
-                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
-                alt="Bintaro Exchange Mall"
-              />
-            </div>
-            <div class="chiller-card-content">
-              <div class="chiller-card-title">
-                <h2>Chiller 2</h2>
-                <span class="chiller-status">Stop</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Model:</span>
-                <span class="info-value">YKKEXLH95ETH</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Serial Number:</span>
-                <span class="info-value">50612C31908796</span>
-              </div>
-              <p class="chiller-description">
-                Bintaro Exchange Mall 2 Chiller Monitoring
-              </p>
-              <div class="chiller-footer">
-                <button class="monitor-btn">
-                  Monitor <i class="fas fa-arrow-right"></i>
-                </button>
-                <div class="chiller-stats">
-                  <span><i class="fas fa-bolt"></i> 3516 kW</span>
-                  <span><i class="fas fa-snowflake"></i> 1000 TR</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="chiller-card">
-            <div class="chiller-card-image">
-              <img
-                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
-                alt="Bintaro Exchange Mall"
-              />
-            </div>
-            <div class="chiller-card-content">
-              <div class="chiller-card-title">
-                <h2>Chiller 3</h2>
-                <span class="chiller-status">Stop</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Model:</span>
-                <span class="info-value">YKHCFLP83EMH</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Serial Number:</span>
-                <span class="info-value">50612C31908797</span>
-              </div>
-              <p class="chiller-description">
-                Bintaro Exchange Mall 2 Chiller Monitoring
-              </p>
-              <div class="chiller-footer">
-                <button class="monitor-btn">
-                  Monitor <i class="fas fa-arrow-right"></i>
-                </button>
-                <div class="chiller-stats">
-                  <span><i class="fas fa-bolt"></i> 2109.6 kW</span>
-                  <span><i class="fas fa-snowflake"></i> 600 TR</span>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div class="chiller-card">
-            <div class="chiller-card-image">
-              <img
-                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
-                alt="Bintaro Exchange Mall"
-              />
-            </div>
-            <div class="chiller-card-content">
-              <div class="chiller-card-title">
-                <h2>Chiller 4</h2>
-                <span class="chiller-status">Stop</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Model:</span>
-                <span class="info-value">YKHCFLP83EMH</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Serial Number:</span>
-                <span class="info-value">50612C31908798</span>
-              </div>
-              <p class="chiller-description">
-                Bintaro Exchange Mall 2 Chiller Monitoring
-              </p>
-              <div class="chiller-footer">
-                <button class="monitor-btn">
-                  Monitor <i class="fas fa-arrow-right"></i>
-                </button>
-                <div class="chiller-stats">
-                  <span><i class="fas fa-bolt"></i> 2109.6 kW</span>
-                  <span><i class="fas fa-snowflake"></i> 600 TR</span>
-                </div>
-              </div>
-            </div>
-          </div>
+          {% endfor %} {% else %}
+          <p style="color: black">Tidak ada chiller yang tersedia untuk site ini.</p>
+          {% endif %}
         </section>
       </main>
     </div>
 
     <script>
-      /* JavaScript Ditempatkan di Sini (Sama seperti sebelumnya) */
+      /* JavaScript Ditempatkan di Sini */
       document.addEventListener("DOMContentLoaded", () => {
         const menuToggle = document.getElementById("menuToggle");
         const sidebar = document.querySelector(".sidebar");
-        const sidebarNavLinks = document.querySelectorAll(
-          ".sidebar-nav ul li a"
-        );
+        // Removed sidebarNavLinks and related active class logic
+        // as this is handled by the base template (sidebar.html)
 
         // Toggle sidebar collapse
         menuToggle.addEventListener("click", () => {
           sidebar.classList.toggle("collapsed");
         });
 
-        // Add active class to clicked navigation item for sidebar
-        // This is important for navigating between home and chillers pages
-        sidebarNavLinks.forEach((link) => {
-          link.addEventListener("click", function (event) {
-            // Remove active class from all links
-            sidebarNavLinks.forEach((item) =>
-              item.parentElement.classList.remove("active")
-            );
-            // Add active class to the parent li of the clicked link
-            this.parentElement.classList.add("active");
-          });
-        });
-
-        // Set initial active link based on current URL path
-        const currentPath = window.location.pathname;
-        sidebarNavLinks.forEach((link) => {
-          // Get the href attribute and ensure it's a valid path
-          const linkHref = link.getAttribute("href");
-          if (linkHref && linkHref.startsWith("/")) {
-            // Only process internal links
-            if (
-              currentPath === linkHref ||
-              (currentPath === "/" && linkHref === '{{ url_for("home") }}')
-            ) {
-              link.parentElement.classList.add("active");
-            }
-          }
-        });
+        // No need for active class logic here, as it's handled in sidebar.html
       });
     </script>
   </body>

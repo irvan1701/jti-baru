@@ -1,0 +1,123 @@
+{% extends 'sidebar.html' %}
+
+{% block title %}Add New User (Admin) - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}TAMBAH PENGGUNA BARU{% endblock %}
+
+{% block content %}
+<div class="page-content">
+    <h2 style="color: var(--text-color); margin-bottom: 20px;">Tambah Pengguna Baru (Admin)</h2>
+
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <ul class="flash-messages">
+                {% for category, message in messages %}
+                    <li class="flash-message {{ category }}">{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+    {% endwith %}
+
+    <div class="form-card" style="background-color: var(--sidebar-bg); padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+        <form method="POST" action="{{ url_for('add_user_by_admin') }}">
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="nama" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Nama Lengkap:</label>
+                <input type="text" id="nama" name="nama" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="email" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Email:</label>
+                <input type="email" id="email" name="email" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="jabatan" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Jabatan:</label>
+                <input type="text" id="jabatan" name="jabatan" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="password" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Password:</label>
+                <input type="password" id="password" name="password" required
+                       style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+            </div>
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label for="role" style="display: block; color: var(--sidebar-text); margin-bottom: 8px;">Peran (Role):</label>
+                <select id="role" name="role" required
+                        style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #444; background-color: #33384f; color: #fff;">
+                    <option value="">-- Pilih Peran --</option>
+                    <option value="Admin">Admin</option>
+                    <option value="Viewer">Viewer</option>
+                    <option value="User">User</option>
+                </select>
+            </div>
+
+            <div class="form-group" id="site-selection-group" style="margin-bottom: 25px;">
+                <label style="display: block; color: var(--sidebar-text); font-weight: bold; margin-bottom: 15px; font-size: 1.1em;">Pilih Site (untuk Viewer/User):</label>
+                <div class="site-checkbox-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px;">
+                    {% if all_sites %}
+                        {% for site in all_sites %}
+                            <div class="checkbox-item" style="display: flex; align-items: center; background-color: var(--sidebar-hover); padding: 10px 15px; border-radius: 5px;">
+                                <input type="checkbox" id="site_{{ site.id }}" name="sites" value="{{ site.id }}"
+                                    style="margin-right: 10px; transform: scale(1.2);"
+                                >
+                                <label for="site_{{ site.id }}" style="color: var(--sidebar-text); flex-grow: 1; cursor: pointer;">{{ site.nama_site }}</label>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p style="color: var(--sidebar-text); grid-column: span 2;">Tidak ada site yang tersedia di database.</p>
+                    {% endif %}
+                </div>
+            </div>
+
+            <button type="submit" class="monitor-btn"
+                style="background-color: #28a745; /* Green for save */
+                       color: white;
+                       padding: 12px 20px;
+                       border: none;
+                       border-radius: 5px;
+                       cursor: pointer;
+                       font-size: 1em;
+                       transition: background-color 0.2s ease;">
+                Tambah Pengguna
+            </button>
+            <a href="{{ url_for('manage_users') }}" class="monitor-btn"
+               style="background-color: #6c757d; /* Grey for cancel */
+                      color: white;
+                      padding: 12px 20px;
+                      border: none;
+                      border-radius: 5px;
+                      cursor: pointer;
+                      font-size: 1em;
+                      transition: background-color 0.2s ease;
+                      margin-left: 10px; text-decoration: none;">
+                Batal
+            </a>
+        </form>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const roleSelect = document.getElementById('role');
+        const siteSelectionGroup = document.getElementById('site-selection-group');
+
+        function toggleSiteSelection() {
+            if (roleSelect.value === 'Admin') {
+                siteSelectionGroup.style.display = 'none';
+                // Uncheck all site checkboxes when Admin is selected
+                siteSelectionGroup.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+                    checkbox.checked = false;
+                });
+            } else {
+                siteSelectionGroup.style.display = 'block';
+            }
+        }
+
+        // Initial call to set visibility based on default selected role
+        toggleSiteSelection();
+
+        // Add event listener for when the role changes
+        roleSelect.addEventListener('change', toggleSiteSelection);
+    });
+</script>
+{% endblock %}

@@ -281,16 +281,16 @@
             </div>
             <nav class="sidebar-nav">
                 <ul>
-                    <li>
-                        <a href="{{ url_for('home') }}"
+                    <li {% if request.path == url_for('select_site') %}class="active"{% endif %}>
+                        <a href="{{ url_for('select_site') }}"
                             ><i class="fas fa-home"></i> <span>Home</span></a
                         >
                     </li>
-                    <li {% if request.path == url_for('chillers_page') %}class="active"{% endif %}>
-                        <a href="{{ url_for('chillers_page') }}"
+                    <!-- <li {% if request.path.startswith('/select_chiller') or request.path.startswith('/monitor_chiller') or request.path.startswith('/test') %}class="active"{% endif %}>
+                        <a href="{{ url_for('select_chiller', site_id=session.get('current_site_id')) if session.get('current_site_id') else url_for('select_site') }}"
                             ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
                         >
-                    </li>
+                    </li> -->
                     <li>
                         <a href="#"
                             ><i class="fas fa-project-diagram"></i> <span>Project</span></a
@@ -301,9 +301,22 @@
                             ><i class="fas fa-file-alt"></i> <span>Report</span></a
                         >
                     </li>
-                    <li>
-                        <a href="#"
+                    {% if session.get('role') == 'Admin' %}
+                    <li {% if request.path == url_for('manage_users') or request.path.startswith('/manage_user_access') or request.path == url_for('add_user_by_admin') %}class="active"{% endif %}>
+                        <a href="{{ url_for('manage_users') }}"
                             ><i class="fas fa-users-cog"></i> <span>Manage User</span></a
+                        >
+                    </li>
+                    {% elif session.get('role') == 'User' %}
+                    <li {% if request.path == url_for('user_add_account') %}class="active"{% endif %}>
+                        <a href="{{ url_for('user_add_account') }}"
+                            ><i class="fas fa-user-plus"></i> <span>Add Account</span></a
+                        >
+                    </li>
+                    {% endif %}
+                    <li>
+                        <a href="{{ url_for('auth.logout') }}"
+                            ><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a
                         >
                     </li>
                 </ul>
@@ -313,7 +326,7 @@
         <main class="main-content">
             <header class="header">
                 <div class="header-left">
-                    <h1>Chiller 1 Dashboard</h1>
+                    <h1>{% block header_title %}JTI BAS Dashboard{% endblock %}</h1>
                 </div>
                 <div class="header-right">
                     <span>{{ current_time }}</span>
@@ -352,24 +365,21 @@
                 if (linkHref) { // Check if href exists
                     const absoluteLinkHref = new URL(linkHref, window.location.origin).pathname;
                     if (currentPath === absoluteLinkHref ||
-                        (currentPath === '/' && absoluteLinkHref === '{{ url_for("home") }}') ||
-                        (currentPath.startsWith('/chillers') && absoluteLinkHref === '{{ url_for("chillers_page") }}'))
-                    {
+                        (currentPath === '/' && absoluteLinkHref === '{{ url_for("select_site") }}') ||
+                        (currentPath.startsWith('/select_chiller') && absoluteLinkHref.startsWith(new URL("{{ url_for('select_chiller', site_id='') }}", window.location.origin).pathname)) ||
+                        (currentPath.startsWith('/monitor_chiller') && absoluteLinkHref.startsWith(new URL("{{ url_for('select_chiller', site_id='') }}", window.location.origin).pathname)) ||
+                        (currentPath.startsWith('/test') && absoluteLinkHref.startsWith(new URL("{{ url_for('select_chiller', site_id='') }}", window.location.origin).pathname)) ||
+                        (currentPath.startsWith('/manage_users') && absoluteLinkHref === '{{ url_for("manage_users") }}') ||
+                        (currentPath.startsWith('/manage_user_access') && absoluteLinkHref.startsWith(new URL("{{ url_for('manage_user_access', user_id=1) }}", window.location.origin).pathname.slice(0, -1))) || // Adjust for dynamic user_id
+                        (currentPath.startsWith('/user_add_account') && absoluteLinkHref === '{{ url_for("user_add_account") }}') || // New line for Add Account
+                        (currentPath.startsWith('/add_user_by_admin') && absoluteLinkHref === '{{ url_for("add_user_by_admin") }}') # New line for Add User By Admin
+                    ) {
                         link.parentElement.classList.add("active");
                     } else {
                          link.parentElement.classList.remove("active"); // Ensure others are not active
                     }
                 }
             });
-            // Optional: Remove client-side click active class logic if you prefer server-side
-            // sidebarNavLinks.forEach((link) => {
-            //   link.addEventListener("click", function (event) {
-            //     sidebarNavLinks.forEach((item) =>
-            //       item.parentElement.classList.remove("active")
-            //     );
-            //     this.parentElement.classList.add("active");
-            //   });
-            // });
         });
     </script>
 </body>

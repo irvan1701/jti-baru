@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>JTI BAS Dashboard</title>
+    <title>JTI BAS Dashboard - Select Site</title>
     <link
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
@@ -16,10 +16,10 @@
         --sidebar-bg: #1f2937; /* Dark blue-grey */
         --sidebar-text: #ecf0f1; /* Light grey */
         --sidebar-hover: #34495e; /* Slightly darker blue-grey */
-        --header-bg: #ffffff;
+        --header-bg: #1f2937;
         --header-border: #dfe6e9;
         --main-bg: #f4f7f6; /* Light background for main content */
-        --card-bg: #1f2937;
+        --card-bg: #1f2937; /* Dark blue-grey for site cards */
         --card-border: #e0e0e0;
         --text-color: #ffffff;
         --light-text-color: #7f8c8d; /* Grey text for descriptions */
@@ -36,9 +36,7 @@
 
       body {
         font-family: "Roboto", sans-serif;
-        /* **Penting:** Path relatif dari root aplikasi Flask (atau dari 'templates' jika diakses langsung) */
-        /* Flask akan menyajikan folder 'static' sebagai '/static/' */
-        background-image: url("/static/images/logo-3.jpg");
+        background-image: url("{{ url_for('static', filename='images/logo-3.jpg')}}");
         background-size: cover;
         background-repeat: no-repeat;
         background-position: center center;
@@ -63,11 +61,11 @@
         display: flex;
         flex-direction: column;
         transition: width 0.3s ease;
-        flex-shrink: 0; /* Prevent sidebar from shrinking */
+        flex-shrink: 0;
       }
 
       .sidebar.collapsed {
-        width: 60px; /* Adjust based on icon width + padding */
+        width: 60px;
       }
 
       .sidebar-header {
@@ -147,7 +145,7 @@
       .sidebar-nav ul li a i {
         margin-right: 15px;
         font-size: 1.1em;
-        width: 20px; /* Fixed width for icons */
+        width: 20px;
         text-align: center;
       }
 
@@ -198,7 +196,7 @@
 
       .user-profile i {
         font-size: 2em;
-        color: var(--sidebar-bg); /* Use sidebar-bg color for user icon */
+        color: var(--sidebar-bg);
       }
 
       /* Dashboard Cards Styling */
@@ -209,10 +207,6 @@
         gap: 25px;
         flex-grow: 1;
         align-content: flex-start;
-        background-image: url("/static/images/logo-3.jpg");
-        background-repeat: no-repeat;
-        background-position: center;
-        background-attachment: fixed;
       }
 
       .card {
@@ -274,7 +268,6 @@
         border-radius: 5px;
         cursor: pointer;
         text-decoration: none;
-
         font-size: 0.9em;
         display: inline-flex;
         align-items: center;
@@ -360,7 +353,6 @@
 
         .card-content {
           padding: 15px;
-          max-width: 40vh;
         }
 
         .card-content h2 {
@@ -396,15 +388,15 @@
         <nav class="sidebar-nav">
           <ul>
             <li class="active">
-              <a href="{{ url_for('home') }}"
+              <a href="{{ url_for('select_site') }}"
                 ><i class="fas fa-home"></i> <span>Home</span></a
               >
             </li>
-            <li>
-              <a href="{{ url_for('chillers_page') }}"
+            <!-- <li {% if request.path.startswith('/select_chiller') or request.path.startswith('/monitor_chiller') or request.path.startswith('/test') %}class="active"{% endif %}>
+              <a href="{{ url_for('select_chiller', site_id=session.get('current_site_id')) if session.get('current_site_id') else url_for('select_site') }}"
                 ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
               >
-            </li>
+            </li> -->
             <li>
               <a href="#"
                 ><i class="fas fa-project-diagram"></i> <span>Project</span></a
@@ -416,8 +408,13 @@
               >
             </li>
             <li>
-              <a href="#"
+              <a href="/manage_users"
                 ><i class="fas fa-users-cog"></i> <span>Manage User</span></a
+              >
+            </li>
+            <li>
+              <a href="{{ url_for('auth.logout') }}"
+                ><i class="fas fa-sign-out-alt"></i> <span>Logout</span></a
               >
             </li>
           </ul>
@@ -427,7 +424,7 @@
       <main class="main-content">
         <header class="header">
           <div class="header-left">
-            <h1>HOME DASHBOARD</h1>
+            <h1>PILIH SITE</h1>
           </div>
           <div class="header-right">
             <span>{{ current_time }}</span>
@@ -438,21 +435,29 @@
         </header>
 
         <section class="dashboard-cards">
+          {% if sites %} {% for site in sites %}
           <div class="card">
             <div class="card-image">
               <img
-                src="{{ url_for('static', filename='images/bintaro_mall.jpg') }}"
-                alt="Bintaro Exchange Mall"
+                src="{{ url_for('static', filename='images/' + site.gambar_url) }}"
+                alt="{{ site.nama_site }}"
+                onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/placeholder.jpg') }}';"
               />
             </div>
             <div class="card-content">
-              <h2>Bintaro Exchange Mall</h2>
-              <p>Bintaro Exchange Mall 2 Chiller Monitoring</p>
-              <a href="{{ url_for('chillers_page') }}" class="monitor-btn">
-                Monitor <i class="fas fa-arrow-right"></i>
+              <h2>{{ site.nama_site }}</h2>
+              <p>{{ site.lokasi }}</p>
+              <a
+                href="{{ url_for('select_chiller', site_id=site.id) }}"
+                class="monitor-btn"
+              >
+                Pilih Site <i class="fas fa-arrow-right"></i>
               </a>
             </div>
           </div>
+          {% endfor %} {% else %}
+          <p style="color: black">Tidak ada site yang tersedia.</p>
+          {% endif %}
         </section>
       </main>
     </div>
@@ -483,6 +488,27 @@
             // Add active class to the parent li of the clicked link
             this.parentElement.classList.add("active");
           });
+        });
+
+        // Set initial active link based on current URL path
+        const currentPath = window.location.pathname;
+        sidebarNavLinks.forEach((link) => {
+          const linkHref = link.getAttribute("href");
+          if (linkHref) {
+            const absoluteLinkHref = new URL(
+              linkHref,
+              window.location.origin
+            ).pathname;
+            if (
+              currentPath === absoluteLinkHref ||
+              (currentPath === "/" &&
+                absoluteLinkHref === "{{ url_for('select_site') }}")
+            ) {
+              link.parentElement.classList.add("active");
+            } else {
+              link.parentElement.classList.remove("active");
+            }
+          }
         });
       });
     </script>
