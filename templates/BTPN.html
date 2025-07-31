@@ -32,7 +32,10 @@
                 <div class="info-card"><p class="label">Operating Hour</p><p class="value">4538</p></div>
                 <div class="info-card"><p class="label">Input Power</p><p class="value">485.00</p></div>
                 <div class="info-card"><p class="label">Input KWh</p><p class="value">1356120.00</p></div>
-                <div class="info-card"><p class="label">Starts</p><p class="value">592.00</p></div>
+                <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">1356120.00</p></div>
+                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">758</p></div>
+                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">765</p></div>
+                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">757</p></div>
             </div>
         </div>
 
@@ -52,10 +55,7 @@
                         <p class="thermometer-label">SATUR</p>
                         <canvas data-type="linear-gauge" data-width="120" data-height="220" data-min-value="-5" data-max-value="15" data-major-ticks="-5,0,5,10,15" data-highlights='[{"from": 3.33, "to": 6.67, "color": "rgba(0, 255, 0)"}]' data-value="0.78" data-units="°C" data-color-plate="#222" data-color-major-ticks="#f5f5f5" data-color-minor-ticks="#ddd" data-color-title="#fff" data-color-units="#ccc" data-color-numbers="#eee" data-color-value-box-shadow="false"></canvas>
                     </div>
-                    <div class="single-thermometer">
-                        <p class="thermometer-label">Refri</p>
-                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-highlights='[{"from": 20, "to": 25, "color": "rgba(0, 128, 0, .5)"}]' data-value="30.1" data-units="°C" data-color-plate="#222" data-color-major-ticks="#f5f5f5" data-color-minor-ticks="#ddd" data-color-title="#fff" data-color-units="#ccc" data-color-numbers="#eee" data-color-value-box-shadow="false"></canvas>
-                    </div>
+                    
                     <div class="single-thermometer">
                         <p class="thermometer-label">Pressure</p>
                         <canvas data-type="radial-gauge" data-width="180" data-height="180" data-units="PSI" data-value="264.07" data-min-value="235" data-max-value="520" data-major-ticks="235,285,335,385,435,485,520" data-highlights='[ { "from": 220.64, "to": 275.80, "color": "rgba(0, 255, 0, .5)" } ]' data-color-plate="#222" data-color-major-ticks="#f5f5f5" data-color-minor-ticks="#ddd" data-color-title="#fff" data-color-units="#ccc" data-color-numbers="#eee" data-color-needle-start="rgba(240, 128, 128, 1)" data-color-needle-end="rgba(255, 160, 122, .9)" data-value-box="true" data-animation-rule="bounce" data-animation-duration="500" data-font-value="Led" data-animated-value="true"></canvas>
@@ -85,11 +85,7 @@
                             <td>3.33 - 6.67 °C</td>
                             <td>0.78 °C</td>
                         </tr>
-                        <tr>
-                            <td>Refri</td>
-                            <td>20 - 25 °C</td>
-                            <td class="value-danger">30.1 °C</td>
-                        </tr>
+                        
                         <tr>
                             <td>Pressure</td>
                             <td>220.64 - 275.80 PSI</td>
@@ -171,11 +167,11 @@
                         <canvas data-type="linear-gauge" data-width="120" data-height="220" data-highlights='[{"from": 20, "to": 70, "color": "rgba(0, 128, 0, .5)"}]' data-value="25.0" data-units="°C" data-color-plate="#222" data-color-major-ticks="#f5f5f5" data-color-minor-ticks="#ddd" data-color-title="#fff" data-color-units="#ccc" data-color-numbers="#eee" data-color-value-box-shadow="false"></canvas>
                     </div>
                     <div class="single-thermometer">
-                        <p class="thermometer-label">Oil Discharge PSI</p>
+                        <p class="thermometer-label">Oil Pump Pressure</p>
                         <canvas data-type="radial-gauge" data-width="180" data-height="180" data-units="PSI" data-max-value="220" data-highlights='[ { "from": 0, "to": 50, "color": "rgba(0,255,0,.15)" } ]' data-value="0" data-color-plate="#222" data-color-major-ticks="#f5f5f5" data-color-minor-ticks="#ddd" data-color-title="#fff" data-color-units="#ccc" data-color-numbers="#eee" data-color-needle-start="rgba(240, 128, 128, 1)" data-color-needle-end="rgba(255, 160, 122, .9)" data-value-box="true" data-animation-rule="bounce" data-animation-duration="500" data-font-value="Led" data-animated-value="true"></canvas>
                     </div>
                     <div class="single-thermometer">
-                        <p class="thermometer-label">Refrigerant Pressure</p>
+                        <p class="thermometer-label">Oil Pressure Diff</p>
                         <canvas data-type="radial-gauge" data-width="180" data-height="180" data-units="PSI" data-max-value="220" data-highlights='[ { "from": 0, "to": 50, "color": "rgba(0,255,0,.15)" } ]' data-value="0" data-color-plate="#222" data-color-major-ticks="#f5f5f5" data-color-minor-ticks="#ddd" data-color-title="#fff" data-color-units="#ccc" data-color-numbers="#eee" data-color-needle-start="rgba(240, 128, 128, 1)" data-color-needle-end="rgba(255, 160, 122, .9)" data-value-box="true" data-animation-rule="bounce" data-animation-duration="500" data-font-value="Led" data-animated-value="true"></canvas>
                     </div>
                 </div>
@@ -199,12 +195,12 @@
                             <td>25.0 °C</td>
                         </tr>
                         <tr>
-                            <td>Oil Discharge PSI</td>
+                            <td>Oil Pump Pressuren</td>
                             <td>0 - 50 PSI</td>
                             <td>0 PSI</td>
                         </tr>
                         <tr>
-                            <td>Refrigerant Pressure</td>
+                            <td>Oil Pressure Diff</td>
                             <td>0 - 50 PSI</td>
                             <td>0 PSI</td>
                         </tr>

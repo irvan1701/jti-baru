@@ -168,36 +168,13 @@ def select_chiller(site_id):
 def monitor_chiller(chiller_id):
     """
     Rute untuk memantau chiller yang dipilih.
-    Arahkan ke /test (template2.html) dengan chiller_id.
+    Mengarahkan langsung ke rute /test dengan chiller_id.
     """
     if 'logged_in' not in session or not session['logged_in']:
         flash('Silakan login untuk memantau chiller.', 'warning')
         return redirect(url_for('auth.login'))
 
-    # Simpan chiller_id yang dipilih di session
     session['current_chiller_id'] = chiller_id
-
-    # Anda bisa mengambil detail chiller dari database di sini jika diperlukan
-    # untuk ditampilkan di template2.html, misalnya nama chiller, model, dll.
-    conn = get_db_connection()
-    chiller_data = {}
-    if conn:
-        cursor = conn.cursor(dictionary=True)
-        try:
-            # Menggunakan 'chiller_num' dari tabel chillers
-            cursor.execute("SELECT chiller_num FROM chillers WHERE id = %s", (chiller_id,))
-            chiller_info = cursor.fetchone()
-            if chiller_info:
-                chiller_data['nama_chiller'] = chiller_info['chiller_num'] # Menggunakan 'chiller_num'
-        except mysql.connector.Error as err:
-            print(f"Error saat mengambil detail chiller: {err}")
-        finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
-
-    # Mengarahkan ke halaman /test (template2.html)
     return redirect(url_for('test', chiller_id=chiller_id))
 
 
@@ -224,7 +201,7 @@ def testing():
         return redirect(url_for('auth.login'))
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
-    return render_template('template2.html', current_time=current_time)
+    return render_template('BTPN.html', current_time=current_time)
 
 @app.route('/testinggg')
 def testingg():
@@ -242,34 +219,48 @@ def testingg():
         {"label": "Speed", "value": 150},
         {"label": "Humidity", "value": 30}
     ]
-    return render_template('template2.html', gauges=gauges)
+    return render_template('BTPN.html', gauges=gauges)
 
 @app.route('/test')
 def test():
     """
-    Test route, renders template2.html with active_page.
-    This route will now also receive chiller_id.
+    Rute test yang merender template secara dinamis berdasarkan site chiller.
     """
     if 'logged_in' not in session or not session['logged_in']:
         flash('Silakan login untuk mengakses halaman test.', 'warning')
         return redirect(url_for('auth.login'))
 
-    chiller_id = request.args.get('chiller_id') # Ambil chiller_id dari parameter URL
+    chiller_id = request.args.get('chiller_id')
+    template_to_render = 'template2.html'  # Default template
+    chiller_name = "Chiller Dashboard"
 
-    # Opsional: Ambil data chiller berdasarkan chiller_id untuk ditampilkan di template2.html
-    chiller_name = "Chiller Dashboard" # Default
     if chiller_id:
         conn = get_db_connection()
         if conn:
             cursor = conn.cursor(dictionary=True)
             try:
-                # Menggunakan 'chiller_num' dari tabel chillers
-                cursor.execute("SELECT chiller_num FROM chillers WHERE id = %s", (chiller_id,))
+                # Ambil detail chiller dan nama site terkait menggunakan ID numerik
+                query = """
+                    SELECT c.chiller_num, s.name AS site_name
+                    FROM chillers c
+                    JOIN sites s ON c.site_id = s.id
+                    WHERE c.id = %s
+                """
+                cursor.execute(query, (chiller_id,))
                 chiller_info = cursor.fetchone()
+
                 if chiller_info:
-                    chiller_name = f"{chiller_info['chiller_num']} Dashboard" # Menggunakan 'chiller_num'
+                    chiller_name = f"{chiller_info['chiller_num']} Dashboard"
+                    site_name = chiller_info['site_name'].lower()
+                    
+                    if 'btpn' in site_name:
+                        template_to_render = 'BTPN.html'
+                    # Anda bisa menambahkan kondisi lain di sini, misalnya:
+                    # elif 'bxc' in site_name:
+                    #     template_to_render = 'template2.html'
+
             except mysql.connector.Error as err:
-                print(f"Error fetching chiller name: {err}")
+                print(f"Error fetching chiller/site details: {err}")
             finally:
                 if cursor:
                     cursor.close()
@@ -277,7 +268,7 @@ def test():
                     conn.close()
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
-    return render_template('template2.html', active_page='chiller_monitor', current_time=current_time, chiller_name=chiller_name)
+    return render_template(template_to_render, active_page='chiller_monitor', current_time=current_time, chiller_name=chiller_name)
 
 @app.route('/report')
 def report():
