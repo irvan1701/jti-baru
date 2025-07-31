@@ -9,22 +9,17 @@ import mysql.connector # Import MySQL connector
 app = Flask(__name__)
 
 # Konfigurasi kunci rahasia dari variabel lingkungan atau gunakan default
-app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here') # Ganti dengan kunci rahasia yang kuat dan unik
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'your_secret_key_here')
 
 # Konfigurasi database MySQL
-# Sebaiknya gunakan variabel lingkungan untuk kredensial database di produksi
 app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', '127.0.0.1')
-app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root') # Ganti dengan user MySQL Anda
-app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '') # Ganti dengan password MySQL Anda
-app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'jti-new2') # Nama database dari gateway-sql.sql
+app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
+app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '')
+app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'jti-new2')
 
-# Inisialisasi Bcrypt dengan aplikasi Flask
 bcrypt = Bcrypt(app)
-
-# Daftarkan Blueprint autentikasi
 app.register_blueprint(auth_bp)
 
-# Fungsi untuk mendapatkan koneksi database (diulang dari auth.py agar bisa diakses di sini)
 def get_db_connection():
     try:
         conn = mysql.connector.connect(
@@ -39,31 +34,21 @@ def get_db_connection():
         print(f"Error koneksi database: {err}")
         return None
 
-# Helper function to check if user is admin
 def is_admin():
     return 'logged_in' in session and session.get('role') == 'Admin'
 
-# Helper function to check if user is a regular user (not Admin or Viewer)
 def is_regular_user():
     return 'logged_in' in session and session.get('role') == 'User'
 
 @app.route('/')
 def index():
-    """
-    Rute utama yang mengarahkan ke halaman login jika belum login,
-    jika sudah, akan mengarahkan ke halaman pemilihan site.
-    """
     if 'logged_in' not in session or not session['logged_in']:
         flash('Anda harus login terlebih dahulu.', 'warning')
         return redirect(url_for('auth.login'))
-    return redirect(url_for('select_site')) # Arahkan ke pemilihan site setelah login
+    return redirect(url_for('select_site'))
 
 @app.route('/select_site')
 def select_site():
-    """
-    Rute untuk menampilkan halaman pemilihan site.
-    Mengambil daftar site dari database, dengan filter berdasarkan peran pengguna.
-    """
     if 'logged_in' not in session or not session['logged_in']:
         flash('Silakan login untuk memilih site.', 'warning')
         return redirect(url_for('auth.login'))
@@ -73,51 +58,32 @@ def select_site():
     if conn:
         cursor = conn.cursor(dictionary=True)
         try:
-            user_role = session.get('role') # Ambil peran pengguna dari session
-            user_id = session.get('user_id') # Ambil user_id dari session
+            user_role = session.get('role')
+            user_id = session.get('user_id')
 
             if user_role in ['Admin', 'Viewer']:
-                # Jika peran adalah Admin atau Viewer, tampilkan semua site
-                # Menggunakan nama kolom yang benar: name, location, image_name
                 cursor.execute("SELECT id, name AS nama_site, location AS lokasi, image_name AS gambar_url FROM sites")
             elif user_id:
-                # Jika peran bukan Admin/Viewer dan user_id ada, filter berdasarkan user_site_access
-                # Menggunakan nama kolom yang benar: name, location, image_name
                 cursor.execute("""
                     SELECT s.id, s.name AS nama_site, s.location AS lokasi, s.image_name AS gambar_url
                     FROM sites s
                     JOIN user_site_access usa ON s.id = usa.site_id
                     WHERE usa.user_id = %s
                 """, (user_id,))
-            else:
-                # Jika tidak ada peran atau user_id, tidak ada site yang ditampilkan
-                sites = []
-                flash("Tidak dapat menentukan akses site Anda. Silakan login kembali.", 'warning')
-
-            # Fetch all results if cursor was executed
-            if 'cursor' in locals() and cursor.description: # Check if cursor was actually used and has results
-                sites = cursor.fetchall()
-            else:
-                sites = [] # Ensure sites is empty if no query was run or no results
+            
+            sites = cursor.fetchall()
 
         except mysql.connector.Error as err:
             flash(f"Error saat mengambil daftar site: {err}", 'danger')
-            print(f"Error saat mengambil daftar site: {err}")
         finally:
-            if 'cursor' in locals() and cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+            cursor.close()
+            conn.close()
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
     return render_template('select_site.html', current_time=current_time, sites=sites)
 
 @app.route('/select_chiller/<string:site_id>')
 def select_chiller(site_id):
-    """
-    Rute untuk menampilkan halaman pemilihan chiller berdasarkan site_id.
-    Mengambil daftar chiller dari database untuk site yang dipilih.
-    """
     if 'logged_in' not in session or not session['logged_in']:
         flash('Silakan login untuk memilih chiller.', 'warning')
         return redirect(url_for('auth.login'))
@@ -128,36 +94,24 @@ def select_chiller(site_id):
     if conn:
         cursor = conn.cursor(dictionary=True)
         try:
-            # Ambil nama site (menggunakan 'name' dari tabel sites)
             cursor.execute("SELECT name FROM sites WHERE id = %s", (site_id,))
             site_info = cursor.fetchone()
             if site_info:
-                site_name = site_info['name'] # Menggunakan 'name'
+                site_name = site_info['name']
 
-            # Ambil chiller untuk site yang dipilih
-            # Menggunakan nama kolom yang benar: chiller_num, model_number, power_kW, ton_of_refrigeration, image_name
             cursor.execute("""
-                SELECT id, site_id,
-                       chiller_num AS nama_chiller,
-                       model_number AS model,
-                       serial_number,
-                       power_kW,
-                       ton_of_refrigeration,
-                       image_name AS gambar_url
+                SELECT id, chiller_num AS nama_chiller, model_number AS model, serial_number, 
+                       power_kW, ton_of_refrigeration, image_name AS gambar_url
                 FROM chillers
                 WHERE site_id = %s
             """, (site_id,))
             chillers = cursor.fetchall()
         except mysql.connector.Error as err:
             flash(f"Error saat mengambil daftar chiller: {err}", 'danger')
-            print(f"Error saat mengambil daftar chiller: {err}")
         finally:
-            if cursor:
-                cursor.close()
-            if conn:
-                conn.close()
+            cursor.close()
+            conn.close()
     
-    # Simpan site_id yang dipilih di session untuk navigasi selanjutnya
     session['current_site_id'] = site_id
     session['current_site_name'] = site_name
 
@@ -166,16 +120,228 @@ def select_chiller(site_id):
 
 @app.route('/monitor_chiller/<string:chiller_id>')
 def monitor_chiller(chiller_id):
-    """
-    Rute untuk memantau chiller yang dipilih.
-    Mengarahkan langsung ke rute /test dengan chiller_id.
-    """
     if 'logged_in' not in session or not session['logged_in']:
         flash('Silakan login untuk memantau chiller.', 'warning')
         return redirect(url_for('auth.login'))
-
-    session['current_chiller_id'] = chiller_id
     return redirect(url_for('test', chiller_id=chiller_id))
+
+@app.route('/test')
+def test():
+    """
+    Rute test yang membangun dasbor secara dinamis dari database,
+    mengambil nilai aktual dari chiller_datas.
+    """
+    if 'logged_in' not in session or not session['logged_in']:
+        flash('Silakan login untuk mengakses halaman test.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    chiller_id = request.args.get('chiller_id')
+    chiller_details = {}
+    parameters_by_section = {}
+    last_updated_timestamp = None # Initialize to None
+
+    # Mapping dictionary for parameter names to chiller_datas column names
+    parameter_data_map = {
+        'LWT': 'evap_lwt',
+        'RWT': 'evap_rwt',
+        'Evap Pressure': 'evap_pressure',
+        'Cond LWT': 'cond_lwt',
+        'Cond RWT': 'cond_rwt',
+        'Cond Pressure': 'cond_pressure',
+        'Discharge Temp': 'discharge_temp',
+        'Oil Sump Temp': 'oil_sump_temp',
+        'Oil Discharge PSI': 'oil_sump_pressure', # Assuming this is the correct column
+        'VSD Out Voltage': 'vsd_out_voltage',
+        'Motor PH A Current': 'vsd_ph_a_current',
+        'Motor PH B Current': 'vsd_ph_b_current',
+        'Motor PH C Current': 'vsd_ph_c_current',
+        # Add all other parameter mappings here
+        'Evap Satur Temp': 'evap_satur_temp',
+        'Evap STD': 'evap_std',
+        'Evap Refri Lvl': 'evap_refri_lvl',
+        'Cond STD': 'cond_std',
+        'Cond Refri Lvl': 'cond_refri_lvl',
+        'Cond Refri Lvl SP': 'cond_refri_lvl_sp',
+        'Drop Leg Refri Temp': 'drop_leg_refri_temp',
+        'Oil Pressure Diff': 'oil_pressure_diff',
+        'Oil Sump Pressure': 'oil_sump_pressure',
+        'Oil Pump Pressure': 'oil_pump_pressure',
+        'FLA': 'fla',
+        'Input Power': 'input_power',
+        'Input KWH': 'input_kwh',
+        'Operating Hour': 'operating_hour',
+        'Number of Start': 'number_of_start',
+        'Act Current Limit': 'act_current_limit',
+        'VSD Out Freq': 'vsd_out_freq',
+        'Mtr Wind PH A Temp': 'mtr_wind_ph_a_temp',
+        'Mtr Wind PH B Temp': 'mtr_wind_ph_b_temp',
+        'Mtr Wind PH C Temp': 'mtr_wind_ph_c_temp',
+        'Status': 'status',
+        'Warning': 'warning',
+        'Alarm': 'alarm',
+        'Safety Fault': 'safety_fault',
+        'Cycling Fault': 'cycling_fault',
+        'Warning Fault': 'warning_fault',
+        'Operating Code': 'operating_code',
+        'Liq Line Solenoid': 'liq_line_solenoid',
+        'CH Liq Pump STS': 'ch_liq_pump_sts',
+        'Panel Stop Switch STS': 'panel_stop_switch_sts',
+        'CH Liq Flow Switch': 'ch_liq_flow_switch',
+        'Cond Liq Flow Switch': 'cond_liq_flow_switch',
+        'Cond Liq Pump STS': 'cond_liq_pump_sts',
+        'CH1 Evap RWT Fahrenheit': 'ch1_evap_rwt_fahrenheit',
+        'CH1 Evap LWT Fahrenheit': 'ch1_evap_lwt_fahrenheit',
+        'CH2 Evap RWT Fahrenheit': 'ch2_evap_rwt_fahrenheit',
+        'CH2 Evap LWT Fahrenheit': 'ch2_evap_lwt_fahrenheit',
+        'CH3 Evap RWT Fahrenheit': 'ch3_evap_rwt_fahrenheit',
+        'CH3 Evap LWT Fahrenheit': 'ch3_evap_lwt_fahrenheit',
+        'CH4 Evap RWT Fahrenheit': 'ch4_evap_rwt_fahrenheit',
+        'CH4 Evap LWT Fahrenheit': 'ch4_evap_lwt_fahrenheit',
+        'Leav CH Liq SP': 'leav_ch_liq_sp',
+        'Evap RWT Fahrenheit': 'evap_rwt_fahrenheit',
+        'Evap LWT Fahrenheit': 'evap_lwt_fahrenheit',
+        'VSD Input Power': 'VSD_Input_Power',
+        'VSD Input KWH': 'VSD_Input_KWH',
+        'Evap Refri Temp': 'Evap_Refri_Temp',
+        'Vsd In Amb Temp': 'Vsd_In_Amb_Temp',
+        'Sys1 Disch Temp': 'Sys1_Disch_Temp',
+        'Sys1 Oil Press': 'Sys1_Oil_Press',
+        'Sys1 Evap Press': 'Sys1_Evap_Press',
+        'Sys1 Disch Press': 'Sys1_Disch_Press',
+        'Sys1 Comp FLA': 'Sys1_Comp_FLA',
+        'Sys1 Run Hour': 'Sys1_Run_Hour',
+        'Sys2 Oil Press': 'Sys2_Oil_Press',
+        'Sys2 Suct Press': 'Sys2_Suct_Press',
+        'Sys2 Disch Press': 'Sys2_Disch_Press',
+        'Sys2 Comp FLA': 'Sys2_Comp_FLA',
+        'Sys2 Run Hour': 'Sys2_Run_Hour',
+        'Chiller Run': 'Chiller_Run',
+        'Chiller Alarm': 'Chiller_Alarm',
+        'Fault Code': 'Fault_Code',
+        'Sys1 Suct Temp': 'Sys1_Suct_Temp',
+        'Amb Air Temp': 'Amb_Air_Temp',
+        'Sys1 Suct Superheat': 'Sys1_Suct_Superheat',
+        'Sys1 EEV Out Pct': 'Sys1_EEV_Out_Pct',
+        'Sys1 Com1 Hour': 'Sys1_Com1_Hour',
+        'Sys1 Com2 Hour': 'Sys1_Com2_Hour',
+        'Sys1 Com3 Hour': 'Sys1_Com3_Hour',
+        'Sys2 Com1 Hour': 'Sys2_Com1_Hour',
+        'Sys2 Com2 Hour': 'Sys2_Com2_Hour',
+        'Sys2 Com3 Hour': 'Sys2_Com3_Hour',
+        'Sys1 Com1 Run': 'Sys1_Com1_Run',
+        'Sys1 Com2 Run': 'Sys1_Com2_Run',
+        'Sys1 Com3 Run': 'Sys1_Com3_Run',
+        'Sys2 Com1 Run': 'Sys2_Com1_Run',
+        'Sys2 Com2 Run': 'Sys2_Com2_Run',
+        'Sys2 Com3 Run': 'Sys2_Com3_Run',
+        'Sys2 Suct Temp': 'Sys2_Suct_Temp',
+        'Sys2 Suct Superheat': 'Sys2_Suct_Superheat',
+        'Sys2 EEV Out Pct': 'Sys2_EEV_Out_Pct',
+        'Sys1 Disch Superheat': 'Sys1_Disch_Superheat',
+        'Sys2 Disch Temp': 'Sys2_Disch_Temp',
+        'Sys2 Disch Superheat': 'Sys2_Disch_Superheat',
+        'Sys1 Fault Code': 'Sys1_Fault_Code',
+        'Sys2 Fault Code': 'Sys2_Fault_Code',
+        'Sys1 Cond Temp': 'Sys1_Cond_Temp',
+        'Out Amb Temp': 'Out_Amb_Temp',
+        'Sys1 Eductor Temp': 'Sys1_Eductor_Temp',
+        'Sys2 Eductor Temp': 'Sys2_Eductor_Temp',
+        'Sys1 Alarm': 'Sys1_Alarm',
+        'Sys2 Alarm': 'Sys2_Alarm',
+        'Sys1 Warning Code': 'Sys1_Warning_Code',
+        'Sys2 Warning Code': 'Sys2_Warning_Code',
+        'Sys1 Fan Power': 'Sys1_Fan_Power',
+        'Sys1 Comp Power': 'Sys1_Comp_Power',
+        'Sys2 Fan Power': 'Sys2_Fan_Power',
+        'Sys2 Comp Power': 'Sys2_Comp_Power',
+        'Motor Ph A Current': 'Motor_Ph_A_Current',
+        'Motor Ph B Current': 'Motor_Ph_B_Current',
+        'Motor Ph C Current': 'Motor_Ph_C_Current',
+        'Motor Ph A Voltage': 'Motor_Ph_A_Voltage',
+        'Motor Ph B Voltage': 'Motor_Ph_B_Voltage',
+        'Motor Ph C Voltage': 'Motor_Ph_C_Voltage',
+        'Seal Press Diff': 'Seal_Press_Diff',
+        'Filter Diff Press': 'Filter_Diff_Press',
+        'Output Voltage': 'Output_Voltage',
+    }
+
+    if chiller_id:
+        conn = get_db_connection()
+        if conn:
+            cursor = conn.cursor(dictionary=True)
+            try:
+                # 1. Ambil detail chiller dasar
+                cursor.execute("SELECT * FROM chillers WHERE id = %s", (chiller_id,))
+                chiller_details = cursor.fetchone()
+
+                # 2. Ambil data terbaru dari chiller_datas untuk chiller ini
+                latest_chiller_data = None
+                cursor.execute(
+                    "SELECT * FROM chiller_datas WHERE chiller_id = %s ORDER BY timestamp DESC LIMIT 1",
+                    (chiller_id,)
+                )
+                latest_chiller_data = cursor.fetchone()
+                
+                if latest_chiller_data and 'timestamp' in latest_chiller_data:
+                    last_updated_timestamp = latest_chiller_data['timestamp']
+
+                # 3. Ambil semua parameter konfigurasi untuk chiller ini
+                query = """
+                    SELECT
+                        p.name, p.section, p.gauge_type, p.units, p.min_value, p.max_value,
+                        cp.safe_range_low, cp.safe_range_high
+                    FROM chiller_parameters cp
+                    JOIN parameters p ON cp.parameter_id = p.id
+                    WHERE cp.chiller_id = %s
+                    ORDER BY p.section, p.id
+                """
+                cursor.execute(query, (chiller_id,))
+                all_parameters = cursor.fetchall()
+
+                # 4. Kelompokkan parameter berdasarkan bagian (section) dan isi nilai aktual
+                for param in all_parameters:
+                    section = param['section']
+                    if section not in parameters_by_section:
+                        parameters_by_section[section] = []
+                    
+                    # Dapatkan nama kolom dari mapping dictionary
+                    data_col_name = parameter_data_map.get(param['name'])
+
+                    # Ambil nilai aktual dari latest_chiller_data menggunakan data_col_name
+                    if latest_chiller_data and data_col_name and data_col_name in latest_chiller_data:
+                        param['current_value'] = latest_chiller_data[data_col_name]
+                    else:
+                        param['current_value'] = None # Atau nilai default lainnya jika data tidak ditemukan
+
+                    parameters_by_section[section].append(param)
+
+            except mysql.connector.Error as err:
+                print(f"Error fetching dynamic dashboard data: {err}")
+            finally:
+                cursor.close()
+                conn.close()
+
+    current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
+    
+    # Tentukan template berdasarkan chiller_type
+    template_to_render = 'chiller_dashboard.html' # Default ke template universal
+    if chiller_details and chiller_details.get('chiller_type'):
+        # Konversi chiller_type ke nama file template (misal: 'BTPN_Type' -> 'btpn_type.html')
+        specific_template = f"{chiller_details['chiller_type'].lower()}.html"
+        # Periksa apakah template spesifik ada, jika tidak, gunakan default
+        if os.path.exists(os.path.join(app.template_folder, specific_template)):
+            template_to_render = specific_template
+        else:
+            print(f"Warning: Template {specific_template} not found. Falling back to chiller_dashboard.html.")
+
+    return render_template(
+        template_to_render, 
+        active_page='chiller_monitor', 
+        current_time=current_time, 
+        chiller=chiller_details,
+        sections=parameters_by_section,
+        last_updated_timestamp=last_updated_timestamp
+    )
 
 
 @app.route('/dashboard')
@@ -201,7 +367,7 @@ def testing():
         return redirect(url_for('auth.login'))
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
-    return render_template('BTPN.html', current_time=current_time)
+    return render_template('template2.html', current_time=current_time)
 
 @app.route('/testinggg')
 def testingg():
@@ -219,56 +385,8 @@ def testingg():
         {"label": "Speed", "value": 150},
         {"label": "Humidity", "value": 30}
     ]
-    return render_template('BTPN.html', gauges=gauges)
+    return render_template('template2.html', gauges=gauges)
 
-@app.route('/test')
-def test():
-    """
-    Rute test yang merender template secara dinamis berdasarkan site chiller.
-    """
-    if 'logged_in' not in session or not session['logged_in']:
-        flash('Silakan login untuk mengakses halaman test.', 'warning')
-        return redirect(url_for('auth.login'))
-
-    chiller_id = request.args.get('chiller_id')
-    template_to_render = 'template2.html'  # Default template
-    chiller_name = "Chiller Dashboard"
-
-    if chiller_id:
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor(dictionary=True)
-            try:
-                # Ambil detail chiller dan nama site terkait menggunakan ID numerik
-                query = """
-                    SELECT c.chiller_num, s.name AS site_name
-                    FROM chillers c
-                    JOIN sites s ON c.site_id = s.id
-                    WHERE c.id = %s
-                """
-                cursor.execute(query, (chiller_id,))
-                chiller_info = cursor.fetchone()
-
-                if chiller_info:
-                    chiller_name = f"{chiller_info['chiller_num']} Dashboard"
-                    site_name = chiller_info['site_name'].lower()
-                    
-                    if 'btpn' in site_name:
-                        template_to_render = 'BTPN.html'
-                    # Anda bisa menambahkan kondisi lain di sini, misalnya:
-                    # elif 'bxc' in site_name:
-                    #     template_to_render = 'template2.html'
-
-            except mysql.connector.Error as err:
-                print(f"Error fetching chiller/site details: {err}")
-            finally:
-                if cursor:
-                    cursor.close()
-                if conn:
-                    conn.close()
-
-    current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
-    return render_template(template_to_render, active_page='chiller_monitor', current_time=current_time, chiller_name=chiller_name)
 
 @app.route('/report')
 def report():
@@ -280,7 +398,7 @@ def report():
         return redirect(url_for('auth.login'))
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
-    return render_template('report.html', current_time=current_time) # Assuming you have a report.html
+    return render_template('report.html', current_time=current_time)
 
 
 @app.route('/manage_users')
@@ -554,4 +672,3 @@ if __name__ == '__main__':
         except locale.Error:
             print("Warning: Indonesian locale not found. Date/time may not be formatted correctly.")
     app.run(debug=True, host='0.0.0.0')
-

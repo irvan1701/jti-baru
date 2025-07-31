@@ -1,0 +1,26 @@
+  Aturan Penamaan:
+
+  Jika di tabel chillers, chiller_type adalah:
+
+   * 'BTPN_Type'  -> Template yang dicari: btpn_type.html
+   * 'BXC2_Type'  -> Template yang dicari: bxc2_type.html
+   * 'Jenis_Chiller_Baru' -> Template yang dicari: jenis_chiller_baru.html
+   * 'Chiller_A'  -> Template yang dicari: chiller_a.html
+
+    Langkah-langkah untuk Menambahkan Jenis Chiller Baru:
+
+   1. Tentukan `chiller_type` Baru: Saat Anda menambahkan chiller baru ke tabel chillers, berikan
+      nilai unik dan deskriptif untuk kolom chiller_type (misalnya, 'Jenis_Chiller_Baru').
+   2. Buat File Template HTML: Buat file HTML baru di folder templates Anda dengan nama yang sesuai
+      dengan chiller_type yang Anda definisikan (misalnya, jenis_chiller_baru.html).
+   3. Desain Template: Isi jenis_chiller_baru.html dengan tata letak, gauge, dan tabel parameter yang
+      spesifik untuk jenis chiller tersebut. Anda bisa menyalin dari template2.html atau BTPN.html
+      sebagai titik awal dan memodifikasinya.
+
+  Penting:
+
+   * Konsistensi: Pastikan nilai chiller_type di database Anda konsisten dengan nama file template
+     (setelah dikonversi ke huruf kecil).
+   * Template Default: Jika chiller_type tidak ditemukan atau template yang sesuai tidak ada,
+     aplikasi akan kembali ke default_chiller_template.html (jika Anda membuatnya dan mengaturnya
+     sebagai fallback). Saat ini, jika tidak ditemukan, akan ada error TemplateNotFound.

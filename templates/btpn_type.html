@@ -1,0 +1,128 @@
+{% extends 'sidebar.html' %}
+{% block title %}{{ chiller_name or 'Chiller Dashboard' }} - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
+
+{% block content %}
+<div class="chiller-content-wrapper">
+    <div class="dashboard-grid">
+        
+        <div class="faults-section">
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
+                <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ sections.Faults|selectattr('name', 'equalto', 'Safety Fault')|map(attribute='current_value')|first if sections.Faults else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/cycling-icon.png') }}" alt="Cycling Fault"></div>
+                <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ sections.Faults|selectattr('name', 'equalto', 'Cycling Fault')|map(attribute='current_value')|first if sections.Faults else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Warning Fault"></div>
+                <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ sections.Faults|selectattr('name', 'equalto', 'Warning Fault')|map(attribute='current_value')|first if sections.Faults else '-' }}</p></div>
+            </div>
+        </div>
+
+        <div class="chiller-details-section">
+            <div class="chiller-image">
+                <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
+            </div>
+            <div class="chiller-info-grid">
+                <div class="info-card"><p class="label">Status</p><p class="value running">{{ sections.General|selectattr('name', 'equalto', 'Status')|map(attribute='current_value')|first if sections.General and (sections.General|selectattr('name', 'equalto', 'Status')|map(attribute='current_value')|first == 1) else 'Stopped' }}</p></div>
+                <div class="info-card"><p class="label">FLA</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'FLA')|map(attribute='current_value')|first if sections.General else '-' }} %</p></div>
+                <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Operating Hour')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Input Power')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Input KWh')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'VSD Out Voltage')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Motor PH A Current')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Motor PH B Current')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Motor PH C Current')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+            </div>
+        </div>
+        <div class="last-updated-info">
+            <p>Last Updated: {{ last_updated_timestamp.strftime('%Y-%m-%d %H:%M:%S') if last_updated_timestamp else 'N/A' }}</p>
+        </div>
+
+        {% for section_name, section_params in sections.items() %}
+            {% if section_name not in ['Faults', 'General', 'Status'] %} {# Exclude sections already handled #}
+                <div class="section-card">
+                    <p>Section {{ section_name }}</p>
+                    <div class="thermometer-group">
+                        {% for param in section_params %}
+                            {% if param.gauge_type == 'linear-gauge' %}
+                                <div class="single-thermometer">
+                                    <p class="thermometer-label">{{ param.name }}</p>
+                                    <canvas data-type="linear-gauge"
+                                            data-width="120"
+                                            data-height="220"
+                                            data-highlights='[{"from": 0, "to": 100, "color": "rgba(0, 255, 0)"}]' {# Hardcoded highlights #}
+                                            data-value="{{ param.current_value if param.current_value is not none else 0 }}"
+                                            data-units="{{ param.units }}"
+                                            data-min-value="{{ param.min_value | default(0) }}"
+                                            data-max-value="{{ param.max_value | default(100) }}"
+                                            data-color-plate="#222"
+                                            data-color-major-ticks="#f5f5f5"
+                                            data-color-minor-ticks="#ddd"
+                                            data-color-title="#fff"
+                                            data-color-units="#ccc"
+                                            data-color-numbers="#eee"
+                                            data-color-value-box-shadow="false"></canvas>
+                                </div>
+                            {% elif param.gauge_type == 'radial-gauge' %}
+                                <div class="single-thermometer">
+                                    <p class="thermometer-label">{{ param.name }}</p>
+                                    <canvas data-type="radial-gauge"
+                                            data-width="180"
+                                            data-height="180"
+                                            data-units="{{ param.units }}"
+                                            data-value="{{ param.current_value if param.current_value is not none else 0 }}"
+                                            data-min-value="{{ param.min_value | default(0) }}"
+                                            data-max-value="{{ param.max_value | default(100) }}"
+                                            data-major-ticks="{{ param.min_value | default(0) }},{{ ((param.min_value | default(0)) + (param.max_value | default(100)))/2 }},{{ param.max_value | default(100) }}" {# This might need more sophisticated tick generation #}
+                                            data-highlights='[ { "from": 0, "to": 100, "color": "rgba(0,255,0,.15)" } ]' {# Hardcoded highlights #}
+                                            data-color-plate="#222"
+                                            data-color-major-ticks="#f5f5f5"
+                                            data-color-minor-ticks="#ddd"
+                                            data-color-title="#fff"
+                                            data-color-units="#ccc"
+                                            data-color-numbers="#eee"
+                                            data-color-needle-start="rgba(240, 128, 128, 1)"
+                                            data-color-needle-end="rgba(255, 160, 122, .9)"
+                                            data-value-box="true"
+                                            data-animation-rule="bounce"
+                                            data-animation-duration="500"
+                                            data-font-value="Led"
+                                            data-animated-value="true"></canvas>
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                    <table class="parameter-table">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Safe Range</th>
+                                <th>Value</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for param in section_params %}
+                                <tr>
+                                    <td>{{ param.name }}</td>
+                                    <td>{{ param.safe_range_low | default('N/A') }} - {{ param.safe_range_high | default('N/A') }} {{ param.units }}</td>
+                                    <td {% if param.current_value is not none and (param.current_value < param.safe_range_low or param.current_value > param.safe_range_high) %}class="value-danger"{% endif %}>
+                                        {{ param.current_value }} {{ param.units }}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            {% endif %}
+        {% endfor %}
+
+        <div class="chart-section">
+            <p>Chart</p>
+        </div>
+    </div>
+</div>
+{% endblock %}
