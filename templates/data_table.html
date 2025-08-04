@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Debug Table</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+        .container {
+            max-width: 800px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        th {
+            background-color: #f9fafb;
+            font-weight: 600;
+        }
+        tr:hover {
+            background-color: #f3f4f6;
+        }
+        .text-null {
+            color: #9ca3af;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 class="text-3xl font-bold mb-6 text-gray-800">API Data Verification</h1>
+        <p class="text-gray-600 mb-4">Halaman ini menampilkan data mentah yang diterima dari API untuk tujuan debugging.</p>
+        
+        <!-- Dropdown untuk memilih Chiller ID -->
+        <form action="/data_table" method="get" class="mb-6">
+            <label for="chiller_selector" class="block text-sm font-medium text-gray-700">Pilih Chiller ID:</label>
+            <select id="chiller_selector" name="chiller_id" onchange="this.form.submit()" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                {% for id in chiller_ids %}
+                    <option value="{{ id }}" {% if id == selected_chiller_id %}selected{% endif %}>{{ id }}</option>
+                {% endfor %}
+            </select>
+        </form>
+
+        {% if data %}
+        <table class="min-w-full bg-white rounded-md overflow-hidden">
+            <thead>
+                <tr>
+                    <th class="px-6 py-3">Parameter</th>
+                    <th class="px-6 py-3">Value</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for key, value in data.items() %}
+                <tr>
+                    <td class="px-6 py-4">{{ key }}</td>
+                    <td class="px-6 py-4">
+                        {% if value is none %}
+                            <span class="text-null">NULL</span>
+                        {% else %}
+                            {{ value }}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative" role="alert">
+            <span class="block sm:inline">Tidak ada data yang tersedia untuk Chiller ID ini.</span>
+        </div>
+        {% endif %}
+    </div>
+</body>
+</html>

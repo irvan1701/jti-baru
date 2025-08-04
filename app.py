@@ -1,10 +1,12 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
-from auth import auth_bp # Impor Blueprint dari auth.py
+from auth import auth_bp
 from datetime import datetime
 import locale
-import os # Import os for environment variables
-from flask_bcrypt import Bcrypt # Import Bcrypt
-import mysql.connector # Import MySQL connector
+import os
+from flask_bcrypt import Bcrypt
+import mysql.connector
+import requests
+import json
 
 app = Flask(__name__)
 
@@ -137,198 +139,44 @@ def test():
 
     chiller_id = request.args.get('chiller_id')
     chiller_details = {}
-    parameters_by_section = {}
-    last_updated_timestamp = None # Initialize to None
-
-    # Mapping dictionary for parameter names to chiller_datas column names
-    parameter_data_map = {
-        'LWT': 'evap_lwt',
-        'RWT': 'evap_rwt',
-        'Evap Pressure': 'evap_pressure',
-        'Cond LWT': 'cond_lwt',
-        'Cond RWT': 'cond_rwt',
-        'Cond Pressure': 'cond_pressure',
-        'Discharge Temp': 'discharge_temp',
-        'Oil Sump Temp': 'oil_sump_temp',
-        'Oil Discharge PSI': 'oil_sump_pressure', # Assuming this is the correct column
-        'VSD Out Voltage': 'vsd_out_voltage',
-        'Motor PH A Current': 'vsd_ph_a_current',
-        'Motor PH B Current': 'vsd_ph_b_current',
-        'Motor PH C Current': 'vsd_ph_c_current',
-        # Add all other parameter mappings here
-        'Evap Satur Temp': 'evap_satur_temp',
-        'Evap STD': 'evap_std',
-        'Evap Refri Lvl': 'evap_refri_lvl',
-        'Cond STD': 'cond_std',
-        'Cond Refri Lvl': 'cond_refri_lvl',
-        'Cond Refri Lvl SP': 'cond_refri_lvl_sp',
-        'Drop Leg Refri Temp': 'drop_leg_refri_temp',
-        'Oil Pressure Diff': 'oil_pressure_diff',
-        'Oil Sump Pressure': 'oil_sump_pressure',
-        'Oil Pump Pressure': 'oil_pump_pressure',
-        'FLA': 'fla',
-        'Input Power': 'input_power',
-        'Input KWH': 'input_kwh',
-        'Operating Hour': 'operating_hour',
-        'Number of Start': 'number_of_start',
-        'Act Current Limit': 'act_current_limit',
-        'VSD Out Freq': 'vsd_out_freq',
-        'Mtr Wind PH A Temp': 'mtr_wind_ph_a_temp',
-        'Mtr Wind PH B Temp': 'mtr_wind_ph_b_temp',
-        'Mtr Wind PH C Temp': 'mtr_wind_ph_c_temp',
-        'Status': 'status',
-        'Warning': 'warning',
-        'Alarm': 'alarm',
-        'Safety Fault': 'safety_fault',
-        'Cycling Fault': 'cycling_fault',
-        'Warning Fault': 'warning_fault',
-        'Operating Code': 'operating_code',
-        'Liq Line Solenoid': 'liq_line_solenoid',
-        'CH Liq Pump STS': 'ch_liq_pump_sts',
-        'Panel Stop Switch STS': 'panel_stop_switch_sts',
-        'CH Liq Flow Switch': 'ch_liq_flow_switch',
-        'Cond Liq Flow Switch': 'cond_liq_flow_switch',
-        'Cond Liq Pump STS': 'cond_liq_pump_sts',
-        'CH1 Evap RWT Fahrenheit': 'ch1_evap_rwt_fahrenheit',
-        'CH1 Evap LWT Fahrenheit': 'ch1_evap_lwt_fahrenheit',
-        'CH2 Evap RWT Fahrenheit': 'ch2_evap_rwt_fahrenheit',
-        'CH2 Evap LWT Fahrenheit': 'ch2_evap_lwt_fahrenheit',
-        'CH3 Evap RWT Fahrenheit': 'ch3_evap_rwt_fahrenheit',
-        'CH3 Evap LWT Fahrenheit': 'ch3_evap_lwt_fahrenheit',
-        'CH4 Evap RWT Fahrenheit': 'ch4_evap_rwt_fahrenheit',
-        'CH4 Evap LWT Fahrenheit': 'ch4_evap_lwt_fahrenheit',
-        'Leav CH Liq SP': 'leav_ch_liq_sp',
-        'Evap RWT Fahrenheit': 'evap_rwt_fahrenheit',
-        'Evap LWT Fahrenheit': 'evap_lwt_fahrenheit',
-        'VSD Input Power': 'VSD_Input_Power',
-        'VSD Input KWH': 'VSD_Input_KWH',
-        'Evap Refri Temp': 'Evap_Refri_Temp',
-        'Vsd In Amb Temp': 'Vsd_In_Amb_Temp',
-        'Sys1 Disch Temp': 'Sys1_Disch_Temp',
-        'Sys1 Oil Press': 'Sys1_Oil_Press',
-        'Sys1 Evap Press': 'Sys1_Evap_Press',
-        'Sys1 Disch Press': 'Sys1_Disch_Press',
-        'Sys1 Comp FLA': 'Sys1_Comp_FLA',
-        'Sys1 Run Hour': 'Sys1_Run_Hour',
-        'Sys2 Oil Press': 'Sys2_Oil_Press',
-        'Sys2 Suct Press': 'Sys2_Suct_Press',
-        'Sys2 Disch Press': 'Sys2_Disch_Press',
-        'Sys2 Comp FLA': 'Sys2_Comp_FLA',
-        'Sys2 Run Hour': 'Sys2_Run_Hour',
-        'Chiller Run': 'Chiller_Run',
-        'Chiller Alarm': 'Chiller_Alarm',
-        'Fault Code': 'Fault_Code',
-        'Sys1 Suct Temp': 'Sys1_Suct_Temp',
-        'Amb Air Temp': 'Amb_Air_Temp',
-        'Sys1 Suct Superheat': 'Sys1_Suct_Superheat',
-        'Sys1 EEV Out Pct': 'Sys1_EEV_Out_Pct',
-        'Sys1 Com1 Hour': 'Sys1_Com1_Hour',
-        'Sys1 Com2 Hour': 'Sys1_Com2_Hour',
-        'Sys1 Com3 Hour': 'Sys1_Com3_Hour',
-        'Sys2 Com1 Hour': 'Sys2_Com1_Hour',
-        'Sys2 Com2 Hour': 'Sys2_Com2_Hour',
-        'Sys2 Com3 Hour': 'Sys2_Com3_Hour',
-        'Sys1 Com1 Run': 'Sys1_Com1_Run',
-        'Sys1 Com2 Run': 'Sys1_Com2_Run',
-        'Sys1 Com3 Run': 'Sys1_Com3_Run',
-        'Sys2 Com1 Run': 'Sys2_Com1_Run',
-        'Sys2 Com2 Run': 'Sys2_Com2_Run',
-        'Sys2 Com3 Run': 'Sys2_Com3_Run',
-        'Sys2 Suct Temp': 'Sys2_Suct_Temp',
-        'Sys2 Suct Superheat': 'Sys2_Suct_Superheat',
-        'Sys2 EEV Out Pct': 'Sys2_EEV_Out_Pct',
-        'Sys1 Disch Superheat': 'Sys1_Disch_Superheat',
-        'Sys2 Disch Temp': 'Sys2_Disch_Temp',
-        'Sys2 Disch Superheat': 'Sys2_Disch_Superheat',
-        'Sys1 Fault Code': 'Sys1_Fault_Code',
-        'Sys2 Fault Code': 'Sys2_Fault_Code',
-        'Sys1 Cond Temp': 'Sys1_Cond_Temp',
-        'Out Amb Temp': 'Out_Amb_Temp',
-        'Sys1 Eductor Temp': 'Sys1_Eductor_Temp',
-        'Sys2 Eductor Temp': 'Sys2_Eductor_Temp',
-        'Sys1 Alarm': 'Sys1_Alarm',
-        'Sys2 Alarm': 'Sys2_Alarm',
-        'Sys1 Warning Code': 'Sys1_Warning_Code',
-        'Sys2 Warning Code': 'Sys2_Warning_Code',
-        'Sys1 Fan Power': 'Sys1_Fan_Power',
-        'Sys1 Comp Power': 'Sys1_Comp_Power',
-        'Sys2 Fan Power': 'Sys2_Fan_Power',
-        'Sys2 Comp Power': 'Sys2_Comp_Power',
-        'Motor Ph A Current': 'Motor_Ph_A_Current',
-        'Motor Ph B Current': 'Motor_Ph_B_Current',
-        'Motor Ph C Current': 'Motor_Ph_C_Current',
-        'Motor Ph A Voltage': 'Motor_Ph_A_Voltage',
-        'Motor Ph B Voltage': 'Motor_Ph_B_Voltage',
-        'Motor Ph C Voltage': 'Motor_Ph_C_Voltage',
-        'Seal Press Diff': 'Seal_Press_Diff',
-        'Filter Diff Press': 'Filter_Diff_Press',
-        'Output Voltage': 'Output_Voltage',
-    }
+    latest_chiller_data = None
+    last_updated_timestamp = None
 
     if chiller_id:
-        conn = get_db_connection()
-        if conn:
-            cursor = conn.cursor(dictionary=True)
-            try:
-                # 1. Ambil detail chiller dasar
-                cursor.execute("SELECT * FROM chillers WHERE id = %s", (chiller_id,))
-                chiller_details = cursor.fetchone()
+        try:
+            # Mengambil data dari API
+            response = requests.get(f'http://127.0.0.1:8000/chiller_datas/{chiller_id}')
+            response.raise_for_status()
+            
+            raw_json_data = response.json()
+            if raw_json_data:
+                latest_chiller_data = raw_json_data[0]
+                if 'timestamp' in latest_chiller_data:
+                    last_updated_timestamp = datetime.fromisoformat(latest_chiller_data['timestamp'])
+            
+            # Ambil detail chiller dasar dari database
+            conn = get_db_connection()
+            if conn:
+                cursor = conn.cursor(dictionary=True)
+                try:
+                    cursor.execute("SELECT * FROM chillers WHERE id = %s", (chiller_id,))
+                    chiller_details = cursor.fetchone()
+                finally:
+                    cursor.close()
+                    conn.close()
 
-                # 2. Ambil data terbaru dari chiller_datas untuk chiller ini
-                latest_chiller_data = None
-                cursor.execute(
-                    "SELECT * FROM chiller_datas WHERE chiller_id = %s ORDER BY timestamp DESC LIMIT 1",
-                    (chiller_id,)
-                )
-                latest_chiller_data = cursor.fetchone()
-                
-                if latest_chiller_data and 'timestamp' in latest_chiller_data:
-                    last_updated_timestamp = latest_chiller_data['timestamp']
-
-                # 3. Ambil semua parameter konfigurasi untuk chiller ini
-                query = """
-                    SELECT
-                        p.name, p.section, p.gauge_type, p.units, p.min_value, p.max_value,
-                        cp.safe_range_low, cp.safe_range_high
-                    FROM chiller_parameters cp
-                    JOIN parameters p ON cp.parameter_id = p.id
-                    WHERE cp.chiller_id = %s
-                    ORDER BY p.section, p.id
-                """
-                cursor.execute(query, (chiller_id,))
-                all_parameters = cursor.fetchall()
-
-                # 4. Kelompokkan parameter berdasarkan bagian (section) dan isi nilai aktual
-                for param in all_parameters:
-                    section = param['section']
-                    if section not in parameters_by_section:
-                        parameters_by_section[section] = []
-                    
-                    # Dapatkan nama kolom dari mapping dictionary
-                    data_col_name = parameter_data_map.get(param['name'])
-
-                    # Ambil nilai aktual dari latest_chiller_data menggunakan data_col_name
-                    if latest_chiller_data and data_col_name and data_col_name in latest_chiller_data:
-                        param['current_value'] = latest_chiller_data[data_col_name]
-                    else:
-                        param['current_value'] = None # Atau nilai default lainnya jika data tidak ditemukan
-
-                    parameters_by_section[section].append(param)
-
-            except mysql.connector.Error as err:
-                print(f"Error fetching dynamic dashboard data: {err}")
-            finally:
-                cursor.close()
-                conn.close()
-
+        except requests.exceptions.RequestException as e:
+            flash(f'Gagal mengambil data dari API: {e}', 'danger')
+            print(f"Error fetching data from API: {e}")
+        except Exception as e:
+            flash(f'Gagal memproses data: {e}', 'danger')
+            print(f"Error processing data: {e}")
+            
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
     
-    # Tentukan template berdasarkan chiller_type
-    template_to_render = 'chiller_dashboard.html' # Default ke template universal
+    template_to_render = 'chiller_dashboard.html'
     if chiller_details and chiller_details.get('chiller_type'):
-        # Konversi chiller_type ke nama file template (misal: 'BTPN_Type' -> 'btpn_type.html')
         specific_template = f"{chiller_details['chiller_type'].lower()}.html"
-        # Periksa apakah template spesifik ada, jika tidak, gunakan default
         if os.path.exists(os.path.join(app.template_folder, specific_template)):
             template_to_render = specific_template
         else:
@@ -339,9 +187,38 @@ def test():
         active_page='chiller_monitor', 
         current_time=current_time, 
         chiller=chiller_details,
-        sections=parameters_by_section,
+        data=latest_chiller_data,
         last_updated_timestamp=last_updated_timestamp
     )
+
+
+# Rute untuk halaman debug data
+@app.route('/data_table')
+def data_table():
+    if 'logged_in' not in session or not session['logged_in']:
+        flash('Silakan login untuk mengakses halaman ini.', 'warning')
+        return redirect(url_for('auth.login'))
+
+    # Mock daftar chiller ID untuk dropdown
+    chiller_ids = ["bxc2_sqc_1", "bxc2_sqc_2", "bxc2_sqc_3", "bxc2_sqc_4","menara_btpn_1", "menara_btpn_2", "menara_btpn_3", "menara_btpn_4"]
+    selected_chiller_id = request.args.get('chiller_id', chiller_ids[0] if chiller_ids else None)
+    
+    data = None
+    if selected_chiller_id:
+        try:
+            # Mengambil data dari API
+            response = requests.get(f'http://127.0.0.1:8000/chiller_datas/{selected_chiller_id}')
+            response.raise_for_status() # Cek jika ada bad status code
+            
+            raw_json_data = response.json()
+            if raw_json_data:
+                data = raw_json_data[0]
+
+        except requests.exceptions.RequestException as e:
+            flash(f'Gagal mengambil data dari API: {e}', 'danger')
+            print(f"Error fetching data from API: {e}")
+            
+    return render_template('data_table.html', data=data, chiller_ids=chiller_ids, selected_chiller_id=selected_chiller_id)
 
 
 @app.route('/dashboard')
@@ -672,3 +549,4 @@ if __name__ == '__main__':
         except locale.Error:
             print("Warning: Indonesian locale not found. Date/time may not be formatted correctly.")
     app.run(debug=True, host='0.0.0.0')
+

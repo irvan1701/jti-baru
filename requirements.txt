@@ -1,3 +1,4 @@
 Flask
 Flask-Bcrypt
 mysql-connector-python
+requests

@@ -10,115 +10,222 @@
         <div class="faults-section">
             <div class="fault-card">
                 <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
-                <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ sections.Faults|selectattr('name', 'equalto', 'Safety Fault')|map(attribute='current_value')|first if sections.Faults else '-' }}</p></div>
+                <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault if data else '-' }}</p></div>
             </div>
             <div class="fault-card">
                 <div class="icon-circle"><img src="{{ url_for('static', filename='icons/cycling-icon.png') }}" alt="Cycling Fault"></div>
-                <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ sections.Faults|selectattr('name', 'equalto', 'Cycling Fault')|map(attribute='current_value')|first if sections.Faults else '-' }}</p></div>
+                <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault if data else '-' }}</p></div>
             </div>
             <div class="fault-card">
                 <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Warning Fault"></div>
-                <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ sections.Faults|selectattr('name', 'equalto', 'Warning Fault')|map(attribute='current_value')|first if sections.Faults else '-' }}</p></div>
+                <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault if data else '-' }}</p></div>
             </div>
         </div>
 
         <div class="chiller-details-section">
             <div class="chiller-image">
+                {% if data.fla is not none and data.fla > 5 %}
                 <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
+                {% endif %}
             </div>
             <div class="chiller-info-grid">
-                <div class="info-card"><p class="label">Status</p><p class="value running">{{ sections.General|selectattr('name', 'equalto', 'Status')|map(attribute='current_value')|first if sections.General and (sections.General|selectattr('name', 'equalto', 'Status')|map(attribute='current_value')|first == 1) else 'Stopped' }}</p></div>
-                <div class="info-card"><p class="label">FLA</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'FLA')|map(attribute='current_value')|first if sections.General else '-' }} %</p></div>
-                <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Operating Hour')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Input Power')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Input KWh')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
-                <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'VSD Out Voltage')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Motor PH A Current')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Motor PH B Current')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ sections.General|selectattr('name', 'equalto', 'Motor PH C Current')|map(attribute='current_value')|first if sections.General else '-' }}</p></div>
+                <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data.fla is not none and data.fla > 5 else "Stopped" }}</p></div>
+                <div class="info-card"><p class="label">FLA</p><p class="value">{{ data.fla if data else '-' }} %</p></div>
+                <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ data.operating_hour if data else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">{{ data.vsd_out_voltage if data else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data else '-' }}</p></div>
             </div>
         </div>
         <div class="last-updated-info">
-            <p>Last Updated: {{ last_updated_timestamp.strftime('%Y-%m-%d %H:%M:%S') if last_updated_timestamp else 'N/A' }}</p>
+            <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
         </div>
 
-        {% for section_name, section_params in sections.items() %}
-            {% if section_name not in ['Faults', 'General', 'Status'] %} {# Exclude sections already handled #}
-                <div class="section-card">
-                    <p>Section {{ section_name }}</p>
-                    <div class="thermometer-group">
-                        {% for param in section_params %}
-                            {% if param.gauge_type == 'linear-gauge' %}
-                                <div class="single-thermometer">
-                                    <p class="thermometer-label">{{ param.name }}</p>
-                                    <canvas data-type="linear-gauge"
-                                            data-width="120"
-                                            data-height="220"
-                                            data-highlights='[{"from": 0, "to": 100, "color": "rgba(0, 255, 0)"}]' {# Hardcoded highlights #}
-                                            data-value="{{ param.current_value if param.current_value is not none else 0 }}"
-                                            data-units="{{ param.units }}"
-                                            data-min-value="{{ param.min_value | default(0) }}"
-                                            data-max-value="{{ param.max_value | default(100) }}"
-                                            data-color-plate="#222"
-                                            data-color-major-ticks="#f5f5f5"
-                                            data-color-minor-ticks="#ddd"
-                                            data-color-title="#fff"
-                                            data-color-units="#ccc"
-                                            data-color-numbers="#eee"
-                                            data-color-value-box-shadow="false"></canvas>
-                                </div>
-                            {% elif param.gauge_type == 'radial-gauge' %}
-                                <div class="single-thermometer">
-                                    <p class="thermometer-label">{{ param.name }}</p>
-                                    <canvas data-type="radial-gauge"
-                                            data-width="180"
-                                            data-height="180"
-                                            data-units="{{ param.units }}"
-                                            data-value="{{ param.current_value if param.current_value is not none else 0 }}"
-                                            data-min-value="{{ param.min_value | default(0) }}"
-                                            data-max-value="{{ param.max_value | default(100) }}"
-                                            data-major-ticks="{{ param.min_value | default(0) }},{{ ((param.min_value | default(0)) + (param.max_value | default(100)))/2 }},{{ param.max_value | default(100) }}" {# This might need more sophisticated tick generation #}
-                                            data-highlights='[ { "from": 0, "to": 100, "color": "rgba(0,255,0,.15)" } ]' {# Hardcoded highlights #}
-                                            data-color-plate="#222"
-                                            data-color-major-ticks="#f5f5f5"
-                                            data-color-minor-ticks="#ddd"
-                                            data-color-title="#fff"
-                                            data-color-units="#ccc"
-                                            data-color-numbers="#eee"
-                                            data-color-needle-start="rgba(240, 128, 128, 1)"
-                                            data-color-needle-end="rgba(255, 160, 122, .9)"
-                                            data-value-box="true"
-                                            data-animation-rule="bounce"
-                                            data-animation-duration="500"
-                                            data-font-value="Led"
-                                            data-animated-value="true"></canvas>
-                                </div>
-                            {% endif %}
-                        {% endfor %}
+        <div class="section-card">
+            <p class="mb-4">Evap</p>
+            <div class="flex flex-row space-x-4">
+                <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">LWT</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_lwt if data else 0 }}" data-units="°C"></canvas>
                     </div>
-                    <table class="parameter-table">
-                        <thead>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">RWT</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_rwt if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Satur Temp</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Pressure</p>
+                        <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.evap_pressure if data else 0 }}" data-units="psi"></canvas>
+                    </div>
+                </div>
+                <!-- Table for Evap section -->
+                <div class="data-table flex-1 p-4 border rounded-md shadow-sm">
+                    <h3 class="text-lg font-semibold mb-2 text-center text-gray-700">Detail Evaporator</h3>
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
+                        <thead class="bg-gray-100">
                             <tr>
-                                <th>Parameter</th>
-                                <th>Safe Range</th>
-                                <th>Value</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-300">Parameter</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-300">Safe Range</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Value</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for param in section_params %}
-                                <tr>
-                                    <td>{{ param.name }}</td>
-                                    <td>{{ param.safe_range_low | default('N/A') }} - {{ param.safe_range_high | default('N/A') }} {{ param.units }}</td>
-                                    <td {% if param.current_value is not none and (param.current_value < param.safe_range_low or param.current_value > param.safe_range_high) %}class="value-danger"{% endif %}>
-                                        {{ param.current_value }} {{ param.units }}
-                                    </td>
-                                </tr>
-                            {% endfor %}
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">LWT</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.evap_lwt if data else '-' }} °C</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">RWT</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.evap_rwt if data else '-' }} °C</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Satur Temp</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.evap_satur_temp if data else '-' }} °C</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Pressure</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.evap_pressure if data else '-' }} psi</td>
+                            </tr>
                         </tbody>
                     </table>
                 </div>
-            {% endif %}
-        {% endfor %}
+            </div>
+        </div>
+
+        <div class="section-card">
+            <p class="mb-4">Condenser</p>
+            <div class="flex flex-row space-x-4">
+                <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">LWT</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_lwt if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">RWT</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_rwt if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Satur Temp</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_satur_temp if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Pressure</p>
+                        <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.cond_pressure if data else 0 }}" data-units="psi"></canvas>
+                    </div>
+                </div>
+                 <!-- Table for Condenser section -->
+                <div class="data-table flex-1 p-4 border rounded-md shadow-sm">
+                    <h3 class="text-lg font-semibold mb-2 text-center text-gray-700">Detail Kondensor</h3>
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-300">Parameter</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-300">Safe Range</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">LWT</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.cond_lwt if data else '-' }} °C</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">RWT</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.cond_rwt if data else '-' }} °C</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Satur Temp</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.cond_satur_temp if data else '-' }} °C</td>
+                            </tr>
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Pressure</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.cond_pressure if data else '-' }} psi</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-card">
+            <p class="mb-4">Oil & Discharge</p>
+             <div class="flex flex-row space-x-4">
+                <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Oil Pressure Diff</p>
+                        <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.oil_pressure_diff if data else 0 }}" data-units="psi"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Oil Pump Pressure</p>
+                        <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.oil_pump_pressure if data else 0 }}" data-units="psi"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Oil Sump Temp</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.oil_sump_temp if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                    <div class="single-thermometer">
+                        <p class="thermometer-label">Discharge Temp</p>
+                        <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.discharge_temp if data else 0 }}" data-units="°C"></canvas>
+                    </div>
+                </div>
+                <!-- Table for Oil & Discharge section -->
+                <div class="data-table flex-1 p-4 border rounded-md shadow-sm">
+                    <h3 class="text-lg font-semibold mb-2 text-center text-gray-700">Detail Oli & Discharge</h3>
+                    <table class="min-w-full divide-y divide-gray-200 border border-gray-300">
+                        <thead class="bg-gray-100">
+                            <tr>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-300">Parameter</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider border-r border-gray-300">Safe Range</th>
+                                <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Value</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200">
+                            <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Oil Pressure Diff</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.oil_pressure_diff if data else '-' }} psi</td>
+                            </tr>
+                             <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Oil Pump Pressure</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.oil_pump_pressure if data else '-' }} psi</td>
+                            </tr>
+                             <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Oil Sump Temp</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.oil_sump_temp if data else '-' }} °C</td>
+                            </tr>
+                             <tr class="hover:bg-gray-50">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 border-r border-gray-200">Discharge Temp</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700 border-r border-gray-200">-</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">{{ data.discharge_temp if data else '-' }} °C</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <p>Chart</p>
+        </div>
 
         <div class="chart-section">
             <p>Chart</p>
