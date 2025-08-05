@@ -1,0 +1,213 @@
+{% extends 'sidebar.html' %}
+
+{% block title %}{{ chiller_name or 'Chiller Dashboard' }} - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
+
+{% block content %}
+<div class="chiller-content-wrapper">
+    <div class="dashboard-grid">
+        
+        <div class="faults-section">
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Sys1 Fault Code"></div>
+                <div class="fault-details"><p class="fault-type">Sys1 Fault Code</p><p class="fault-value">{{ data.get('sys1_fault_code', '-') }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Sys2 Fault Code"></div>
+                <div class="fault-details"><p class="fault-type">Sys2 Fault Code</p><p class="fault-value">{{ data.get('sys2_fault_code', '-') }}</p></div>
+            </div>
+        </div>
+
+        <div class="chiller-details-section">
+            <div class="chiller-image">
+                {% if data and ((data.get('sys1_com1_run', 0) > 0 or data.get('sys1_com2_run', 0) > 0 or data.get('sys1_com3_run', 0) > 0) or (data.get('sys2_com1_run', 0) > 0 or data.get('sys2_com2_run', 0) > 0 or data.get('sys2_com3_run', 0) > 0)) %}
+                <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
+                {% endif %}
+            </div>
+            <div class="chiller-info-grid">
+                <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data and ((data.get('sys1_com1_run', 0) > 0 or data.get('sys1_com2_run', 0) > 0 or data.get('sys1_com3_run', 0) > 0) or (data.get('sys2_com1_run', 0) > 0 or data.get('sys2_com2_run', 0) > 0 or data.get('sys2_com3_run', 0) > 0)) else "Stopped" }}</p></div>
+                <div class="info-card"><p class="label">Amb Air Temp</p><p class="value">{{ data.get('amb_air_temp', '-') }} °C</p></div>
+                <div class="info-card"><p class="label">Sys1 EEV Out Pct</p><p class="value">{{ data.get('sys1_eev_out_pct', '-') }} %</p></div>
+                <div class="info-card"><p class="label">Sys2 EEV Out Pct</p><p class="value">{{ data.get('sys2_eev_out_pct', '-') }} %</p></div>
+            </div>
+        </div>
+
+        <div class="last-updated-info">
+            <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
+        </div>
+        
+        <div class="evap-cond-section">
+            <div class="section-card">
+                <p class="mb-4">Evaporator</p>
+                <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Evap LWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('evap_lwt', 0) }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Evap RWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('evap_rwt', 0) }}" data-units="°C"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Evaporator</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Evap LWT</td>
+                                    <td>{{ data.get('evap_lwt', '-') }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Evap RWT</td>
+                                    <td>{{ data.get('evap_rwt', '-') }} °C</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="systems-section">
+            <div class="flex flex-row space-x-4">
+                <div class="section-card flex-1">
+                    <p class="mb-4">System 1</p>
+                    <div class="flex flex-row space-x-4">
+                        <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Suct Temp</p>
+                                <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('sys1_suct_temp', 0) }}" data-units="°C"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Disch Temp</p>
+                                <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('sys1_disch_temp', 0) }}" data-units="°C"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Eductor Temp</p>
+                                <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('sys1_eductor_temp', 0) }}" data-units="°C"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Suct Press</p>
+                                <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.get('sys1_suct_press', 0) }}" data-units="psi"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Disch Press</p>
+                                <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.get('sys1_disch_press', 0) }}" data-units="psi"></canvas>
+                            </div>
+                        </div>
+                        <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                            <h3 class="text-lg font-semibold mb-2 text-center">Detail System 1</h3>
+                            <table class="parameter-table min-w-full">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Parameter</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Run Hours</td>
+                                        <td>{{ data.get('sys1_com1_hour', '-') }} | {{ data.get('sys1_com2_hour', '-') }} | {{ data.get('sys1_com3_hour', '-') }}</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Run Status</td>
+                                        <td>{{ data.get('sys1_com1_run', '-') }} | {{ data.get('sys1_com2_run', '-') }} | {{ data.get('sys1_com3_run', '-') }}</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Suct Superheat</td>
+                                        <td>{{ data.get('sys1_suct_superheat', '-') }} °C</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Disch Superheat</td>
+                                        <td>{{ data.get('sys1_disch_superheat', '-') }} °C</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Oil Press</td>
+                                        <td>{{ data.get('sys1_oil_press', '-') }} psi</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="section-card flex-1">
+                    <p class="mb-4">System 2</p>
+                    <div class="flex flex-row space-x-4">
+                        <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Suct Temp</p>
+                                <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('sys2_suct_temp', 0) }}" data-units="°C"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Disch Temp</p>
+                                <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('sys2_disch_temp', 0) }}" data-units="°C"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Eductor Temp</p>
+                                <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.get('sys2_eductor_temp', 0) }}" data-units="°C"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Suct Press</p>
+                                <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.get('sys2_suct_press', 0) }}" data-units="psi"></canvas>
+                            </div>
+                            <div class="single-thermometer">
+                                <p class="thermometer-label">Disch Press</p>
+                                <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.get('sys2_disch_press', 0) }}" data-units="psi"></canvas>
+                            </div>
+                        </div>
+                        <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                            <h3 class="text-lg font-semibold mb-2 text-center">Detail System 2</h3>
+                            <table class="parameter-table min-w-full">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Parameter</th>
+                                        <th scope="col">Value</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Run Hours</td>
+                                        <td>{{ data.get('sys2_com1_hour', '-') }} | {{ data.get('sys2_com2_hour', '-') }} | {{ data.get('sys2_com3_hour', '-') }}</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Run Status</td>
+                                        <td>{{ data.get('sys2_com1_run', '-') }} | {{ data.get('sys2_com2_run', '-') }} | {{ data.get('sys2_com3_run', '-') }}</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Suct Superheat</td>
+                                        <td>{{ data.get('sys2_suct_superheat', '-') }} °C</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Disch Superheat</td>
+                                        <td>{{ data.get('sys2_disch_superheat', '-') }} °C</td>
+                                    </tr>
+                                    <tr class="hover:bg-gray-700">
+                                        <td class="font-medium">Oil Press</td>
+                                        <td>{{ data.get('sys2_oil_press', '-') }} psi</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <p>Chart</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

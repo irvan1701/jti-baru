@@ -1,0 +1,272 @@
+{% extends 'sidebar.html' %}
+
+{% block title %}{{ chiller_name or 'Chiller Dashboard' }} - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
+
+{% block content %}
+<div class="chiller-content-wrapper">
+    <div class="dashboard-grid">
+        
+        <div class="faults-section">
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Sys1 Alarm"></div>
+                <div class="fault-details"><p class="fault-type">Sys1 Alarm</p><p class="fault-value">{{ data.sys1_alarm if data and data.sys1_alarm is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Sys2 Alarm"></div>
+                <div class="fault-details"><p class="fault-type">Sys2 Alarm</p><p class="fault-value">{{ data.sys2_alarm if data and data.sys2_alarm is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Sys1 Fault Code"></div>
+                <div class="fault-details"><p class="fault-type">Sys1 Fault Code</p><p class="fault-value">{{ data.sys1_fault_code if data and data.sys1_fault_code is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Sys2 Fault Code"></div>
+                <div class="fault-details"><p class="fault-type">Sys2 Fault Code</p><p class="fault-value">{{ data.sys2_fault_code if data and data.sys2_fault_code is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/warning-icon.png') }}" alt="Sys1 Warning Code"></div>
+                <div class="fault-details"><p class="fault-type">Sys1 Warning Code</p><p class="fault-value">{{ data.sys1_warning_code if data and data.sys1_warning_code is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/warning-icon.png') }}" alt="Sys2 Warning Code"></div>
+                <div class="fault-details"><p class="fault-type">Sys2 Warning Code</p><p class="fault-value">{{ data.sys2_warning_code if data and data.sys2_warning_code is not none else '-' }}</p></div>
+            </div>
+        </div>
+
+        <div class="chiller-details-section">
+    <div class="chiller-image">
+        {% if data and (data.get('sys1_comp_fla', 0) is not none and data.get('sys1_comp_fla', 0) > 5) or (data.get('sys2_comp_fla', 0) is not none and data.get('sys2_comp_fla', 0) > 5) %}
+        <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
+        {% else %}
+        <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
+        {% endif %}
+    </div>
+    <div class="chiller-info-grid">
+        <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if (data and data.get('sys1_comp_fla', 0) is not none and data.get('sys1_comp_fla', 0) > 5) or (data and data.get('sys2_comp_fla', 0) is not none and data.get('sys2_comp_fla', 0) > 5) else "Stopped" }}</p></div>
+        <div class="info-card"><p class="label">Sys1 Comp FLA</p><p class="value">{{ data.get('sys1_comp_fla', '-') }} %</p></div>
+        <div class="info-card"><p class="label">Sys2 Comp FLA</p><p class="value">{{ data.get('sys2_comp_fla', '-') }} %</p></div>
+        <div class="info-card"><p class="label">Sys1 Run Hour</p><p class="value">{{ data.get('sys1_run_hour', '-') }}</p></div>
+        <div class="info-card"><p class="label">Sys2 Run Hour</p><p class="value">{{ data.get('sys2_run_hour', '-') }}</p></div>
+        <div class="info-card"><p class="label">VSD Out Freq</p><p class="value">{{ data.get('vsd_out_freq', '-') }} Hz</p></div>
+    </div>
+</div>
+
+        <div class="last-updated-info">
+            <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
+        </div>
+
+        <div class="evap-cond-section">
+            <div class="section-card">
+                <p class="mb-4">Evaporator</p>
+                <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Evap LWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Evap RWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Suct Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.sys1_suct_press if data and data.sys1_suct_press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys2 Suct Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.sys2_suct_press if data and data.sys2_suct_press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Evaporator</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Safe Range</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Evap LWT</td>
+                                    <td>-</td>
+                                    <td>{{ data.evap_lwt if data and data.evap_lwt is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Evap RWT</td>
+                                    <td>-</td>
+                                    <td>{{ data.evap_rwt if data and data.evap_rwt is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Suct Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys1_suct_press if data and data.sys1_suct_press is not none else '-' }} psi</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys2 Suct Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys2_suct_press if data and data.sys2_suct_press is not none else '-' }} psi</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <p class="mb-4">Condenser</p>
+                <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">VSD In Amb Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.vsd_in_amb_temp if data and data.vsd_in_amb_temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Out Amb Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.out_amb_temp if data and data.out_amb_temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Cond Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.sys1_cond_temp if data and data.sys1_cond_temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys2 Cond Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.sys2_cond_temp if data and data.sys2_cond_temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Kondensor</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Safe Range</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Vsd In Amb Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.vsd_in_amb_temp if data and data.vsd_in_amb_temp is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Out Amb Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.out_amb_temp if data and data.out_amb_temp is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Cond Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys1_cond_temp if data and data.sys1_cond_temp is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys2 Cond Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys2_cond_temp if data and data.sys2_cond_temp is not none else '-' }} °C</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="oil-discharge-section">
+            <div class="section-card">
+                <p class="mb-4">Oil & Discharge</p>
+                 <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Disch Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.sys1_disch_temp if data and data.sys1_disch_temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys2 Disch Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.sys2_disch_temp if data and data.sys2_disch_temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Oil Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.sys1_oil_press if data and data.sys1_oil_press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys2 Oil Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.sys2_oil_press if data and data.sys2_oil_press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Disch Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.sys1_disch_press if data and data.sys1_disch_press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                         <div class="single-thermometer">
+                            <p class="thermometer-label">Sys2 Disch Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.sys2_disch_press if data and data.sys2_disch_press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Oli & Discharge</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Safe Range</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Disch Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys1_disch_temp if data and data.sys1_disch_temp is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys2 Disch Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys2_disch_temp if data and data.sys2_disch_temp is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Oil Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys1_oil_press if data and data.sys1_oil_press is not none else '-' }} psi</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys2 Oil Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys2_oil_press if data and data.sys2_oil_press is not none else '-' }} psi</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Disch Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys1_disch_press if data and data.sys1_disch_press is not none else '-' }} psi</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys2 Disch Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys2_disch_press if data and data.sys2_disch_press is not none else '-' }} psi</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Disch Superheat</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys1_disch_superheat if data and data.sys1_disch_superheat is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys2 Disch Superheat</td>
+                                    <td>-</td>
+                                    <td>{{ data.sys2_disch_superheat if data and data.sys2_disch_superheat is not none else '-' }} °C</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="chart-section">
+            <p>Chart</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

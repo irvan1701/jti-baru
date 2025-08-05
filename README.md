@@ -197,3 +197,8 @@ Aplikasi biasanya akan berjalan di `http://127.0.0.1:5000/`.
 *   **Keamanan:** Selalu gunakan kunci rahasia yang kuat dan unik dan jangan pernah mengekspos kredensial database secara langsung dalam kode di lingkungan produksi. Gunakan variabel lingkungan.
 
 ---
+
+### 8. Menjalankan SERVER API
+
+cd api
+uvicorn main:app --reload

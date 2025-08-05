@@ -1,6 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, session
 from auth import auth_bp
-from datetime import datetime
+from datetime import datetime, timedelta
 import locale
 import os
 from flask_bcrypt import Bcrypt
@@ -140,21 +140,36 @@ def test():
     chiller_id = request.args.get('chiller_id')
     chiller_details = {}
     latest_chiller_data = None
+    historical_data = []
     last_updated_timestamp = None
+
+    # Atur rentang waktu default di luar blok if
+    now = datetime.now()
+    start_date = request.args.get('start_date') or (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = request.args.get('end_date') or (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
 
     if chiller_id:
         try:
-            # Mengambil data dari API
-            response = requests.get(f'http://127.0.0.1:8000/chiller_datas/{chiller_id}')
-            response.raise_for_status()
+            # 1. Mengambil data terbaru untuk tampilan utama
+            response_latest = requests.get(f'http://127.0.0.1:8000/chillers/{chiller_id}/latest_data')
+            response_latest.raise_for_status()
             
-            raw_json_data = response.json()
+            raw_json_data = response_latest.json()
             if raw_json_data:
-                latest_chiller_data = raw_json_data[0]
+                latest_chiller_data = raw_json_data
                 if 'timestamp' in latest_chiller_data:
                     last_updated_timestamp = datetime.fromisoformat(latest_chiller_data['timestamp'])
-            
-            # Ambil detail chiller dasar dari database
+            else:
+                latest_chiller_data = None
+
+            # 2. Mengambil data historis untuk grafik dengan filter waktu
+            params = {'start_date': start_date, 'end_date': end_date}
+            api_url = f'http://127.0.0.1:8000/chillers/{chiller_id}/history'
+            response_history = requests.get(api_url, params=params)
+            if response_history.status_code == 200:
+                historical_data = response_history.json()
+
+            # 3. Ambil detail chiller dasar dari database
             conn = get_db_connection()
             if conn:
                 cursor = conn.cursor(dictionary=True)
@@ -174,13 +189,14 @@ def test():
             
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
     
-    template_to_render = 'chiller_dashboard.html'
+    # Perubahan di sini untuk menggunakan nama file yang benar
+    template_to_render = 'default_type.html' # Atur default template
     if chiller_details and chiller_details.get('chiller_type'):
-        specific_template = f"{chiller_details['chiller_type'].lower()}.html"
+        specific_template = f"{chiller_details['chiller_type'].lower()}_type.html"
         if os.path.exists(os.path.join(app.template_folder, specific_template)):
             template_to_render = specific_template
         else:
-            print(f"Warning: Template {specific_template} not found. Falling back to chiller_dashboard.html.")
+            print(f"Warning: Template {specific_template} not found. Falling back to default_type.html.")
 
     return render_template(
         template_to_render, 
@@ -188,9 +204,11 @@ def test():
         current_time=current_time, 
         chiller=chiller_details,
         data=latest_chiller_data,
+        historical_data=historical_data,
+        start_date=start_date,
+        end_date=end_date,
         last_updated_timestamp=last_updated_timestamp
     )
-
 
 # Rute untuk halaman debug data
 @app.route('/data_table')
@@ -199,26 +217,46 @@ def data_table():
         flash('Silakan login untuk mengakses halaman ini.', 'warning')
         return redirect(url_for('auth.login'))
 
-    # Mock daftar chiller ID untuk dropdown
     chiller_ids = ["bxc2_sqc_1", "bxc2_sqc_2", "bxc2_sqc_3", "bxc2_sqc_4","menara_btpn_1", "menara_btpn_2", "menara_btpn_3", "menara_btpn_4"]
     selected_chiller_id = request.args.get('chiller_id', chiller_ids[0] if chiller_ids else None)
     
-    data = None
+    # Atur rentang waktu default jika tidak ada
+    now = datetime.now()
+    start_date = request.args.get('start_date')
+    if not start_date:
+        start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+        
+    end_date = request.args.get('end_date')
+    if not end_date:
+        end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+
+    data = []
     if selected_chiller_id:
         try:
-            # Mengambil data dari API
-            response = requests.get(f'http://127.0.0.1:8000/chiller_datas/{selected_chiller_id}')
-            response.raise_for_status() # Cek jika ada bad status code
+            params = {
+                'start_date': start_date,
+                'end_date': end_date
+            }
             
-            raw_json_data = response.json()
-            if raw_json_data:
-                data = raw_json_data[0]
+            api_url = f'http://127.0.0.1:8000/chillers/{selected_chiller_id}/history'
+            response = requests.get(api_url, params=params)
+            response.raise_for_status()
+            
+            data = response.json()
 
         except requests.exceptions.RequestException as e:
-            flash(f'Gagal mengambil data dari API: {e}', 'danger')
-            print(f"Error fetching data from API: {e}")
+            if e.response and e.response.status_code == 404:
+                flash(f'Tidak ada data historis ditemukan untuk chiller {selected_chiller_id} pada rentang waktu yang dipilih.', 'info')
+            else:
+                flash(f'Gagal mengambil data dari API: {e}', 'danger')
+                print(f"Error fetching data from API: {e}")
             
-    return render_template('data_table.html', data=data, chiller_ids=chiller_ids, selected_chiller_id=selected_chiller_id)
+    return render_template('data_table.html', 
+                           data=data, 
+                           chiller_ids=chiller_ids, 
+                           selected_chiller_id=selected_chiller_id,
+                           start_date=start_date,
+                           end_date=end_date)
 
 
 @app.route('/dashboard')
@@ -549,4 +587,3 @@ if __name__ == '__main__':
         except locale.Error:
             print("Warning: Indonesian locale not found. Date/time may not be formatted correctly.")
     app.run(debug=True, host='0.0.0.0')
-

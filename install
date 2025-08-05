@@ -1,5 +1,0 @@
-pip install mysql-connector-python
-# atau
-pip install PyMySQL
-# dan juga Flask-Bcrypt untuk hashing password yang aman
-pip install Flask-Bcrypt

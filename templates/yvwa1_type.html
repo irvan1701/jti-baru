@@ -1,0 +1,194 @@
+{% extends 'sidebar.html' %}
+
+{% block title %}{{ chiller_name or 'Chiller Dashboard' }} - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
+
+{% block content %}
+<div class="chiller-content-wrapper">
+    <div class="dashboard-grid">
+        
+        <div class="faults-section">
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
+                <div class="fault-details"><p class="fault-type">Chiller Alarm</p><p class="fault-value">{{ data.Chiller_Alarm if data and data.Chiller_Alarm is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Fault Code"></div>
+                <div class="fault-details"><p class="fault-type">Fault Code</p><p class="fault-value">{{ data.Fault_Code if data and data.Fault_Code is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/cycling-icon.png') }}" alt="Sys1_Comp_FLA"></div>
+                <div class="fault-details"><p class="fault-type">Sys1 Comp FLA</p><p class="fault-value">{{ data.Sys1_Comp_FLA if data and data.Sys1_Comp_FLA is not none else '-' }} %</p></div>
+            </div>
+        </div>
+
+        <div class="chiller-details-section">
+            <div class="chiller-image">
+                {% if data and data.Chiller_Run is not none and data.Chiller_Run > 0 %}
+                <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
+                {% else %}
+                <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
+                {% endif %}
+            </div>
+            <div class="chiller-info-grid">
+                <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data and data.Chiller_Run is not none and data.Chiller_Run > 0 else "Stopped" }}</p></div>
+                <div class="info-card"><p class="label">VSD Out Freq</p><p class="value">{{ data.vsd_out_freq if data and data.vsd_out_freq is not none else '-' }} Hz</p></div>
+                <div class="info-card"><p class="label">VSD In Amb Temp</p><p class="value">{{ data.Vsd_In_Amb_Temp if data and data.Vsd_In_Amb_Temp is not none else '-' }} °C</p></div>
+                <div class="info-card"><p class="label">Sys1 Run Hour</p><p class="value">{{ data.Sys1_Run_Hour if data and data.Sys1_Run_Hour is not none else '-' }}</p></div>
+            </div>
+        </div>
+
+        <div class="last-updated-info">
+            <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
+        </div>
+
+        <div class="evap-cond-section">
+            <div class="section-card">
+                <p class="mb-4">Evaporator</p>
+                <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Evap LWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Evap RWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Evap Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.Sys1_Evap_Press if data and data.Sys1_Evap_Press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Evaporator</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Safe Range</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Evap LWT</td>
+                                    <td>-</td>
+                                    <td>{{ data.evap_lwt if data and data.evap_lwt is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Evap RWT</td>
+                                    <td>-</td>
+                                    <td>{{ data.evap_rwt if data and data.evap_rwt is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Evap Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.Sys1_Evap_Press if data and data.Sys1_Evap_Press is not none else '-' }} psi</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="section-card">
+                <p class="mb-4">Condenser</p>
+                <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Cond RWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Cond LWT</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Kondensor</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Safe Range</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Cond RWT</td>
+                                    <td>-</td>
+                                    <td>{{ data.cond_rwt if data and data.cond_rwt is not none else '-' }} °C</td>
+                                </tr>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Cond LWT</td>
+                                    <td>-</td>
+                                    <td>{{ data.cond_lwt if data and data.cond_lwt is not none else '-' }} °C</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="oil-discharge-section">
+            <div class="section-card">
+                <p class="mb-4">Oil & Discharge</p>
+                 <div class="flex flex-row space-x-4">
+                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Disch Temp</p>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.Sys1_Disch_Temp if data and data.Sys1_Disch_Temp is not none else 0 }}" data-units="°C"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Oil Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.Sys1_Oil_Press if data and data.Sys1_Oil_Press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                        <div class="single-thermometer">
+                            <p class="thermometer-label">Sys1 Disch Press</p>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.Sys1_Disch_Press if data and data.Sys1_Disch_Press is not none else 0 }}" data-units="psi"></canvas>
+                        </div>
+                    </div>
+                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
+                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Oli & Discharge</h3>
+                        <table class="parameter-table min-w-full">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Parameter</th>
+                                    <th scope="col">Safe Range</th>
+                                    <th scope="col">Value</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Disch Temp</td>
+                                    <td>-</td>
+                                    <td>{{ data.Sys1_Disch_Temp if data and data.Sys1_Disch_Temp is not none else '-' }} °C</td>
+                                </tr>
+                                 <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Oil Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.Sys1_Oil_Press if data and data.Sys1_Oil_Press is not none else '-' }} psi</td>
+                                </tr>
+                                 <tr class="hover:bg-gray-700">
+                                    <td class="font-medium">Sys1 Disch Press</td>
+                                    <td>-</td>
+                                    <td>{{ data.Sys1_Disch_Press if data and data.Sys1_Disch_Press is not none else '-' }} psi</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="chart-section">
+            <p>Chart</p>
+        </div>
+
+    </div>
+</div>
+{% endblock %}

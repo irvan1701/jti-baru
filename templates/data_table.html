@@ -2,87 +2,157 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="refresh" content="300">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Data Debug Table</title>
+    <title>Data Historis Chiller</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6;
         }
         .container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 2rem auto;
             padding: 2rem;
-            background-color: #ffffff;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            padding: 1rem;
-            text-align: left;
-            border-bottom: 1px solid #e5e7eb;
-        }
-        th {
-            background-color: #f9fafb;
-            font-weight: 600;
-        }
-        tr:hover {
-            background-color: #f3f4f6;
-        }
-        .text-null {
-            color: #9ca3af;
-            font-style: italic;
+        .filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="text-3xl font-bold mb-6 text-gray-800">API Data Verification</h1>
-        <p class="text-gray-600 mb-4">Halaman ini menampilkan data mentah yang diterima dari API untuk tujuan debugging.</p>
-        
-        <!-- Dropdown untuk memilih Chiller ID -->
-        <form action="/data_table" method="get" class="mb-6">
-            <label for="chiller_selector" class="block text-sm font-medium text-gray-700">Pilih Chiller ID:</label>
-            <select id="chiller_selector" name="chiller_id" onchange="this.form.submit()" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                {% for id in chiller_ids %}
-                    <option value="{{ id }}" {% if id == selected_chiller_id %}selected{% endif %}>{{ id }}</option>
-                {% endfor %}
-            </select>
-        </form>
+        <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+            <h1 class="text-3xl font-bold mb-2 text-gray-800">Dashboard Data Historis</h1>
+            <p class="text-gray-600">Pilih chiller dan rentang waktu untuk melihat data historis dalam bentuk grafik.</p>
+            
+            <form action="/data_table" method="get" class="mt-6">
+                <div class="filter-form">
+                    <div>
+                        <label for="chiller_selector" class="block text-sm font-medium text-gray-700">Pilih Chiller ID:</label>
+                        <select id="chiller_selector" name="chiller_id" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                            {% for id in chiller_ids %}
+                                <option value="{{ id }}" {% if id == selected_chiller_id %}selected{% endif %}>{{ id }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div>
+                        <label for="start_date" class="block text-sm font-medium text-gray-700">Dari Tanggal & Jam:</label>
+                        <input type="datetime-local" id="start_date" name="start_date" value="{{ start_date or '' }}" class="mt-1 block w-full border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    </div>
+                    <div>
+                        <label for="end_date" class="block text-sm font-medium text-gray-700">Sampai Tanggal & Jam:</label>
+                        <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}" class="mt-1 block w-full border-gray-300 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+                    </div>
+                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Tampilkan</button>
+                </div>
+            </form>
+        </div>
 
         {% if data %}
-        <table class="min-w-full bg-white rounded-md overflow-hidden">
-            <thead>
-                <tr>
-                    <th class="px-6 py-3">Parameter</th>
-                    <th class="px-6 py-3">Value</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for key, value in data.items() %}
-                <tr>
-                    <td class="px-6 py-4">{{ key }}</td>
-                    <td class="px-6 py-4">
-                        {% if value is none %}
-                            <span class="text-null">NULL</span>
-                        {% else %}
-                            {{ value }}
-                        {% endif %}
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+        <div class="flex flex-wrap -mx-3">
+            {% set parameters = [
+            { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "fla", "label": "FLA", "unit": "%", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "input_power", "label": "Input Power", "unit": "kW", "color": "rgba(79, 70, 229, 1)" },
+            { "key": "vsd_out_voltage", "label": "VSD Output Voltage", "unit": "V", "color": "rgba(79, 70, 229, 1)" }
+        ] %}
+
+            {% for param in parameters %}
+            <div class="w-full md:w-1/2 px-3 mb-6">
+                <div class="bg-white p-4 rounded-xl shadow-lg h-full">
+                    <h3 class="text-lg font-semibold text-gray-800 mb-2">{{ param.label }}</h3>
+                    <div class="chart-wrapper" style="height: 300px;">
+                        <canvas id="chart-{{ param.key }}"></canvas>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
         {% else %}
-        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-md relative" role="alert">
-            <span class="block sm:inline">Tidak ada data yang tersedia untuk Chiller ID ini.</span>
+        <div class="bg-white p-6 rounded-xl shadow-lg text-center">
+            <h3 class="text-xl font-semibold text-gray-700">Data Tidak Ditemukan</h3>
+            <p class="text-gray-500 mt-2">
+                {% if selected_chiller_id %}
+                    Tidak ada data yang ditemukan untuk chiller ini pada rentang waktu yang dipilih. Silakan coba rentang waktu yang berbeda.
+                {% else %}
+                    Silakan pilih Chiller ID dan rentang waktu untuk menampilkan data.
+                {% endif %}
+            </p>
         </div>
         {% endif %}
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const data = {{ data|tojson }};
+            if (data && data.length > 0) {
+                const labels = data.map(d => new Date(d.timestamp).toLocaleString('id-ID'));
+                
+                const parameters = {{ parameters|tojson }};
+
+                function createChart(param) {
+                    const ctx = document.getElementById(`chart-${param.key}`).getContext('2d');
+                    if (!ctx) return;
+
+                    new Chart(ctx, {
+                        type: 'line',
+                        data: {
+                            labels: labels,
+                            datasets: [{
+                                label: `${param.label} (${param.unit})`,
+                                data: data.map(d => d[param.key]),
+                                borderColor: param.color,
+                                backgroundColor: param.color.replace('1)', '0.2)'),
+                                borderWidth: 2,
+                                pointBackgroundColor: param.color,
+                                pointRadius: 1,
+                                fill: true,
+                                tension: 0.3
+                            }]
+                        },
+                        options: {
+                            responsive: true,
+                            maintainAspectRatio: false,
+                            plugins: {
+                                legend: { display: false },
+                                title: { display: false }
+                            },
+                            scales: {
+                                x: { 
+                                    ticks: { 
+                                        display: true, 
+                                        autoSkip: true,
+                                        maxTicksLimit: 8, // Batasi jumlah timestamp agar tidak tumpang tindih
+                                        color: '#6b7280'
+                                    },
+                                    grid: { display: false }
+                                },
+                                y: {
+                                    beginAtZero: true,
+                                    grid: { color: '#e5e7eb' },
+                                    ticks: { color: '#6b7280' }
+                                }
+                            }
+                        }
+                    });
+                }
+
+                parameters.forEach(createChart);
+            }
+        });
+    </script>
 </body>
 </html>
