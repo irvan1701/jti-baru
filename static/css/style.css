@@ -173,6 +173,12 @@
   justify-content: center;
   align-items: center;
 }
+.filter-form {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
 
 /* Styles for the inner content of div1, div2, div3 */
 .icon-circle {

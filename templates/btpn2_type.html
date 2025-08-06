@@ -7,7 +7,9 @@
 <div class="chiller-content-wrapper">
     <div class="dashboard-grid">
         
+        
         <div class="faults-section">
+            
             <div class="fault-card">
                 <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
                 <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault if data and data.safety_fault is not none else '-' }}</p></div>
@@ -47,9 +49,9 @@
                 <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data and data.input_power is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data and data.input_kwh is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">{{ data.vsd_out_voltage if data and data.vsd_out_voltage is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data and data.vsd_ph_c_current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ data.Motor_Ph_A_Current if data and data.Motor_Ph_A_Current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ data.Motor_Ph_B_Current if data and data.Motor_Ph_B_Current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ data.Motor_Ph_C_Current if data and data.Motor_Ph_C_Current is not none else '-' }}</p></div>
             </div>
         </div>
 
@@ -70,7 +72,7 @@
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"></canvas>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Pressure</p>
@@ -101,8 +103,7 @@
                                 <tr class="hover:bg-gray-700">
                                     <td class="font-medium">Satur Temp</td>
                                     <td>-</td>
-                                    <td data-temp-celsius="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}">{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '-' }} °C</td>
-                                </tr>
+                                    <td data-temp-celsius="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}">{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '-' }} °C</td>
                                 <tr class="hover:bg-gray-700">
                                     <td class="font-medium">Pressure</td>
                                     <td>-</td>
@@ -155,7 +156,7 @@
                                     <td class="font-medium">RWT</td>
                                     <td>-</td>
                                     <td data-temp-celsius="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}">{{ data.cond_rwt if data and data.cond_rwt is not none else '-' }} °C</td>
-                                </tr>
+                                </tr> 
                                 <tr class="hover:bg-gray-700">
                                     <td class="font-medium">Satur Temp</td>
                                     <td>-</td>
@@ -275,9 +276,9 @@
                         "label": "Motor Phase Currents", 
                         "unit": "A",
                         "datasets": [
-                            { "key": "vsd_ph_a_current", "label": "Phase A", "borderColor": "#ef4444" },
-                            { "key": "vsd_ph_b_current", "label": "Phase B", "borderColor": "#f97316" },
-                            { "key": "vsd_ph_c_current", "label": "Phase C", "borderColor": "#eab308" }
+                            { "key": "Motor_Ph_A_Current", "label": "Phase A", "borderColor": "#ef4444" },
+                            { "key": "Motor_Ph_B_Current", "label": "Phase B", "borderColor": "#f97316" },
+                            { "key": "Motor_Ph_C_Current", "label": "Phase C", "borderColor": "#eab308" }
                         ]
                     }
                 ] %}

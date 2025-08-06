@@ -164,6 +164,13 @@ def test():
 
             # 2. Mengambil data historis untuk grafik dengan filter waktu
             params = {'start_date': start_date, 'end_date': end_date}
+            # Convert start_date and end_date strings to datetime objects for requests
+            # requests will then format them as ISO 8601 strings for FastAPI
+            if start_date:
+                params['start_date'] = datetime.fromisoformat(start_date).strftime('%Y-%m-%dT%H:%M:%S')
+            if end_date:
+                params['end_date'] = datetime.fromisoformat(end_date).strftime('%Y-%m-%dT%H:%M:%S')
+
             api_url = f'http://127.0.0.1:8000/chillers/{chiller_id}/history'
             response_history = requests.get(api_url, params=params)
             if response_history.status_code == 200:
@@ -233,10 +240,11 @@ def data_table():
     data = []
     if selected_chiller_id:
         try:
-            params = {
-                'start_date': start_date,
-                'end_date': end_date
-            }
+            params = {}
+            if start_date:
+                params['start_date'] = datetime.fromisoformat(start_date).strftime('%Y-%m-%dT%H:%M:%S')
+            if end_date:
+                params['end_date'] = datetime.fromisoformat(end_date).strftime('%Y-%m-%dT%H:%M:%S')
             
             api_url = f'http://127.0.0.1:8000/chillers/{selected_chiller_id}/history'
             response = requests.get(api_url, params=params)
