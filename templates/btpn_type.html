@@ -44,8 +44,8 @@
                 <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data and data.fla is not none and data.fla > 5 else "Stopped" }}</p></div>
                 <div class="info-card"><p class="label">FLA</p><p class="value">{{ data.fla if data and data.fla is not none else '-' }} %</p></div>
                 <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ data.operating_hour if data and data.operating_hour is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data and data.input_power is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data and data.input_kwh is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.VSD_Input_Power if data and data.VSD_Input_Power is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.VSD_Input_KWH if data and data.VSD_Input_KWH is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">{{ data.vsd_out_voltage if data and data.vsd_out_voltage is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '-' }}</p></div>
@@ -266,7 +266,7 @@
                     { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
                     { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
                     { "key": "fla", "label": "FLA", "unit": "%" },
-                    { "key": "input_power", "label": "Input Power", "unit": "kW" },
+                    { "key": "VSD_Input_Power", "label": "Input Power", "unit": "kW" },
                     { "key": "vsd_out_voltage", "label": "VSD Output Voltage", "unit": "V" },
                     { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
                     { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },

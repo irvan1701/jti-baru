@@ -389,7 +389,7 @@
                     if (!ctx) return;
 
                     let datasets;
-                    const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
+                    const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp", "Motor_Ph_A_Current", "Motor_Ph_B_Current", "Motor_Ph_C_Current"].includes(param.key);
                     let displayUnit = param.unit;
 
                     if (isTemperature && currentUnit === 'fahrenheit') {

@@ -50,6 +50,9 @@
                 <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data and data.input_power is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data and data.input_kwh is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Starts</p><p class="value">{{ data.number_of_start if data and data.number_of_start is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data and data.vsd_ph_c_current is not none else '-' }}</p></div>
             </div>
         </div>
 
