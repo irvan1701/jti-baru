@@ -1,0 +1,35 @@
+{% extends 'sidebar.html' %}
+{% block title %}Data Tidak Tersedia - JTI BAS Dashboard{% endblock %}
+
+{% block header_title %}Data Tidak Tersedia{% endblock %}
+
+{% block content %}
+<div class="flex items-center justify-center min-h-screen bg-gray-900 text-white">
+    <div class="bg-gray-800 p-8 rounded-lg shadow-xl text-center max-w-md">
+        <h1 class="text-3xl font-bold mb-4">Data Tidak Tersedia</h1>
+        <p class="text-gray-400 mb-6">
+            Kami tidak dapat menemukan data untuk chiller yang Anda pilih pada saat ini.
+        </p>
+        <p class="text-lg mb-6">
+            Silakan lakukan langkah-langkah berikut:
+        </p>
+        <ul class="text-left space-y-3 mx-auto">
+            <li class="flex items-start">
+                <span class="mr-2 text-indigo-400 text-2xl font-bold">1.</span>
+                <span>
+                    **Periksa koneksi MQTT.** Pastikan perangkat Anda terhubung dengan benar ke broker MQTT.
+                </span>
+            </li>
+            <li class="flex items-start">
+                <span class="mr-2 text-indigo-400 text-2xl font-bold">2.</span>
+                <span>
+                    **Hubungi Operator.** Jika masalah berlanjut, harap hubungi tim operator untuk bantuan lebih lanjut.
+                </span>
+            </li>
+        </ul>
+        <a href="{{ url_for('select_chiller', site_id=session.get('current_site_id')) }}" class="mt-8 inline-block px-6 py-3 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 transition-colors duration-200">
+            Kembali ke Pemilihan Chiller
+        </a>
+    </div>
+</div>
+{% endblock %}

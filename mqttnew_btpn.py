@@ -2,31 +2,23 @@ import paho.mqtt.client as mqtt
 import mysql.connector
 import json
 from datetime import datetime
-import re # Untuk mengekstrak site_id dari topik
+import re
 
 # --- Konfigurasi Database (HARAP PERBARUI INI!) ---
 db_config = {
     'host': '127.0.0.1',
-    'user': 'root',        # <--- GANTI DENGAN USERNAME MySQL Anda
-    'password': '', # <--- GANTI DENGAN PASSWORD MySQL Anda
+    'user': 'root',
+    'password': '',
     'database': 'jti-new2',
-    'port' : '3306'
+    'port': '3306'
 }
-
-
-
 
 # --- Konfigurasi Broker MQTT ---
 mqtt_broker_host = "broker.mqtt-dashboard.com"
 mqtt_broker_port = 1883
-mqtt_topic = "ecu1051/mqtt_data/menara_btpn" # Topik MQTT yang akan dilanggan
+mqtt_topic = "ecu1051/mqtt_data/menara_btpn"
 
 # --- Pemetaan Kolom Database ---
-# Kamus ini memetakan nama tag dari payload Anda ke nama kolom database Anda.
-# Pastikan ini sesuai dengan skema tabel 'chiller_datas' Anda.
-# --- Pemetaan Kolom Database ---
-# Kamus ini memetakan nama tag dari payload Anda ke nama kolom database Anda.
-# Pastikan ini sesuai dengan skema tabel 'chiller_datas' Anda.
 column_mapping = {
     "Evap_LWT": "evap_lwt",
     "Evap_RWT": "evap_rwt",
@@ -46,7 +38,8 @@ column_mapping = {
     "Discharge_Temp": "discharge_temp",
     "Oil_Sump_Temp": "oil_sump_temp",
     "Cond_Refrigerant_Level": "cond_refri_lvl",
-    "Operating_Hours": "operating_hour", # <--- DITAMBAHKAN/DIPASTIKAN
+    "Operating_Hours": "operating_hour",
+    "Operating_Hour": "operating_hour",
     "Oil_Pump_Pressure": "oil_pump_pressure",
     "Safety_fault": "safety_fault",
     "Cycling_Fault": "cycling_fault",
@@ -56,15 +49,20 @@ column_mapping = {
     "VSD_Input_Power": "vsd_input_power",
     "VSD_Input_KWH": "vsd_input_kwh",
     "Evap_Refrigerant_Temp": "evap_refri_temp",
-    # Tambahan dari payload yang Anda berikan:
-    "VSD_Ph_A_Current": "vsd_ph_a_current", # <--- DITAMBAHKAN
-    "VSD_Ph_B_Current": "vsd_ph_b_current", # <--- DITAMBAHKAN
-    "VSD_Ph_C_Current": "vsd_ph_c_current", # <--- DITAMBAHKAN
-    "Safety_Fault": "safety_fault", # <--- PASTIKAN 'Safety_fault' (ada underscore) di payload sama dengan yang di DB (Safety_fault)
-                                    # Jika payload pakai 'Safety_Fault', maka harus dicantumkan di sini.
-                                    # Payload Anda punya 'Safety_fault' (tanpa underscore di akhir) dan 'Safety_Fault' (dengan underscore di akhir)
-                                    # Hati-hati dengan kapitalisasi dan underscore. Cek kembali payload asli Anda.
+    "VSD_Ph_A_Current": "vsd_ph_a_current",
+    "VSD_Ph_B_Current": "vsd_ph_b_current",
+    "VSD_Ph_C_Current": "vsd_ph_c_current",
+    "Safety_Fault": "safety_fault",
+    "Approach_Evap": "approach_evap",
+    "Approach_Cond": "approach_cond",
+    "EER": "eer",
+    "COP": "cop",
+    "Efficiency": "efficiency",
+    "Cooling_Capacity": "cooling_capacity",
+    "Cond_DT": "cond_dt",
+    "Evap_DT": "evap_dt",
 }
+
 # --- Fungsi Bantuan ---
 def get_db_connection():
     """Mencoba membuat koneksi database."""
@@ -73,6 +71,10 @@ def get_db_connection():
     except mysql.connector.Error as err:
         print(f"Error koneksi database: {err}")
         return None
+
+def c_to_f(celsius):
+    """Mengonversi suhu dari Celsius ke Fahrenheit."""
+    return (celsius * 9/5) + 32
 
 def insert_or_update_chiller_data(payload, topic):
     """
@@ -85,27 +87,22 @@ def insert_or_update_chiller_data(payload, topic):
     cursor = cnx.cursor()
 
     try:
-        # Ekstrak site_id dari topik MQTT
-        # Misalnya, dari "ecu1051/mqtt_data/menara_btpn" akan menghasilkan "menara_btpn"
         match = re.search(r'ecu1051/mqtt_data/([^/]+)', topic)
         if not match:
             print(f"Error: Tidak dapat mengekstrak site_id dari topik: {topic}")
             return
         site_id = match.group(1)
 
-        # Ekstrak timestamp dari payload
         timestamp_str = payload.get("ts")
         if not timestamp_str:
             print("Error: Field 'ts' (timestamp) tidak ditemukan dalam payload.")
             return
 
-        # Parsing timestamp (menangani ISO 8601 dengan/tanpa Z atau offset zona waktu)
         if timestamp_str.endswith('Z'):
             timestamp = datetime.fromisoformat(timestamp_str[:-1])
-        elif '+' in timestamp_str and len(timestamp_str.split('+')[-1]) == 5: # Handles +HH:MM
+        elif '+' in timestamp_str and len(timestamp_str.split('+')[-1]) == 5:
             timestamp = datetime.fromisoformat(timestamp_str)
         else:
-            # Fallback untuk format sederhana jika tidak ada info zona waktu
             timestamp = datetime.strptime(timestamp_str, "%Y-%m-%dT%H:%M:%S")
 
         data_entries = payload.get("d", [])
@@ -113,50 +110,165 @@ def insert_or_update_chiller_data(payload, topic):
             print("Peringatan: Field 'd' (data) tidak ditemukan atau kosong dalam payload.")
             return
 
-        # Untuk setiap entri data dalam payload
+        chiller_data = {}
+
         for entry in data_entries:
             tag = entry.get("tag")
             value = entry.get("value")
 
             if not tag or value is None:
-                print(f"Melewatkan entri dengan field 'tag' atau 'value' yang hilang: {entry}")
                 continue
 
-            # Ekstrak nomor chiller dari tag (misalnya, "CH1:Evap_LWT" -> "CH1")
             chiller_tag_parts = tag.split(':')
             if len(chiller_tag_parts) < 2:
-                print(f"Melewatkan tag yang salah format (tidak ada chiller_num atau data_field): {tag}")
                 continue
 
-            chiller_num_raw = chiller_tag_parts[0] # Contoh: "CH1"
-            # Buat chiller_id (contoh: "menara_btpn_1")
-            # Pastikan chiller_num_raw diproses dengan benar menjadi hanya angka jika "CH" adalah awalan
+            chiller_num_raw = chiller_tag_parts[0]
+            data_field_name = chiller_tag_parts[1]
+
+            if chiller_num_raw not in chiller_data:
+                chiller_data[chiller_num_raw] = {}
+
+            if data_field_name in ["Evap_LWT", "Evap_RWT", "Evap_Satur_Temp", "Cond_RWT", "Cond_LWT", "Cond_Satur_Temp", "Discharge_Temp", "Oil_Sump_Temp", "Evap_Refrigerant_Temp"]:
+                value = c_to_f(value)
+            
+            chiller_data[chiller_num_raw][data_field_name] = value
+        
+        for chiller_num_raw, data_values in chiller_data.items():
             chiller_id_num = chiller_num_raw.lower().replace('ch', '')
             full_chiller_id = f"{site_id}_{chiller_id_num}"
 
-            # Ekstrak nama field data yang sebenarnya (contoh: "Evap_LWT")
-            data_field_name = chiller_tag_parts[1]
+            columns_to_insert = ["timestamp", "chiller_id"]
+            values_to_insert = [timestamp, full_chiller_id]
+            updates = []
+            
+            print(f"\n--- DEBUGGING UNTUK CHILLER {full_chiller_id} PADA {timestamp} ---")
+            
+            efficiency = None
+            cop = None
+            eer = None
+            cooling_capacity = None
 
-            db_column_name = column_mapping.get(data_field_name)
+            for tag_name, value in data_values.items():
+                db_column_name = column_mapping.get(tag_name)
+                
+                if db_column_name:
+                    columns_to_insert.append(db_column_name)
+                    values_to_insert.append(value)
+                    updates.append(f"{db_column_name} = VALUES({db_column_name})")
+                print(f"Data dari payload (setelah konversi jika suhu): {tag_name} = {value}")
 
-            if not db_column_name:
-                print(f"Peringatan: Tidak ada pemetaan kolom database ditemukan untuk field tag '{data_field_name}'. Melewatkan.")
+            try:
+                evap_lwt = data_values.get("Evap_LWT")
+                evap_satur_temp = data_values.get("Evap_Satur_Temp")
+                evap_rwt = data_values.get("Evap_RWT")
+                cond_lwt = data_values.get("Cond_LWT")
+                cond_rwt = data_values.get("Cond_RWT")
+                cond_satur_temp = data_values.get("Cond_Satur_Temp")
+                fla = data_values.get("FLA")
+                input_power = data_values.get("Input_Power")
+                
+                if fla is not None and fla < 5:
+                    print(f"Peringatan: FLA ({fla}) di bawah 5. Chiller dianggap mati. Efficiency, COP, dan EER diatur ke 0.0.")
+                    efficiency = 0.0
+                    cop = 0.0
+                    eer = 0.0
+                else:
+                    if evap_lwt is not None and evap_satur_temp is not None:
+                        approach_evap = evap_lwt - evap_satur_temp
+                        columns_to_insert.append("approach_evap")
+                        values_to_insert.append(approach_evap)
+                        updates.append("approach_evap = VALUES(approach_evap)")
+                        print(f"approach_evap (Evap LWT - Evap Satur Temp): {approach_evap}")
+                    
+                    if cond_satur_temp is not None and cond_lwt is not None:
+                        approach_cond = cond_satur_temp - cond_lwt
+                        columns_to_insert.append("approach_cond")
+                        values_to_insert.append(approach_cond)
+                        updates.append("approach_cond = VALUES(approach_cond)")
+                        print(f"approach_cond (Cond Satur - Cond LWT): {approach_cond}")
+
+                    evap_dt = None
+                    if evap_rwt is not None and evap_lwt is not None:
+                        evap_dt = evap_rwt - evap_lwt
+                        columns_to_insert.append("evap_dt")
+                        values_to_insert.append(evap_dt)
+                        updates.append("evap_dt = VALUES(evap_dt)")
+                        print(f"evap_dt (Evap RWT - Evap LWT): {evap_dt}")
+                    
+                    if cond_lwt is not None and cond_rwt is not None:
+                        cond_dt = cond_lwt - cond_rwt
+                        columns_to_insert.append("cond_dt")
+                        values_to_insert.append(cond_dt)
+                        updates.append("cond_dt = VALUES(cond_dt)")
+                        print(f"cond_dt (Cond LWT - Cond RWT): {cond_dt}")
+
+                    if evap_dt is not None:
+                        cooling_capacity = evap_dt * 1296 / 24
+                        columns_to_insert.append("cooling_capacity")
+                        values_to_insert.append(cooling_capacity)
+                        updates.append("cooling_capacity = VALUES(cooling_capacity)")
+                        print(f"cooling_capacity (Evap DT * 1296 / 24): {cooling_capacity}")
+
+                        if input_power is not None and cooling_capacity is not None and cooling_capacity > 0:
+                            efficiency = input_power / cooling_capacity
+                            if efficiency > 0:
+                                cop = 12 / efficiency / 3.142
+                                eer = 12 / efficiency
+                            else:
+                                cop = 0.0
+                                eer = 0.0
+                                print("Peringatan: Nilai Efficiency nol, COP dan EER diatur ke 0.0.")
+                        else:
+                            print("Peringatan: Cooling_Capacity atau Input_Power tidak valid atau Cooling_Capacity nol. Efficiency, COP, dan EER diatur ke 0.0.")
+                            efficiency = 0.0
+                            cop = 0.0
+                            eer = 0.0
+                    else:
+                        print("Peringatan: Evap_DT tidak valid. Efficiency, COP, dan EER diatur ke 0.0.")
+                        efficiency = 0.0
+                        cop = 0.0
+                        eer = 0.0
+            
+            except (TypeError, ValueError) as calc_err:
+                print(f"Peringatan: Gagal melakukan perhitungan untuk chiller {full_chiller_id}: {calc_err}")
+                efficiency = 0.0
+                cop = 0.0
+                eer = 0.0
+
+            if efficiency is not None:
+                columns_to_insert.append("efficiency")
+                values_to_insert.append(efficiency)
+                updates.append("efficiency = VALUES(efficiency)")
+                print(f"efficiency: {efficiency}")
+
+                columns_to_insert.append("cop")
+                values_to_insert.append(cop)
+                updates.append("cop = VALUES(cop)")
+                print(f"cop: {cop}")
+
+                columns_to_insert.append("eer")
+                values_to_insert.append(eer)
+                updates.append("eer = VALUES(eer)")
+                print(f"eer: {eer}")
+
+            if not updates:
+                print(f"Peringatan: Tidak ada data yang valid untuk chiller {full_chiller_id} yang dapat diinsert/update.")
                 continue
 
-            # Gunakan INSERT ... ON DUPLICATE KEY UPDATE
-            # Ini akan mencoba memasukkan baris. Jika kombinasi (timestamp, chiller_id) sudah ada
-            # (karena UNIQUE KEY Anda), ia akan memperbarui kolom yang ditentukan.
-            sql = f"""
-            INSERT INTO chiller_datas (timestamp, chiller_id, {db_column_name})
-            VALUES (%s, %s, %s)
-            ON DUPLICATE KEY UPDATE
-                {db_column_name} = VALUES({db_column_name})
-            """
+            columns_str = ", ".join(columns_to_insert)
+            placeholders = ", ". join(["%s"] * len(values_to_insert))
+            updates_str = ", ".join(updates)
+            sql = f"INSERT INTO chiller_datas ({columns_str}) VALUES ({placeholders}) ON DUPLICATE KEY UPDATE {updates_str}"
+            
+            print(f"SQL yang akan dieksekusi:\n{sql}")
+            print(f"Nilai yang akan diinput:\n{values_to_insert}")
+
             try:
-                cursor.execute(sql, (timestamp, full_chiller_id, value))
-                print(f"Data {full_chiller_id} - {db_column_name} = {value} pada {timestamp} berhasil diinsert/update.")
+                cursor.execute(sql, values_to_insert)
+                print(f"Data untuk {full_chiller_id} pada {timestamp} berhasil diinsert/update.")
             except mysql.connector.Error as err:
-                print(f"Error saat insert/update data untuk {full_chiller_id}, {timestamp}, {db_column_name}: {err}")
+                print(f"Error saat insert/update data untuk {full_chiller_id}: {err}")
 
         cnx.commit()
         print("Proses insert/update data selesai untuk payload ini.")
@@ -172,7 +284,6 @@ def insert_or_update_chiller_data(payload, topic):
             print("Koneksi database ditutup.")
 
 # --- Callback MQTT ---
-
 def on_connect(client, userdata, flags, rc):
     """Fungsi callback saat klien terhubung ke broker MQTT."""
     if rc == 0:
@@ -199,4 +310,3 @@ if __name__ == "__main__":
     client.on_message = on_message
     client.connect(mqtt_broker_host, mqtt_broker_port, 60)
     client.loop_forever()
-        

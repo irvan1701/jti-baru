@@ -21,14 +21,13 @@
  * - minorTicks: Jumlah tick kecil (default: 5)
  */
 function createGoogleGauge(containerId, label, value, options = {}) {
-  // Memastikan Google Charts API sudah dimuat sebelum mencoba menggambar chart
   if (
     typeof google === "undefined" ||
     typeof google.charts === "undefined" ||
     !google.charts.hasOwnProperty("visualization")
   ) {
     console.error(
-      "Google Charts API belum dimuat. Pastikan Anda memanggil google.charts.load() dan setOnLoadCallback dengan benar."
+      "Google Charts API has not been loaded. Please ensure you call google.charts.load() and setOnLoadCallback correctly."
     );
     return;
   }
@@ -42,19 +41,19 @@ function createGoogleGauge(containerId, label, value, options = {}) {
     redTo: 200,
     yellowFrom: 120,
     yellowTo: 160,
-    // greenFrom dan greenTo bisa ditambahkan jika ingin zona hijau eksplisit
+    greenFrom: 0, // Optional green zone
+    greenTo: 120,
     minorTicks: 5,
+    majorTicks: ["0", "50", "100", "150", "200"],
   };
 
-  // Menggabungkan opsi default dengan opsi yang diberikan. Opsi yang diberikan akan menimpa default.
   const finalOptions = { ...defaultOptions, ...options };
 
   var data = google.visualization.arrayToDataTable([
     ["Label", "Value"],
-    [label, value], // Menggunakan label dan value yang dinamis
+    [label, value],
   ]);
 
-  // Membuat objek opsi untuk chart
   var chartOptions = {
     width: finalOptions.width,
     height: finalOptions.height,
@@ -64,33 +63,33 @@ function createGoogleGauge(containerId, label, value, options = {}) {
     redTo: finalOptions.redTo,
     yellowFrom: finalOptions.yellowFrom,
     yellowTo: finalOptions.yellowTo,
+    greenFrom: finalOptions.greenFrom,
+    greenTo: finalOptions.greenTo,
     minorTicks: finalOptions.minorTicks,
+    majorTicks: finalOptions.majorTicks,
+    chartArea: { left: 20, top: 20, width: "90%", height: "90%" },
+    backgroundColor: { fill: "transparent" }, // Transparent background
+    titleTextStyle: { color: "#333", fontName: "Roboto", fontSize: 16 },
+    legend: { position: "none" },
+    // Advanced styling for the gauge
+    redColor: "#E74C3C",
+    yellowColor: "#F1C40F",
+    greenColor: "#2ECC71",
+    // Needle styling
+    animation: {
+        duration: 500,
+        easing: 'inAndOut',
+    },
   };
-
-  // Menambahkan zona hijau jika didefinisikan
-  if (
-    finalOptions.greenFrom !== undefined &&
-    finalOptions.greenTo !== undefined
-  ) {
-    chartOptions.greenFrom = finalOptions.greenFrom;
-    chartOptions.greenTo = finalOptions.greenTo;
-  }
 
   var chartContainer = document.getElementById(containerId);
   if (!chartContainer) {
-    console.error(`Elemen DIV dengan ID '${containerId}' tidak ditemukan.`);
+    console.error(`DIV element with ID '${containerId}' not found.`);
     return;
   }
-
-  // Pastikan container memiliki gaya lebar/tinggi jika belum ada
-  // Ini penting agar chart memiliki ruang untuk dirender.
-  // Jika Anda sudah mengatur ini di CSS atau HTML, baris ini bisa diabaikan.
-  // chartContainer.style.width = `${finalOptions.width}px`;
-  // chartContainer.style.height = `${finalOptions.height}px`;
 
   var chart = new google.visualization.Gauge(chartContainer);
   chart.draw(data, chartOptions);
 
-  // Mengembalikan objek chart agar bisa dimanipulasi (misal: update nilai)
   return chart;
 }
