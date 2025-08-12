@@ -7,6 +7,7 @@
     display: grid;
     gap: 20px; /* Gap antara bagian-bagian besar dashboard */
     grid-template-areas:
+        "last-updated"
         "faults"
         "chiller-details"
         "evap-cond"
@@ -389,4 +390,216 @@
         max-width: 100px;
         height: 100px;
     }
+}
+/* Last Updated & Unit Selection */
+.last-updated-info {
+    grid-area: last-updated;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 20px;
+    background-color: #1f2937;
+    border-radius: 8px;
+    border: 1px solid #374151;
+}
+
+.last-updated-info p {
+    margin: 0;
+    font-size: 0.9em;
+    color: #a0aec0;
+}
+
+.last-updated-info .unit-selection {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.last-updated-info .unit-selection label {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #cbd5e0;
+    margin: 0;
+}
+
+.last-updated-info .unit-selection select {
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 5px 10px;
+    color: #fff;
+    font-size: 0.9em;
+    transition: all 0.3s ease;
+}
+
+.last-updated-info .unit-selection select:focus {
+    outline: none;
+    border-color: #6366f1;
+    box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.5);
+}
+
+
+/* Historical Data Filter Form */
+.chart-section .filter-form {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-end;
+    padding: 20px;
+    background-color: #1f2937;
+    border-radius: 8px;
+    margin-bottom: 2rem;
+}
+
+.chart-section .filter-form > div {
+    flex: 1;
+    min-width: 200px;
+}
+
+.chart-section .filter-form label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #a0aec0;
+    margin-bottom: 0.5rem;
+}
+
+.chart-section .filter-form input[type="datetime-local"] {
+    width: 100%;
+    background-color: #374151;
+    border: 1px solid #4b5563;
+    border-radius: 6px;
+    padding: 0.6rem 0.75rem;
+    color: #fff;
+    transition: all 0.3s ease;
+    border-image: none; /* Reset border image if any */
+}
+
+.chart-section .filter-form input[type="datetime-local"]:focus {
+    outline: none;
+    border-color: #4f46e5;
+    box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.4);
+}
+
+.chart-section .filter-form button {
+    padding: 0.6rem 1.2rem;
+    background-color: #4f46e5;
+    color: #fff;
+    font-weight: 600;
+    border-radius: 6px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    align-self: flex-end; /* Align button with the bottom of the inputs */
+}
+
+.chart-section .filter-form button:hover {
+    background-color: #4338ca;
+}
+
+/* Alarm Card Blinking Animation */
+@keyframes blink-red-hard {
+    0%, 100% { background-color: #e53e3e; }
+    50% { background-color: #2d3748; }
+}
+
+@keyframes blink-yellow-hard {
+    0%, 100% { background-color: #FFFF00; }
+    50% { background-color: #2d3748; }
+}
+
+.fault-card.blink-red {
+    animation: blink-red-hard 1.5s infinite;
+}
+
+.fault-card.blink-yellow {
+    animation: blink-yellow-hard 1.5s infinite;
+}
+
+/* Styles for Data Unavailable Page */
+.data-unavailable-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-grow: 1;
+    padding: 20px;
+}
+
+.data-unavailable-box {
+    background-color: #2d3748; /* Same as other cards */
+    padding: 40px;
+    border-radius: 12px;
+    text-align: center;
+    max-width: 600px;
+    width: 100%;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    border: 1px solid #4a5568;
+}
+
+.data-unavailable-box .icon-container {
+    font-size: 4rem;
+    color: #e53e3e; /* Red for warning icon */
+    margin-bottom: 20px;
+}
+
+.data-unavailable-box h1 {
+    font-size: 2rem;
+    font-weight: 600;
+    color: #fff;
+    margin-bottom: 15px;
+}
+
+.data-unavailable-box .message {
+    color: #a0aec0;
+    font-size: 1.1rem;
+    margin-bottom: 25px;
+}
+
+.data-unavailable-box .instructions-title {
+    font-size: 1.2rem;
+    font-weight: 500;
+    color: #cbd5e0;
+    margin-bottom: 20px;
+}
+
+.data-unavailable-box .instructions-list {
+    list-style: none;
+    padding: 0;
+    text-align: left;
+    max-width: 400px;
+    margin: 0 auto 30px auto;
+}
+
+.data-unavailable-box .instructions-list li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.data-unavailable-box .step-number {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #3498db; /* Use theme's active color */
+    margin-right: 15px;
+    line-height: 1.2;
+}
+
+.data-unavailable-box .step-text {
+    color: #a0aec0;
+    line-height: 1.5;
+}
+
+.data-unavailable-box .back-button {
+    display: inline-block;
+    padding: 12px 25px;
+    background-color: #3498db;
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    border-radius: 8px;
+    transition: background-color 0.3s ease;
+}
+
+.data-unavailable-box .back-button:hover {
+    background-color: #2980b9;
 }

@@ -8,30 +8,31 @@
     <div class="dashboard-grid">
         
         
-        <div class="faults-section">
-            
-            <div class="fault-card">
-                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
-                <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault_desc if data and data.safety_fault_desc is not none else '-' }}</p></div>
-            </div>
-            <div class="fault-card">
-                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/cycling-icon.png') }}" alt="Cycling Fault"></div>
-                <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault_desc if data and data.cycling_fault_desc is not none else '-' }}</p></div>
-            </div>
-            <div class="fault-card">
-                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Warning Fault"></div>
-                <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
-            </div>
-            <div class="last-updated-info">
+        <div class="last-updated-info">
             <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
             <div class="unit-selection">
-                <label for="temp_unit" class="text-white mr-2">Temperature Unit:</label>
-                <select id="temp_unit" class="bg-gray-700 border border-gray-600 rounded-md px-2 py-1 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <label for="temp_unit">Temperature Unit:</label>
+                <select id="temp_unit">
                     <option value="celsius">Celsius (°C)</option>
                     <option value="fahrenheit">Fahrenheit (°F)</option>
                 </select>
             </div>
         </div>
+
+        <div class="faults-section">
+            
+            <div class="fault-card {% if data.safety_fault and data.safety_fault > 0 %}blink-red{% endif %}">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
+                <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault_desc if data and data.safety_fault_desc is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card {% if data.cycling_fault and data.cycling_fault > 0 %}blink-yellow{% endif %}">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/cycling-icon.png') }}" alt="Cycling Fault"></div>
+                <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault_desc if data and data.cycling_fault_desc is not none else '-' }}</p></div>
+            </div>
+            <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}">
+                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Warning Fault"></div>
+                <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
+            </div>
         </div>
 
         <div class="chiller-details-section">
@@ -52,6 +53,15 @@
                 <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ data.Motor_Ph_A_Current if data and data.Motor_Ph_A_Current is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ data.Motor_Ph_B_Current if data and data.Motor_Ph_B_Current is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ data.Motor_Ph_C_Current if data and data.Motor_Ph_C_Current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Approach Evap</p><p class="value">{{ data.Approach_Evap if data and data.Approach_Evap is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Approach Cond</p><p class="value">{{ data.Approach_Cond if data and data.Approach_Cond is not none else '-' }}</p></div>
+
+                <div class="info-card"><p class="label">Evap ΔT</p><p class="value">{{ data.Evap_DT if data and data.Evap_DT is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Cond ΔT</p><p class="value">{{ data.Cond_DT if data and data.Cond_DT is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Cooling Capacity</p><p class="value">{{ data.Cooling_Capacity if data and data.Cooling_Capacity is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Efficiency</p><p class="value">{{ data.efficiency if data and data.efficiency is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">COP</p><p class="value">{{ data.COP if data and data.COP is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">EER</p><p class="value">{{ data.EER if data and data.EER is not none else '-' }}</p></div>
             </div>
         </div>
 
@@ -238,21 +248,18 @@
         <div class="chart-section">
             <h2 class="text-2xl font-bold text-white mb-4 text-center">Analisis Data Historis</h2>
             
-            <form action="{{ url_for('test') }}" method="get" class="mb-8">
+            <form action="{{ url_for('test') }}" method="get">
                 <input type="hidden" name="chiller_id" value="{{ chiller.id }}">
                 <div class="filter-form">
-                   
                     <div>
-                        <label for="start_date" class="block text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Dari Tanggal & Jam</label>
-                        <input type="datetime-local" id="start_date" name="start_date" value="{{ start_date or '' }}" 
-                               class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <label for="start_date">Dari Tanggal & Jam</label>
+                        <input type="datetime-local" id="start_date" name="start_date" value="{{ start_date or '' }}">
                     </div>
                     <div>
-                        <label for="end_date" class="block text-xs font-bold text-indigo-400 uppercase tracking-wider mb-2">Sampai Tanggal & Jam</label>
-                        <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}"
-                               class="w-full bg-gray-700 border border-gray-600 rounded-md px-3 py-2 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent">
+                        <label for="end_date">Sampai Tanggal & Jam</label>
+                        <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}">
                     </div>
-                    <button type="submit" class="px-4 py-2 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">Tampilkan</button>
+                    <button type="submit">Tampilkan</button>
                 </div>
             </form>
 

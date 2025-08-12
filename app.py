@@ -7,6 +7,7 @@ from flask_bcrypt import Bcrypt
 import mysql.connector
 import requests
 import json
+from werkzeug.utils import secure_filename
 
 app = Flask(__name__)
 
@@ -185,9 +186,9 @@ safety_codes = {
     158: "MBC - SPEED SENSOR FAULT",
     159: "MBC - POWER FAIL LANDING",
     160: "COMPRESSOR - LOW DISCHARGE SUPERHEAT",
-    161: "MVSSS - HIGH HEATSINK 1 TEMPERATURE",
-    162: "MVSSS - HIGH HEATSINK 2 TEMPERATURE",
-    163: "MVSSS - HIGH HEATSINK 3 TEMPERATURE",
+    161: "MVSSS - HIGH HEATSINK  1 TEMPERATURE",
+    162: "MVSSS - HIGH HEATSINK  2 TEMPERATURE",
+    163: "MVSSS - HIGH HEATSINK  3 TEMPERATURE",
     164: "MOTOR CONTROLLER - FAULT CONTACTS OPEN",
     165: "VSD - HIGH PHASE A2 INSTANTANEOUS CURRENT",
     166: "VSD - HIGH PHASE B2 INSTANTANEOUS CURRENT",
@@ -209,11 +210,11 @@ safety_codes = {
     182: "OIL - VARIABLE SPEED PUMP - HIGH RATE OF CHANGE",
     183: "VSD - HIGH MOTOR HARMONICS",
     184: "VSD - CAPACITOR FAULT",
-    185: "VSD - ELECTRICAL SGNATURE BOARD",
+    185: "VSD - ELECTRICAL SGNATURE BOARD"
 }
 
 cycling_codes = {
-    0: "No Cycling Faults Present",
+     0: "No Cycling Faults Present",
     1: "Multiunit Cycling - Contacts Open",
     2: "System Cycling - Contact Open",
     3: "Oil - Low Temperature Differntial",
@@ -422,197 +423,163 @@ cycling_codes = {
     206: "VSD - DC BUS VOLTAGE MISMATCH",
     207: "UPS - NOT CHARGING",
     208: "VSD - SINGLE PHASE INPUT POWER 2",
-    209: "VSD - 105% MOTOR CURRENT OVERLOAD 2",
-    210: "VSD - BASEPLATE TEMPERATURE IMBALANCE 2",
+    209: "VSD - 105% MOTOR CURRENT OVERLOAD",
+    210: "VSD - BASEPLATE TEMPERATURE IMBALANCE 2"
 }
 
 warning_codes = {
-    0: "No Safety Faults Present",
-    1: "Evaporator - Low Pressure",
-    2: "Evaporator - Transducer Or Leaving Liquid Probe",
-    3: "Evaporator - Transducer Or Temperature Sensor",
-    4: "Condenser - High Pressure Contacts Open",
-    5: "Condenser - High Pressure",
-    6: "Condenser - Pressure Transducer Out Of Range",
-    7: "Auxiliary Safety - Contacts Closed",
-    8: "Discharge - Low Temperature",
-    9: "Discharge - High Temperature",
-    10: "Oil - High Sump Temperature",
-    11: "Oil - Low Differential Pressure",
-    12: "Oil - High Differential Pressure",
-    13: "Oil - Pump Pressure Transducer Out Of Range",
-    14: "Oil - Sump Pressure Transducer Out Of Range",
-    15: "Motor - Lack Of Motor Oil Change",
-    16: "Sales Order - Invalid Compressor Model",
-    17: "Sales Order - Invalid Gear Code",
-    18: "Oil - Differential Pressure Calibration",
-    19: "Safety Stop",
-    20: "Oil - Variable Speed Pump - Setpoint Not Achieved",
-    21: "Control Panel - Power Failure",
-    22: "Control Panel - Loss Of Control Voltage",
-    23: "MOTOR OR STARTER - CURRENT IMBALANCE",
-    24: "Thrust Bearing - Proximity Probe Clearance",
-    25: "Thrust Bearing - Proximity Probe Uncalibrated",
-    26: "Thrust Bearing - Proximity Probe Out Of Range",
-    27: "Thrust Bearing - High Oil Temperature",
-    28: "Thrust Bearing - Oil Temperature Sensor",
-    29: "VSD - High Heatsink Temperature",
-    30: "VSD - 105% MOTOR CURRENT OVERLOAD",
-    31: "VSD - HIGH PHASE A INVERTER HEATSINK TEMPERATURE",
-    32: "VSD - HIGH PHASE B INVERTER HEATSINK TEMPERATURE",
-    33: "VSD - HIGH PHASE C INVERTER HEATSINK TEMPERATURE",
-    34: "VSD - HIGH CONVERTER HEATSINK TEMPERATURE",
-    35: "VSD - PRECHARGE LOCKOUT",
-    36: "HARMONIC FILTER - HIGH HEATSINK TEMPERATURE",
-    37: "HARMONIC FILTER - HIGH TOTAL DEMAND DISTORTION",
-    38: "LCSSS - PHASE ROTATION",
-    39: "LCSSS - MOTOR OR STARTER - CURRENT IMBALANCE",
-    40: "LCSSS - 105% MOTOR CURRENT OVERLOAD",
-    41: "LCSSS - HIGH INSTANTANEOUS CURRENT",
-    42: "LCSSS - OPEN SCR",
-    43: "LCSSS - PHASE A SHORTED SCR",
-    44: "LCSSS - PHASE B SHORTED SCR",
-    45: "LCSSS - PHASE C SHORTED SCR",
-    46: "LCSSS - HIGH PHASE A HEATSINK TEMPERATURE",
-    47: "LCSSS - HIGH PHASE B HEATSINK TEMPERATURE",
-    48: "LCSSS - HIGH PHASE C HEATSINK TEMPERATURE",
-    49: "Starter - Invalid Motor Selection",
-    50: "Oil or Conduser Transducer Error",
-    51: "Evaporator - Low Pressure",
-    52: "Evaporator - low Pressure - Smart Freeze",
-    53: "Surge Protection - Excess Surge",
-    54: "VSD - HIGH INVERTER BASEPLATE TEMPERATURE",
-    55: "HARMONIC FILTER - HIGH BASEPLATE TEMPERATURE",
-    56: "Thrust Bearing - Proximity Probe Clearance",
-    57: "Thrust Bearing - Limit Switch Open",
-    58: "VGD Actuator - Positioning Fault",
-    59: "Oil - Sump Or Pump Transducer Error",
-    60: "Motor - High Housing Temperature",
-    61: "Motor - High Winding Temperature",
-    62: "Motor - High Bearing Temperature",
-    63: "VSD - HIGH PHASE A INVERTER BASEPLATE TEMPERATURE",
-    64: "VSD - HIGH PHASE B INVERTER BASEPLATE TEMPERATURE",
-    65: "VSD - HIGH PHASE C INVERTER BASEPLATE TEMPERATURE",
-    66: "VSD - MOTOR CURRENT IMBALANCE",
-    67: "Condenser - High Pressure - Stopped",
-    68: "OIL - HIGH SUPPLY TEMPERATURE",
-    69: "Motor - High Bearing Vibration",
-    70: "SALES ORDER - INVALID MODEL NUMBER",
-    71: "LCSSS - PHASE A OPEN SCR",
-    72: "LCSSS - PHASE B OPEN SCR",
-    73: "LCSSS - PHASE C OPEN SCR",
-    74: "Motor - Lack Of Bearing Lubrication",
-    75: "VSD - LOW FREQUENCY DETECTED",
-    76: "VSD - Feedback Sensor",
-    77: "VSD - Control Fault",
-    78: "VSD - Drive Boot Failure",
-    79: "MVSSS - PHASE ROTATION",
-    80: "MVSSS - MOTOR OR STARTER - CURRENT IMBALANCE",
-    81: "MVSSS - 105% MOTOR CURRENT OVERLOAD",
-    82: "MVSSS - HIGH INSTANTANEOUS CURRENT",
-    83: "MVSSS - FAILED SCR",
-    84: "MVSSS - HIGH HEATSINK TEMPERATURE",
-    85: "MVSSS - GROUND FAULT",
-    86: "MVSSS - CONTACTOR FAULT",
-    87: "MVSSS - CONTROL BOARD FAULT",
-    88: "MVSSS - DISCONNECT FAULT",
-    89: "VSD - POWER TRANSFORMER HIGH TEMPERATURE",
-    90: "VSD - HIGH OUTPUT FREQUENCY",
-    91: "MVVSD - GROUND FAULT",
-    92: "VSD - MAIN CONTROL BOARD FAULT",
-    93: "MVVSD - CONTACTOR FAULT",
-    94: "MVVSD - INTERLOCK FAULT",
-    95: "VSD - LOGIC BOARD PLUG",
-    96: "VSD - INPUT CURRENT OVERLOAD",
-    97: "VSD - HIGH PHASE A INPUT BASEPLATE TEMPERATURE",
-    98: "VSD - HIGH PHASE B INPUT BASEPLATE TEMPERATURE",
-    99: "VSD - HIGH PHASE C INPUT BASEPLATE TEMPERATURE",
-    100: "MOTOR - LOW WINDING TEMPERATURE",
-    101: "VSD - INVALID PWM SOFTWARE",
-    102: "VSD - BASEPLATE TEMPERATURE IMBALANCE",
-    103: "VSD - DC BUS PRE-REGULATION LOCKOUT",
-    104: "VSD - GROUND FAULT",
-    105: "VSD - HIGH INSTANTANEOUS CURRENT",
-    106: "MOTOR CURRENT > 15% FLA",
-    107: "VSD - FREQUENCY > 0 HZ",
-    108: "VSD - PHASE A INPUT DCCT",
-    109: "VSD - PHASE B INPUT DCCT",
-    110: "VSD - PHASE C INPUT DCCT",
-    111: "VSD - HIGH TOTAL DEMAND DISTORTION",
-    112: "Motor - Coiling Coil Leak",
-    113: "MVVSD - Excessive Shutdowns",
-    114: "Isolation Valves - Not Opened",
-    115: "VSD - OUTPUT PHASE ROTATION",
-    116: "VSD - Phase Locked Loop",
-    117: "VSD - HIGH PHASE A INSTANTANEOUS CURRENT",
-    118: "VSD - HIGH PHASE B INSTANTANEOUS CURRENT",
-    119: "VSD - HIGH PHASE C INSTANTANEOUS CURRENT",
-    120: "VSD - Line Voltage Phase Rotation",
-    121: "VSD - INPUT DCCT OFFSET LOCKOUT",
-    122: "VSD - LOGIC BOARD HARDWARE",
-    123: "VSD - RECTIFIER PROGRAM FAULT",
-    124: "VSD - INVERTER PROGRAM FAULT",
-    125: "VSD - DC BUS LOCKOUT - DO NOT RECYCLE POWER",
-    126: "VSD - MOTOR CURREN THD FAULT",
-    127: "VSD - HIGH PHASE A MOTOR CURRENT",
-    128: "VSD - HIGH PHASE B MOTOR CURRENT",
-    129: "VSD - HIGH PHASE C MOTOR CURRENT",
-    130: "VSD - HIGH PHASE A MOTOR BASEPLATE TEMPERATURE",
-    131: "VSD - HIGH PHASE B MOTOR BASEPLATE TEMPERATURE",
-    132: "VSD - HIGH PHASE C MOTOR BASEPLATE TEMPERATURE",
-    133: "VSD - PHASE A MOTOR DCCT",
-    134: "VSD - PHASE B MOTOR DCCT",
-    135: "VSD - PHASE C MOTOR DCCT",
-    136: "Oil - High Sump Pressure",
-    137: "MBC - OVERSPEED FAULT",
-    138: "MBC - WATCHDOG",
-    139: "MBC - POWER SUPPLY FAULT",
-    140: "MBC - HIGH HEATSINK TEMPERATURE",
-    141: "MBC - HIGH DC BUS VOLTAGE",
-    142: "MBC - AMPLIFIER FUSE",
-    143: "MBC - HIGH BEARING J TEMPERATURE",
-    144: "MBC - HIGH BEARING H1 TEMPERATURE",
-    145: "MBC - HIGH BEARING H2 TEMPERATURE",
-    146: "MBC - HIGH BEARING K TEMPERATURE",
-    147: "MBC - GROUND FAULT",
-    148: "MBC - LOW GATE VOLTAGE",
-    149: "MBC - HIGH GATE VOLTAGE",
-    150: "MBC - HIGH AMPLIFIER TEMPERATURE",
-    151: "MBC - HIGH AMPLIFIER VOLTAGE",
-    152: "MBC - FAULT CONTACTS OPEN",
-    153: "MBC - INITIALIZATION FAILURE",
-    154: "MBC - NOT LEVITATED",
-    155: "SYSTEM - STARTUP FAILURE",
-    156: "UPS - Battery Not Connected",
-    157: "UPS - Inverter Low Battery Voltage",
-    158: "MBC - SPEED SENSOR FAULT",
-    159: "MBC - POWER FAIL LANDING",
-    160: "COMPRESSOR - LOW DISCHARGE SUPERHEAT",
-    161: "MVSSS - HIGH HEATSINK 1 TEMPERATURE",
-    162: "MVSSS - HIGH HEATSINK 2 TEMPERATURE",
-    163: "MVSSS - HIGH HEATSINK 3 TEMPERATURE",
-    164: "MOTOR CONTROLLER - FAULT CONTACTS OPEN",
-    165: "VSD - HIGH PHASE A2 INSTANTANEOUS CURRENT",
-    166: "VSD - HIGH PHASE B2 INSTANTANEOUS CURRENT",
-    167: "VSD - HIGH PHASE C2 INSTANTANEOUS CURRENT",
-    168: "VSD - HIGH PHASE A2 INVERTER BASEPLATE TEMPERATURE",
-    169: "VSD - HIGH PHASE B2 INVERTER BASEPLATE TEMPERATURE",
-    170: "VSD - HIGH PHASE C2 INVERTER BASEPLATE TEMPERATURE",
-    171: "VSD - HIGH CONVERTER 2 HEATSINK TEMPERATURE",
-    172: "VSD - MOTOR CURRENT 2 IMBALANCE",
-    173: "VSD - MOTOR CURRENT MISMATCH",
-    174: "VSD - HIGH PHASE A INPUT CURRENT",
-    175: "VSD - HIGH PHASE B INPUT CURRENT",
-    176: "VSD - HIGH PHASE C INPUT CURRENT",
-    177: "VSD - HIGH INPUT CURRENT TDD",
-    178: "INTERNAL ERROR - NO TIMER HANDERS AVAILABLE",
-    179: "WATCHDOG - SOFTWARE REBOOT",
-    180: "VSD - PRECHARGE LOCKOUT 2",
-    181: "VSD - BASEPLATE TEMPERATURE IMBALANCE 2",
-    182: "OIL - VARIABLE SPEED PUMP - HIGH RATE OF CHANGE",
-    183: "VSD - HIGH MOTOR HARMONICS",
-    184: "VSD - CAPACITOR FAULT",
-    185: "VSD - ELECTRICAL SGNATURE BOARD",
+     0: "No Warning Present",
+    1: "Real-Time Clock Failure",
+    2: "Setpoint Override",
+    3: "Condensor Or Evaporator Transducer Error",
+    4: "Evaporator - Low Pressure Limit",
+    5: "Condensor - High Pressure Limit",
+    6: "OIL - HIGH SUPPLY TEMPERATURE",
+    7: "COMPRESSOR - LOW DISCHARGE SUPERHEAT LIMIT",
+    8: "WARNING - CONDENSER - HIGH TUBE CLEANING TIME",
+    9: "Standby Lube - Low Oil Pressure",
+    10: "Warning - Standby Lube Inihibited",
+    11: "WARNING - VSD - HIGH CONVERTER OR INVERTER TEMPERATURE",
+    12: "WARNING - SALES ORDER - INVALID SERIAL NUMBER",
+    13: "VGD Not Calibrated",
+    14: "VGD Actuator Switch Open",
+    15: "PRV Not Calibrated",
+    16: "Vanes Uncalibrated - Fixed Speed",
+    17: "WARNING - HARMONIC FILTER - OPERATION INIHIBITED",
+    18: "Harmonic Filter - Data Loss",
+    19: "Auto Lube Req'd On Next Shutdown",
+    20: "Auto Lube Grease Level Low",
+    21: "Auto Lube Failed",
+    22: "Motor Oil Change Suggested",
+    23: "Motor Oil Change Required",
+    24: "Lack Of Motor Oil Change",
+    25: "Seal Lubrication In Process",
+    26: "External I/O - Serial Communications",
+    27: "WARNIING - MMB - SERIAL COMMUNICATIONS",
+    28: "WARNING - HARMONIC FILTER - INPUT FREQUENCY RANGE",
+    29: "Surge Protection - Excess Surge Limit",
+    30: "Excess Surge Detected",
+    31: "WARNING - HARMONIC FILTER - INVALID MODEL",
+    32: "Motor - High Housing Temperature",
+    33: "KW Meter Not Calibrated",
+    34: "Condenser Or VGD Sensor Failure",
+    35: "Conditions Override VGD",
+    36: "Motor Bearing Lube Suggested",
+    37: "Motor Bearing Lube Required",
+    38: "Motor Bearing Lube Not Done",
+    39: "WARNING - HARMONIC FILTER - DATA LOSS",
+    40: "Motor - High Winding Temperature",
+    41: "Motor - High Bearing Temperature",
+    42: "Motor - High Bearing Vibration",
+    43: "Motor - Bearing Vibration Baseline Not Set",
+    44: "WARNING - VSD - INPUT VOLTAGE IMBALANCE",
+    45: "WARNING - HARMONIC FILTER - NOT RUNNING",
+    46: "Condenser - freeze Threat From Low Pressure",
+    47: "Liquid Level Setpoint Not Achieved",
+    48: "VSD - DC Bus Active",
+    49: "WARNING - LOSS OF SUBCOOLER LIQUID SEAL",
+    50: "Oil - High Sump Pressure",
+    51: "ECON LCSSS - Invalid Current Scale Selection",
+    52: "ECON LCSSS - Phase Loss",
+    53: "ECON LCSSS - Phase Locked Loop",
+    54: "ECON LCSSS - Power Fault",
+    55: "ECON LCSSS - Run Signal",
+    56: "ECON LCSSS - Motor Current Imbalance",
+    57: "ECON LCSSS - 105% Motor Current Overload",
+    58: "ECON LCSSS - High Motor Current",
+    59: "ECON LCSSS - High Supply Line Voltage",
+    60: "ECON LCSSS - Low Supply Line Voltage",
+    61: "ECON LCSSS - Open SCR",
+    62: "ECON LCSSS - Phase A Shorted SCR",
+    63: "ECON LCSSS - Phase B Shorted SCR",
+    64: "ECON LCSSS - Phase C Shorted SCR",
+    65: "ECON LCSSS - High Phase A Heatsink Temp - Stopped",
+    66: "ECON LCSSS - High Phase B Heatsink Temp - Stopped",
+    67: "ECON LCSSS - High Phase C Heatsink Temp - Stopped",
+    68: "ECON LCSSS - High Phase A Heatsink Temperature",
+    69: "ECON LCSSS - High Phase B Heatsink Temperature",
+    70: "ECON LCSSS - High Phase C Heatsink Temperature",
+    71: "ECON LCSSS - Low Phase A Temperature Sensor",
+    72: "ECON LCSSS - Low Phase B Temperature Sensor",
+    73: "ECON LCSSS - Low Phase C Temperature Sensor",
+    74: "ECON LCSSS - Serial Receive",
+    75: "ECON LCSSS - Logic Board Power Supply",
+    76: "ECON LCSSS - Phase Rotation",
+    77: "ECON LCSSS - Undefined Fault",
+    78: "COND OR ECON XDCR ERROR",
+    79: "EVAP OR ECON XDCR ERROR",
+    80: "COND OR ECON VGD XDCR FAILURE",
+    81: "ECON HIGH STALL - VGD OVERRIDE",
+    82: "ECON STANDBY FAULT - LOW OIL PRESSURE",
+    83: "ECON SEAL LUBRICATION INHIBITED",
+    84: "ECON MOTOR - BEARING LUBE SUGGESTED",
+    85: "ECON MOTOR - BEARING LUBE REQUIRED",
+    86: "ECON MOTOR - BEARING LUBE NOT ACHIEVED",
+    87: "ECON LIQUID LEVEL SETPOINT NOT ACHIEVED",
+    88: "ECONOMIZER - LEVEL HIGH",
+    89: "ECON ANTI-RECYCLE",
+    90: "ECON COMPRESSOR - PRV MOTOR SWITCH",
+    91: "ECONOMIZER - PRESSURE XDCR FAILURE",
+    92: "ECON COMPRESSOR - HPCO SWITCH OPEN",
+    93: "ECON COMPRESSOR - GEAR RATIO INVALID",
+    94: "ECON MOTOR - LINE FREQUENCY NOT SET",
+    95: "ECON DISCHARGE - LOW TEMPERATURE",
+    96: "ECON DISCHARGE - HIGH TEMPERATURE",
+    97: "ECON THRUST BEARING - LIMIT SWITCH OPEN",
+    98: "ECON OIL - VSD PUMP - FAULT CONTACTS OPEN",
+    99: "ECON OIL - PUMP PRESSURE XDCR FAILURE",
+    100: "ECON OIL - DIFF PRESSURE CALIBRATION",
+    101: "ECON OIL - LOW DIFFERENTIAL PRESSURE",
+    102: "ECON OIL - HIGH DIFFERENTIAL PRESSURE",
+    103: "ECON OIL - VSD PUMP - SETPOINT NOT ACHIEVED",
+    104: "ECON MOTOR CONTROLLER - LOSS OF CURRENT",
+    105: "ECON MOTOR CONTROLLER - SERIAL COMMUNICATIONS",
+    106: "ECON MOTOR CONTROLLER - INITIALIZATION FAILED",
+    107: "ECON MOTOR CONTROLLER - FAULT CONTACTS OPEN",
+    108: "ECON MOTOR - LACK OF BEARING LUBRICATION",
+    109: "ECON MOTOR - CURRENT > 15% FLA",
+    110: "ECON COMPRESSOR - PRV NOT CALIBRATED",
+    111: "ECONOMIZEER - HIGH LEVEL (STOPPED)",
+    112: "SALES ORDER - INVALID MOTOR VOLTS OR FLA",
+    113: "ECON MOTOR - HIGH WINDING TEMP",
+    114: "ECON MOTOR - HIGH BEARING TEMP",
+    115: "ECON MOTOR - HIGH BEARING VIBRATION",
+    116: "ECON MOTOR - VIBRATION BASELINE NOT SET",
+    117: "ECON MOTOR - HIGH WINDING TEMP SHUTDOWN",
+    118: "ECON MOTOR - HIGH BEARING TEMP SHUTDOWN",
+    119: "ECON MOTOR - HIGH BEARING VIBRATION SHUTDOWN",
+    120: "ECON MOTOR - AUTO LUBRICATION IN PROGRESS",
+    121: "ECON AUTO LUBE REG'D ON NEXT SHUTDOWN",
+    122: "ECON AUTO LUBE GREASE LEVEL LOW",
+    123: "ECON AUTO LUBE FAILED",
+    124: "ECON MMB I/O SERIAL COMMUNICATIONS",
+    125: "WARNING - UPS - BATTERY TEST FAILED",
+    126: "MBC - LOW AMPLIFIER RESISTANCE",
+    127: "MBC - HIGH AMPLIFIER RESISTANCE",
+    128: "MBC - LOW AMPLIFIER CURRENT",
+    129: "MBC - HIGH AMPLIFIER CURRENT",
+    130: "MBC - POSITION SENSOR ERROR",
+    131: "WARNING - UPS - NOT CHARGING",
+    132: "UPS - Line Low Battery Voltage",
+    133: "UPS - Battery Not Connected",
+    134: "UPS - Check Battery Connected",
+    135: "WARNING - PURGE - HIGH COIL TEMP",
+    136: "WARNING - PURGE - HIGH COIL TEMP INHIBIT",
+    137: "WARNING - PURGE - HIGH REGEN TANK TEMP",
+    138: "WARNING - PURGE - HIGH LEVEL",
+    139: "WARNING - PURGE - EXCESS PURGE",
+    140: "WARNING - PURGE - EQUALIZATION LOW SUCTION TEMP",
+    141: "WARNING - PURGE - POSSIBLE AIR IN SYSTEM",
+    142: "WARNING - PURGE - OPERATION INHIBITED",
+    143: "ECON MOTOR CONTROLLER - CONTACTS OPEN",
+    144: "ECON MOTOR CONTROLLER - POWER FAULT",
+    145: "WARNING - QUARTERLY SERVICE REQUIRED - CONTACT JCI",
+    146: "WARNING - YEARLY SERVICE REQUIRED - CONTACT JCI",
+    147: "WARNING - 3 YEAR SERVICE REQUIRED - CONTACT JCI",
+    148: "WARNING - CHECK OIL SYSTEM",
+    149: "WARNING - CONDENSER - HIGH SMALL TEMP DIFFERENCE",
+    150: "WARNING - SYSTEM - REPLACE FILTER-DRIER",
+    151: "WARNING - CONTROL PANEL - INTERNAL ERROR"
 }
 
 def get_db_connection():
@@ -634,6 +601,100 @@ def is_admin():
 
 def is_regular_user():
     return 'logged_in' in session and session.get('role') == 'User'
+
+@app.context_processor
+def inject_sites_for_nav():
+    conn = get_db_connection()
+    sites_with_status = []
+    if not conn:
+        return dict(all_sites_for_nav=sites_with_status)
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        user_role = session.get('role')
+        user_id = session.get('user_id')
+        sites = []
+
+        if user_role in ['Admin', 'Viewer']:
+            cursor.execute("SELECT id, name FROM sites ORDER BY name")
+        elif user_id:
+            cursor.execute("""
+                SELECT s.id, s.name
+                FROM sites s
+                JOIN user_site_access usa ON s.id = usa.site_id
+                WHERE usa.user_id = %s
+                ORDER BY s.name
+            """, (user_id,))
+        else:
+            return dict(all_sites_for_nav=[])
+
+        sites = cursor.fetchall()
+
+        for site in sites:
+            cursor.execute("SELECT id FROM chillers WHERE site_id = %s", (site['id'],))
+            chillers_in_site = cursor.fetchall()
+            chiller_ids = [chiller['id'] for chiller in chillers_in_site]
+
+            site['alarm_status'] = 'none'
+            site['alarms'] = []
+
+            if chiller_ids:
+                chiller_placeholders = ', '.join(['%s'] * len(chiller_ids))
+                
+                query_latest_data = f"""
+                    SELECT cd.chiller_id, c.chiller_num, cd.safety_fault, cd.warning_fault, cd.cycling_fault
+                    FROM chiller_datas cd
+                    JOIN chillers c ON c.id = cd.chiller_id
+                    INNER JOIN (
+                        SELECT chiller_id, MAX(timestamp) as max_ts
+                        FROM chiller_datas
+                        WHERE chiller_id IN ({chiller_placeholders})
+                        GROUP BY chiller_id
+                    ) as latest ON cd.chiller_id = latest.chiller_id AND cd.timestamp = latest.max_ts
+                """
+                cursor.execute(query_latest_data, tuple(chiller_ids))
+                faults_data = cursor.fetchall()
+
+                active_alarms = []
+                has_safety = False
+                has_warning_or_cycling = False
+
+                for fault in faults_data:
+                    chiller_num_display = fault.get('chiller_num', '')
+                    if fault['safety_fault'] and fault['safety_fault'] > 0:
+                        has_safety = True
+                        description = safety_codes.get(fault['safety_fault'], "Unknown Safety Fault")
+                        active_alarms.append({'type': 'safety', 'description': description, 'chiller_num': chiller_num_display})
+                    
+                    if fault['warning_fault'] and fault['warning_fault'] > 0:
+                        has_warning_or_cycling = True
+                        description = warning_codes.get(fault['warning_fault'], "Unknown Warning Fault")
+                        active_alarms.append({'type': 'warning', 'description': description, 'chiller_num': chiller_num_display})
+
+                    if fault['cycling_fault'] and fault['cycling_fault'] > 0:
+                        has_warning_or_cycling = True
+                        description = cycling_codes.get(fault['cycling_fault'], "Unknown Cycling Fault")
+                        active_alarms.append({'type': 'warning', 'description': description, 'chiller_num': chiller_num_display})
+
+                if has_safety:
+                    site['alarm_status'] = 'safety'
+                elif has_warning_or_cycling:
+                    site['alarm_status'] = 'warning'
+                
+                site['alarms'] = active_alarms
+            
+            sites_with_status.append(site)
+
+    except Exception as e:
+        print(f"Error injecting sites for nav: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+            
+    return dict(all_sites_for_nav=sites_with_status)
+
 
 @app.route('/')
 def index():
@@ -715,7 +776,7 @@ def select_chiller(site_id):
     session['current_site_name'] = site_name
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
-    return render_template('select_chiller.html', current_time=current_time, chillers=chillers, site_name=site_name)
+    return render_template('select_chiller.html', current_time=current_time, chillers=chillers, site_name=site_name, site_id=site_id)
 
 @app.route('/monitor_chiller/<string:chiller_id>')
 def monitor_chiller(chiller_id):
@@ -1192,6 +1253,423 @@ def add_user_by_admin():
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
     return render_template('add_user_by_admin.html', current_time=current_time, all_sites=all_sites)
+
+
+@app.route('/add_site', methods=['POST'])
+def add_site():
+    if not is_admin():
+        flash('Anda tidak memiliki izin untuk melakukan aksi ini.', 'danger')
+        return redirect(url_for('select_site'))
+
+    site_id = request.form.get('site_id')
+    site_name = request.form.get('site_name')
+    location = request.form.get('location')
+    description = request.form.get('description')
+    
+    if not site_id or not site_name or not location:
+        flash('Site ID, Nama Site, dan Lokasi harus diisi.', 'danger')
+        return redirect(url_for('select_site'))
+
+    image_filename = 'default_site.jpg'  # Default image
+    if 'image' in request.files:
+        image_file = request.files['image']
+        if image_file.filename != '':
+            image_filename = secure_filename(image_file.filename)
+            save_path = os.path.join(app.static_folder, 'images', image_filename)
+            try:
+                image_file.save(save_path)
+            except Exception as e:
+                flash(f"Gagal menyimpan file gambar: {e}", 'danger')
+                return redirect(url_for('select_site'))
+
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            cursor.execute("SELECT id FROM sites WHERE id = %s", (site_id,))
+            if cursor.fetchone():
+                flash(f'Site ID "{site_id}" sudah ada. Harap gunakan ID lain.', 'danger')
+                return redirect(url_for('select_site'))
+
+            # Asumsi kolom 'description' ada di tabel. Jika tidak, akan ada error.
+            cursor.execute(
+                "INSERT INTO sites (id, name, location, description, image_name) VALUES (%s, %s, %s, %s, %s)",
+                (site_id, site_name, location, description, image_filename)
+            )
+            conn.commit()
+            flash(f'Site "{site_name}" berhasil ditambahkan.', 'success')
+        except mysql.connector.Error as err:
+            if err.errno == 1054: # ER_BAD_FIELD_ERROR for unknown column
+                flash('Error: Kolom "description" tidak ada di tabel `sites`. Mohon update skema database.', 'danger')
+            else:
+                flash(f"Error saat menambahkan site: {err}", 'danger')
+            print(f"Error saat menambahkan site: {err}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    return redirect(url_for('select_site'))
+
+
+@app.route('/add_chiller/<string:site_id>', methods=['POST'])
+def add_chiller(site_id):
+    if not is_admin():
+        flash('Anda tidak memiliki izin untuk melakukan aksi ini.', 'danger')
+        return redirect(url_for('select_chiller', site_id=site_id))
+
+    chiller_id = request.form.get('chiller_id')
+    chiller_num = request.form.get('chiller_num')
+    serial_number = request.form.get('serial_number')
+    model_number = request.form.get('model_number')
+    power_kW = request.form.get('power_kW')
+    ton_of_refrigeration = request.form.get('ton_of_refrigeration')
+    chiller_type = request.form.get('chiller_type')
+
+    if not chiller_id or not chiller_num:
+        flash('ID Chiller dan Nomor Chiller harus diisi.', 'danger')
+        return redirect(url_for('select_chiller', site_id=site_id))
+
+    image_filename = 'chiller.png' # Default image
+    if 'image' in request.files:
+        image_file = request.files['image']
+        if image_file.filename != '':
+            image_filename = secure_filename(image_file.filename)
+            save_path = os.path.join(app.static_folder, 'images', image_filename)
+            try:
+                image_file.save(save_path)
+            except Exception as e:
+                flash(f"Gagal menyimpan file gambar: {e}", 'danger')
+                return redirect(url_for('select_chiller', site_id=site_id))
+
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor()
+        try:
+            # Check if chiller ID already exists for this site
+            cursor.execute("SELECT id FROM chillers WHERE id = %s AND site_id = %s", (chiller_id, site_id))
+            if cursor.fetchone():
+                flash(f'Chiller ID "{chiller_id}" sudah ada untuk site ini. Harap gunakan ID lain.', 'danger')
+                return redirect(url_for('select_chiller', site_id=site_id))
+
+            cursor.execute(
+                "INSERT INTO chillers (id, site_id, chiller_num, serial_number, model_number, power_kW, ton_of_refrigeration, image_name, chiller_type) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+                (chiller_id, site_id, chiller_num, serial_number, model_number, power_kW, ton_of_refrigeration, image_filename, chiller_type)
+            )
+            conn.commit()
+            flash(f'Chiller "{chiller_num}" berhasil ditambahkan.', 'success')
+        except mysql.connector.Error as err:
+            flash(f"Error saat menambahkan chiller: {err}", 'danger')
+            print(f"Error saat menambahkan chiller: {err}")
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    return redirect(url_for('select_chiller', site_id=site_id))
+
+# Route untuk halaman edit chiller
+@app.route('/edit_chiller/<string:chiller_id>', methods=['GET', 'POST'])
+def edit_chiller(chiller_id):
+    if not is_admin():
+        flash('Anda tidak memiliki izin untuk melakukan aksi ini.', 'danger')
+        return redirect(url_for('select_chiller', site_id=session.get('current_site_id')))
+
+    conn = get_db_connection()
+    chiller_data = None
+    site_id = session.get('current_site_id')
+
+    if not conn:
+        return redirect(url_for('select_chiller', site_id=site_id))
+
+    cursor = conn.cursor(dictionary=True)
+    try:
+        if request.method == 'POST':
+            # Handle the POST request for updating the chiller
+            chiller_num = request.form.get('chiller_num')
+            serial_number = request.form.get('serial_number')
+            model_number = request.form.get('model_number')
+            power_kW = request.form.get('power_kW')
+            ton_of_refrigeration = request.form.get('ton_of_refrigeration')
+            chiller_type = request.form.get('chiller_type')
+
+            # Get current image name before updating
+            cursor.execute("SELECT image_name FROM chillers WHERE id = %s", (chiller_id,))
+            current_chiller = cursor.fetchone()
+            image_filename = current_chiller['image_name']
+
+            # Handle file upload
+            if 'image' in request.files:
+                image_file = request.files['image']
+                if image_file.filename != '':
+                    # Delete old image if it's not the default one
+                    if image_filename and image_filename != 'chiller.png':
+                        old_image_path = os.path.join(app.static_folder, 'images', image_filename)
+                        if os.path.exists(old_image_path):
+                            os.remove(old_image_path)
+
+                    image_filename = secure_filename(image_file.filename)
+                    save_path = os.path.join(app.static_folder, 'images', image_filename)
+                    image_file.save(save_path)
+
+            cursor.execute(
+                """
+                UPDATE chillers SET chiller_num = %s, serial_number = %s, model_number = %s,
+                power_kW = %s, ton_of_refrigeration = %s, image_name = %s, chiller_type = %s
+                WHERE id = %s
+                """,
+                (chiller_num, serial_number, model_number, power_kW, ton_of_refrigeration, image_filename, chiller_type, chiller_id)
+            )
+            conn.commit()
+            flash(f'Chiller "{chiller_num}" berhasil diperbarui.', 'success')
+            return redirect(url_for('select_chiller', site_id=site_id))
+        
+        else:
+            # Handle the GET request to display the edit form
+            cursor.execute("SELECT * FROM chillers WHERE id = %s", (chiller_id,))
+            chiller_data = cursor.fetchone()
+            if not chiller_data:
+                flash('Chiller tidak ditemukan.', 'danger')
+                return redirect(url_for('select_chiller', site_id=site_id))
+
+    except mysql.connector.Error as err:
+        flash(f"Error saat mengedit chiller: {err}", 'danger')
+        print(f"Error saat mengedit chiller: {err}")
+        if conn:
+            conn.rollback()
+    finally:
+        if cursor:
+            cursor.close()
+        if conn:
+            conn.close()
+
+    current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
+    return render_template('edit_chiller.html', current_time=current_time, chiller=chiller_data, site_id=site_id)
+
+
+# Route untuk menghapus chiller
+@app.route('/delete_chiller/<string:chiller_id>', methods=['POST'])
+def delete_chiller(chiller_id):
+    if not is_admin():
+        flash('Anda tidak memiliki izin untuk melakukan aksi ini.', 'danger')
+        return redirect(url_for('select_chiller', site_id=session.get('current_site_id')))
+
+    site_id = session.get('current_site_id')
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            # Get image name before deleting
+            cursor.execute("SELECT image_name FROM chillers WHERE id = %s", (chiller_id,))
+            chiller = cursor.fetchone()
+            if chiller and chiller['image_name'] and chiller['image_name'] != 'chiller.png':
+                image_path = os.path.join(app.static_folder, 'images', chiller['image_name'])
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+
+            # Delete the chiller and its data from the database
+            cursor.execute("DELETE FROM chiller_datas WHERE chiller_id = %s", (chiller_id,))
+            cursor.execute("DELETE FROM chillers WHERE id = %s", (chiller_id,))
+            conn.commit()
+            flash('Chiller berhasil dihapus.', 'success')
+        except mysql.connector.Error as err:
+            flash(f"Error saat menghapus chiller: {err}", 'danger')
+            conn.rollback()
+        finally:
+            if cursor:
+                cursor.close()
+            if conn:
+                conn.close()
+    
+    return redirect(url_for('select_chiller', site_id=site_id))
+
+
+@app.route('/edit_site/<string:site_id>', methods=['POST'])
+def edit_site(site_id):
+    if not is_admin():
+        flash('Anda tidak memiliki izin untuk melakukan aksi ini.', 'danger')
+        return redirect(url_for('select_site'))
+
+    site_name = request.form.get('site_name')
+    location = request.form.get('location')
+    description = request.form.get('description')
+
+    if not site_name or not location:
+        flash('Nama site dan lokasi harus diisi.', 'danger')
+        return redirect(url_for('select_site'))
+
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            # Get current image name
+            cursor.execute("SELECT image_name FROM sites WHERE id = %s", (site_id,))
+            current_site = cursor.fetchone()
+            if not current_site:
+                flash('Site tidak ditemukan.', 'danger')
+                return redirect(url_for('select_site'))
+            
+            image_filename = current_site['image_name']
+
+            # Handle file upload
+            if 'image' in request.files:
+                image_file = request.files['image']
+                if image_file.filename != '':
+                    # Delete old image if it's not the default one
+                    if image_filename and image_filename != 'default_site.jpg':
+                        old_image_path = os.path.join(app.static_folder, 'images', image_filename)
+                        if os.path.exists(old_image_path):
+                            os.remove(old_image_path)
+
+                    image_filename = secure_filename(image_file.filename)
+                    save_path = os.path.join(app.static_folder, 'images', image_filename)
+                    image_file.save(save_path)
+
+            # Update database
+            cursor.execute(
+                "UPDATE sites SET name = %s, location = %s, description = %s, image_name = %s WHERE id = %s",
+                (site_name, location, description, image_filename, site_id)
+            )
+            conn.commit()
+            flash(f'Site "{site_name}" berhasil diperbarui.', 'success')
+
+        except mysql.connector.Error as err:
+            flash(f"Error saat memperbarui site: {err}", 'danger')
+            conn.rollback()
+        finally:
+            cursor.close()
+            conn.close()
+
+    return redirect(url_for('select_site'))
+
+
+@app.route('/delete_site/<string:site_id>', methods=['POST'])
+def delete_site(site_id):
+    if not is_admin():
+        flash('Anda tidak memiliki izin untuk melakukan aksi ini.', 'danger')
+        return redirect(url_for('select_site'))
+
+    conn = get_db_connection()
+    if conn:
+        cursor = conn.cursor(dictionary=True)
+        try:
+            # Get image name before deleting
+            cursor.execute("SELECT image_name FROM sites WHERE id = %s", (site_id,))
+            site = cursor.fetchone()
+            if site and site['image_name'] and site['image_name'] != 'default_site.jpg':
+                image_path = os.path.join(app.static_folder, 'images', site['image_name'])
+                if os.path.exists(image_path):
+                    os.remove(image_path)
+
+            # Delete the site from DB
+            cursor.execute("DELETE FROM sites WHERE id = %s", (site_id,))
+            conn.commit()
+            flash('Site berhasil dihapus.', 'success')
+        except mysql.connector.Error as err:
+            flash(f"Error saat menghapus site: {err}", 'danger')
+            conn.rollback()
+        finally:
+            cursor.close()
+            conn.close()
+
+    return redirect(url_for('select_site'))
+
+def inject_sites_for_nav():
+    conn = get_db_connection()
+    sites_with_status = []
+    if not conn:
+        return dict(all_sites_for_nav=sites_with_status)
+
+    try:
+        cursor = conn.cursor(dictionary=True)
+        
+        user_role = session.get('role')
+        user_id = session.get('user_id')
+        sites = []
+
+        if user_role in ['Admin', 'Viewer']:
+            cursor.execute("SELECT id, name FROM sites ORDER BY name")
+        elif user_id:
+            cursor.execute("""
+                SELECT s.id, s.name
+                FROM sites s
+                JOIN user_site_access usa ON s.id = usa.site_id
+                WHERE usa.user_id = %s
+                ORDER BY s.name
+            """, (user_id,))
+        else:
+            return dict(all_sites_for_nav=[])
+
+        sites = cursor.fetchall()
+
+        for site in sites:
+            cursor.execute("SELECT id FROM chillers WHERE site_id = %s", (site['id'],))
+            chillers_in_site = cursor.fetchall()
+            chiller_ids = [chiller['id'] for chiller in chillers_in_site]
+
+            site['alarm_status'] = 'none'
+            site['alarms'] = []
+
+            if chiller_ids:
+                chiller_placeholders = ', '.join(['%s'] * len(chiller_ids))
+                
+                query_latest_data = f"""
+                    SELECT cd.chiller_id, c.chiller_num, cd.safety_fault, cd.warning_fault, cd.cycling_fault
+                    FROM chiller_datas cd
+                    JOIN chillers c ON c.id = cd.chiller_id
+                    INNER JOIN (
+                        SELECT chiller_id, MAX(timestamp) as max_ts
+                        FROM chiller_datas
+                        WHERE chiller_id IN ({chiller_placeholders})
+                        GROUP BY chiller_id
+                    ) as latest ON cd.chiller_id = latest.chiller_id AND cd.timestamp = latest.max_ts
+                """
+                cursor.execute(query_latest_data, tuple(chiller_ids))
+                faults_data = cursor.fetchall()
+
+                active_alarms = []
+                has_safety = False
+                has_warning_or_cycling = False
+
+                for fault in faults_data:
+                    chiller_num_display = fault.get('chiller_num', '')
+                    if fault['safety_fault'] and fault['safety_fault'] > 0:
+                        has_safety = True
+                        description = safety_codes.get(fault['safety_fault'], "Unknown Safety Fault")
+                        active_alarms.append({'type': 'safety', 'description': description, 'chiller_num': chiller_num_display})
+                    
+                    if fault['warning_fault'] and fault['warning_fault'] > 0:
+                        has_warning_or_cycling = True
+                        description = warning_codes.get(fault['warning_fault'], "Unknown Warning Fault")
+                        active_alarms.append({'type': 'warning', 'description': description, 'chiller_num': chiller_num_display})
+
+                    if fault['cycling_fault'] and fault['cycling_fault'] > 0:
+                        has_warning_or_cycling = True
+                        description = cycling_codes.get(fault['cycling_fault'], "Unknown Cycling Fault")
+                        active_alarms.append({'type': 'warning', 'description': description, 'chiller_num': chiller_num_display})
+
+                if has_safety:
+                    site['alarm_status'] = 'safety'
+                elif has_warning_or_cycling:
+                    site['alarm_status'] = 'warning'
+                
+                site['alarms'] = active_alarms
+            
+            sites_with_status.append(site)
+
+    except Exception as e:
+        print(f"Error injecting sites for nav: {e}")
+    finally:
+        if conn.is_connected():
+            cursor.close()
+            conn.close()
+            
+    return dict(all_sites_for_nav=sites_with_status)
+
 
 
 if __name__ == '__main__':

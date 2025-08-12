@@ -162,6 +162,231 @@
         padding: 12px 0;
       }
 
+      /* Dropdown Styles */
+      .sidebar-nav .has-submenu > a {
+        position: relative;
+      }
+
+      .sidebar-nav .has-submenu .arrow {
+        position: absolute;
+        right: 15px;
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.collapsed .has-submenu .arrow {
+        display: none;
+      }
+
+      .sidebar-nav .has-submenu.open > a .arrow {
+        transform: rotate(180deg);
+      }
+
+      .submenu {
+        list-style: none;
+        padding-left: 20px; /* Indent submenu */
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+      }
+
+      .sidebar.collapsed .submenu {
+        display: none !important; /* Hide submenu completely when collapsed */
+      }
+
+      .has-submenu.open > .submenu {
+        max-height: 500px; /* Adjust as needed */
+        padding-top: 5px;
+      }
+
+      .submenu li a {
+        padding: 10px 15px 10px 25px !important; /* Adjust padding */
+        font-size: 0.9em !important;
+      }
+
+      .submenu li a:before {
+        content: '\f10c'; /* FontAwesome circle icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        margin-right: 10px;
+        font-size: 0.6em;
+      }
+
+      .submenu li.active a {
+        background-color: var(--sidebar-hover) !important;
+        color: var(--active-link);
+      }
+
+      .alarm-submenu {
+        list-style: none;
+        padding-left: 30px;
+        margin-top: 5px;
+        font-size: 0.85em;
+      }
+
+      .alarm-submenu li {
+        padding: 3px 0;
+        white-space: normal;
+        line-height: 1.3;
+        position: relative;
+        padding-left: 15px;
+      }
+
+      .alarm-submenu li::before {
+        content: '\f071'; /* FontAwesome warning icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        top: 5px;
+      }
+
+      .alarm-item-safety {
+        color: #ff8a80; /* Lighter red for text */
+      }
+      .alarm-item-safety::before {
+        color: #e53e3e;
+      }
+
+      .alarm-item-warning {
+        color: #ffd180; /* Lighter yellow for text */
+      }
+      .alarm-item-warning::before {
+        color: #dd6b20;
+      }
+
+      /* Alarm Status Styles */
+      @keyframes blink-red {
+        0%, 100% { background-color: rgba(231, 76, 60, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      @keyframes blink-yellow {
+        0%, 100% { background-color: rgba(241, 196, 15, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      .submenu li.alarm-status-safety > a {
+        animation: blink-red 1.5s infinite;
+      }
+
+      .submenu li.alarm-status-warning > a {
+        animation: blink-yellow 1.5s infinite;
+      }
+
+      .alarm-submenu {
+        list-style: none;
+        padding-left: 30px;
+        margin-top: 5px;
+        font-size: 0.85em;
+      }
+
+      .alarm-submenu li {
+        padding: 3px 0;
+        white-space: normal;
+        line-height: 1.3;
+        position: relative;
+        padding-left: 15px;
+      }
+
+      .alarm-submenu li::before {
+        content: '\f071'; /* FontAwesome warning icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        top: 5px;
+      }
+
+      .alarm-item-safety {
+        color: #ff8a80; /* Lighter red for text */
+      }
+      .alarm-item-safety::before {
+        color: #e53e3e;
+      }
+
+      .alarm-item-warning {
+        color: #ffd180; /* Lighter yellow for text */
+      }
+      .alarm-item-warning::before {
+        color: #dd6b20;
+      }
+
+      /* Alarm Status Styles */
+      @keyframes blink-red {
+        0%, 100% { background-color: rgba(231, 76, 60, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      @keyframes blink-yellow {
+        0%, 100% { background-color: rgba(241, 196, 15, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      .submenu li.alarm-status-safety > a {
+        animation: blink-red 1.5s infinite;
+      }
+
+      .submenu li.alarm-status-warning > a {
+        animation: blink-yellow 1.5s infinite;
+      }
+
+      .alarm-submenu {
+        list-style: none;
+        padding-left: 30px;
+        margin-top: 5px;
+        font-size: 0.85em;
+      }
+
+      .alarm-submenu li {
+        padding: 3px 0;
+        white-space: normal;
+        line-height: 1.3;
+        position: relative;
+        padding-left: 15px;
+      }
+
+      .alarm-submenu li::before {
+        content: '\f071'; /* FontAwesome warning icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        top: 5px;
+      }
+
+      .alarm-item-safety {
+        color: #ff8a80; /* Lighter red for text */
+      }
+      .alarm-item-safety::before {
+        color: #e53e3e;
+      }
+
+      .alarm-item-warning {
+        color: #ffd180; /* Lighter yellow for text */
+      }
+      .alarm-item-warning::before {
+        color: #dd6b20;
+      }
+
+      /* Alarm Status Styles */
+      @keyframes blink-red {
+        0%, 100% { background-color: rgba(231, 76, 60, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      @keyframes blink-yellow {
+        0%, 100% { background-color: rgba(241, 196, 15, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      .submenu li.alarm-status-safety > a {
+        animation: blink-red 1.5s infinite;
+      }
+
+      .submenu li.alarm-status-warning > a {
+        animation: blink-yellow 1.5s infinite;
+      }
+
       /* Main Content Styling (minimal for structure) */
       .main-content {
         flex-grow: 1;
@@ -291,16 +516,7 @@
                             ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
                         >
                     </li> -->
-                    <li>
-                        <a href="#"
-                            ><i class="fas fa-project-diagram"></i> <span>Project</span></a
-                        >
-                    </li>
-                    <li>
-                        <a href="#"
-                            ><i class="fas fa-file-alt"></i> <span>Report</span></a
-                        >
-                    </li>
+              
                     {% if session.get('role') == 'Admin' %}
                     <li {% if request.path == url_for('manage_users') or request.path.startswith('/manage_user_access') or request.path == url_for('add_user_by_admin') %}class="active"{% endif %}>
                         <a href="{{ url_for('manage_users') }}"
@@ -355,6 +571,17 @@
             // Toggle sidebar collapse
             menuToggle.addEventListener("click", () => {
                 sidebar.classList.toggle("collapsed");
+            });
+
+            // Dropdown functionality
+            document.querySelectorAll('.submenu-toggle').forEach(toggle => {
+                toggle.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const parent = this.parentElement;
+                    if (!sidebar.classList.contains('collapsed')) {
+                        parent.classList.toggle('open');
+                    }
+                });
             });
 
             // Set initial active link based on current URL path (server-side logic is better for Flask)

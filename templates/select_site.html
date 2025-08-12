@@ -161,6 +161,117 @@
         padding: 12px 0;
       }
 
+      /* Dropdown Styles */
+      .sidebar-nav .has-submenu > a {
+        position: relative;
+      }
+
+      .sidebar-nav .has-submenu .arrow {
+        position: absolute;
+        right: 15px;
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar.collapsed .has-submenu .arrow {
+        display: none;
+      }
+
+      .sidebar-nav .has-submenu.open > a .arrow {
+        transform: rotate(180deg);
+      }
+
+      .submenu {
+        list-style: none;
+        padding-left: 20px; /* Indent submenu */
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.3s ease-in-out;
+      }
+
+      .sidebar.collapsed .submenu {
+        display: none !important; /* Hide submenu completely when collapsed */
+      }
+
+      .has-submenu.open > .submenu {
+        max-height: 500px; /* Adjust as needed */
+        padding-top: 5px;
+      }
+
+      .submenu li a {
+        padding: 10px 15px 10px 25px !important; /* Adjust padding */
+        font-size: 0.9em !important;
+      }
+
+      .submenu li a:before {
+        content: '\f10c'; /* FontAwesome circle icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        margin-right: 10px;
+        font-size: 0.6em;
+      }
+
+      .submenu li.active a {
+        background-color: var(--sidebar-hover) !important;
+        color: var(--active-link);
+      }
+
+      .alarm-submenu {
+        list-style: none;
+        padding-left: 30px;
+        margin-top: 5px;
+        font-size: 0.85em;
+      }
+
+      .alarm-submenu li {
+        padding: 3px 0;
+        white-space: normal;
+        line-height: 1.3;
+        position: relative;
+        padding-left: 15px;
+      }
+
+      .alarm-submenu li::before {
+        content: '\f071'; /* FontAwesome warning icon */
+        font-family: 'Font Awesome 6 Free';
+        font-weight: 900;
+        position: absolute;
+        left: 0;
+        top: 5px;
+      }
+
+      .alarm-item-safety {
+        color: #ff8a80; /* Lighter red for text */
+      }
+      .alarm-item-safety::before {
+        color: #e53e3e;
+      }
+
+      .alarm-item-warning {
+        color: #ffd180; /* Lighter yellow for text */
+      }
+      .alarm-item-warning::before {
+        color: #dd6b20;
+      }
+
+      /* Alarm Status Styles */
+      @keyframes blink-red {
+        0%, 100% { background-color: rgba(231, 76, 60, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      @keyframes blink-yellow {
+        0%, 100% { background-color: rgba(241, 196, 15, 0.4); }
+        50% { background-color: transparent; }
+      }
+
+      .submenu li.alarm-status-safety > a {
+        animation: blink-red 1.5s infinite;
+      }
+
+      .submenu li.alarm-status-warning > a {
+        animation: blink-yellow 1.5s infinite;
+      }
+
       /* Main Content Styling */
       .main-content {
         flex-grow: 1;
@@ -225,6 +336,66 @@
         box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
       }
 
+      .card-menu {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+      }
+
+      .menu-icon {
+        cursor: pointer;
+        padding: 5px;
+        border-radius: 50%;
+        color: #fff;
+        background-color: rgba(0,0,0,0.3);
+      }
+
+      .menu-icon:hover {
+        background-color: rgba(0,0,0,0.5);
+      }
+
+      .dropdown-menu {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 30px;
+        background-color: var(--sidebar-bg);
+        border-radius: 5px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        overflow: hidden;
+        z-index: 10;
+      }
+
+      .dropdown-menu.show {
+        display: block;
+      }
+
+      .dropdown-menu a, .dropdown-menu .delete-btn {
+        display: block;
+        padding: 10px 15px;
+        color: var(--sidebar-text);
+        text-decoration: none;
+        font-size: 0.9em;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        cursor: pointer;
+      }
+
+      .dropdown-menu a:hover, .dropdown-menu .delete-btn:hover {
+        background-color: var(--sidebar-hover);
+      }
+
+      .delete-btn {
+        color: #e74c3c !important;
+      }
+
+      .delete-btn:hover {
+        color: #fff !important;
+        background-color: #c0392b !important;
+      }
+
       .card-image {
         width: 100%;
         height: 180px;
@@ -277,6 +448,105 @@
       }
 
       .monitor-btn:hover {
+        background-color: var(--button-hover);
+      }
+
+      .header-right .add-site-btn {
+        background-color: var(--button-bg);
+        color: white;
+        border: none;
+        padding: 8px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 0.9em;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: background-color 0.2s ease;
+      }
+
+      .header-right .add-site-btn:hover {
+        background-color: var(--button-hover);
+      }
+
+      /* Modal Styling */
+      .modal {
+        display: none; 
+        position: fixed; 
+        z-index: 1000; 
+        left: 0;
+        top: 0;
+        width: 100%; 
+        height: 100%; 
+        overflow: auto; 
+        background-color: rgba(0,0,0,0.6); 
+      }
+
+      .modal-content {
+        background-color: var(--sidebar-bg);
+        margin: 10% auto; 
+        padding: 30px;
+        border: 1px solid var(--card-border);
+        width: 80%;
+        max-width: 500px;
+        border-radius: 8px;
+        position: relative;
+      }
+
+      .close-btn {
+        color: #aaa;
+        position: absolute;
+        top: 15px;
+        right: 20px;
+        font-size: 28px;
+        font-weight: bold;
+      }
+
+      .close-btn:hover,
+      .close-btn:focus {
+        color: #fff;
+        text-decoration: none;
+        cursor: pointer;
+      }
+
+      .modal-content h2 {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      .modal-content .form-group {
+        margin-bottom: 15px;
+      }
+
+      .modal-content .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
+
+      .modal-content .form-group input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid var(--card-border);
+        background-color: #34495e;
+        color: #fff;
+      }
+
+      .modal-content .submit-btn {
+        width: 100%;
+        padding: 12px;
+        background-color: var(--button-bg);
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        margin-top: 10px;
+      }
+
+      .modal-content .submit-btn:hover {
         background-color: var(--button-hover);
       }
 
@@ -397,10 +667,26 @@
                 ><i class="fas fa-snowflake"></i> <span>Chillers</span></a
               >
             </li> -->
-            <li>
-              <a href="#"
-                ><i class="fas fa-project-diagram"></i> <span>Project</span></a
-              >
+            <li class="has-submenu {% if request.path.startswith('/select_chiller') %}open active{% endif %}">
+                <a href="#" class="submenu-toggle"><i class="fas fa-project-diagram"></i> <span>Projects</span>
+                <i class="fas fa-chevron-down arrow"></i>
+              </a>
+              <ul class="submenu">
+                {% for site in all_sites_for_nav %}
+                  <li class="{% if session.get('current_site_id') == site.id %}active{% endif %} alarm-status-{{ site.alarm_status }}">
+                      <a href="{{ url_for('select_chiller', site_id=site.id) }}">{{ site.name }}</a>
+                      {% if site.alarms %}
+                      <ul class="alarm-submenu">
+                          {% for alarm in site.alarms %}
+                          <li class="alarm-item-{{ alarm.type }}">CH{{ alarm.chiller_num }} - {{ alarm.description }}</li>
+                          {% endfor %}
+                      </ul>
+                      {% endif %}
+                  </li>
+                {% else %}
+                  <li><a>No sites available</a></li>
+                {% endfor %}
+              </ul>
             </li>
             <li>
               <a href="#"
@@ -427,6 +713,9 @@
             <h1>PILIH SITE</h1>
           </div>
           <div class="header-right">
+            {% if session.role == 'Admin' %}
+            <button id="addSiteBtn" class="add-site-btn"><i class="fas fa-plus"></i> Tambah Site Baru</button>
+            {% endif %}
             <span>{{ current_time }}</span>
             <div class="user-profile">
               <i class="fas fa-user-circle"></i>
@@ -454,11 +743,61 @@
                 Pilih Site <i class="fas fa-arrow-right"></i>
               </a>
             </div>
+            {% if session.role == 'Admin' %}
+            <div class="card-menu">
+              <i class="fas fa-ellipsis-v menu-icon"></i>
+              <div class="dropdown-menu">
+                <a href="#" class="edit-btn" 
+                   data-id="{{ site.id }}" 
+                   data-name="{{ site.nama_site }}" 
+                   data-location="{{ site.lokasi }}" 
+                   data-description="{{ site.deskripsi or '' }}"
+                   data-image="{{ site.gambar_url }}">Edit</a>
+                <form action="{{ url_for('delete_site', site_id=site.id) }}" method="POST" onsubmit="return confirm('Anda yakin ingin menghapus site ini? Ini akan menghapus semua data chiller yang terkait.');">
+                  <button type="submit" class="delete-btn">Delete</button>
+                </form>
+              </div>
+            </div>
+            {% endif %}
           </div>
           {% endfor %} {% else %}
-          <p style="color: black">Tidak ada site yang tersedia.</p>
+            <p style="color: black">Tidak ada site yang tersedia.</p>
           {% endif %}
         </section>
+      </main>
+    </div>
+
+    {% if session.role == 'Admin' %}
+    <div id="addSiteModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Tambah Site Baru</h2>
+        <form action="{{ url_for('add_site') }}" method="POST" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="site_id">ID Site</label>
+            <input type="text" id="site_id" name="site_id" placeholder="e.g., menara_btpn" required>
+          </div>
+          <div class="form-group">
+            <label for="site_name">Nama Site</label>
+            <input type="text" id="site_name" name="site_name" placeholder="e.g., Menara BTPN" required>
+          </div>
+          <div class="form-group">
+            <label for="location">Lokasi</label>
+            <input type="text" id="location" name="location" placeholder="e.g., Jakarta Selatan" required>
+          </div>
+          <div class="form-group">
+            <label for="description">Deskripsi</label>
+            <textarea id="description" name="description" rows="3" placeholder="Deskripsi singkat mengenai site..."></textarea>
+          </div>
+          <div class="form-group">
+            <label for="image">Gambar Site</label>
+            <input type="file" id="image" name="image" accept="image/*" class="file-input">
+          </div>
+          <button type="submit" class="submit-btn">Tambah Site</button>
+        </form>
+      </div>
+    </div>
+    {% endif %}
       </main>
     </div>
 
@@ -509,6 +848,96 @@
               link.parentElement.classList.remove("active");
             }
           }
+        });
+
+        // Modal script
+        {% if session.role == 'Admin' %}
+        const modal = document.getElementById("addSiteModal");
+        const btn = document.getElementById("addSiteBtn");
+        const span = document.getElementsByClassName("close-btn")[0];
+
+        btn.onclick = function() {
+          modal.style.display = "block";
+        }
+
+        span.onclick = function() {
+          modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+          if (event.target == modal) {
+            modal.style.display = "none";
+          }
+        }
+        {% endif %}
+
+        // Dropdown menu logic
+        document.querySelectorAll('.menu-icon').forEach(icon => {
+          icon.addEventListener('click', function(event) {
+            event.stopPropagation();
+            // Close all other dropdowns
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+              if (menu !== this.nextElementSibling) {
+                menu.classList.remove('show');
+              }
+            });
+            // Toggle current dropdown
+            this.nextElementSibling.classList.toggle('show');
+          });
+        });
+
+        // Close dropdowns if clicked outside
+        window.addEventListener('click', function(event) {
+          if (!event.target.matches('.menu-icon')) {
+            document.querySelectorAll('.dropdown-menu.show').forEach(menu => {
+              menu.classList.remove('show');
+            });
+          }
+        });
+
+        // Edit modal logic
+        const editModal = document.getElementById('addSiteModal'); // Reusing the same modal
+        const editForm = editModal.querySelector('form');
+        const modalTitle = editModal.querySelector('h2');
+
+        document.querySelectorAll('.edit-btn').forEach(button => {
+          button.addEventListener('click', function(event) {
+            event.preventDefault();
+            
+            const siteId = this.dataset.id;
+            const siteName = this.dataset.name;
+            const siteLocation = this.dataset.location;
+            const siteDescription = this.dataset.description;
+
+            modalTitle.innerText = 'Edit Site';
+            editForm.action = `/edit_site/${siteId}`;
+            editForm.querySelector('#site_id').value = siteId;
+            editForm.querySelector('#site_id').readOnly = true; // ID should not be editable
+            editForm.querySelector('#site_name').value = siteName;
+            editForm.querySelector('#location').value = siteLocation;
+            editForm.querySelector('#description').value = siteDescription;
+            
+            editModal.style.display = 'block';
+          });
+        });
+
+        // Reset modal to "Add" when add button is clicked
+        document.getElementById('addSiteBtn').addEventListener('click', function() {
+            modalTitle.innerText = 'Tambah Site Baru';
+            editForm.action = "{{ url_for('add_site') }}";
+            editForm.reset();
+            editForm.querySelector('#site_id').readOnly = false;
+        });
+
+        // Dropdown functionality for sidebar
+        document.querySelectorAll('.submenu-toggle').forEach(toggle => {
+            toggle.addEventListener('click', function(event) {
+                event.preventDefault();
+                const parent = this.parentElement;
+                if (!document.querySelector('.sidebar').classList.contains('collapsed')) {
+                    parent.classList.toggle('open');
+                }
+            });
         });
       });
     </script>

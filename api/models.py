@@ -153,5 +153,14 @@ class ChillerData(Base):
     Seal_Press_Diff = Column(Float)
     Filter_Diff_Press = Column(Float)
     Output_Voltage = Column(Float)
+    Evap_DT = Column(Float)
+    Cond_DT = Column(Float)
+    Approach_Evap = Column(Float)
+    Approach_Cond = Column(Float)
+    Cooling_Capacity = Column(Float)
+    efficiency = Column(Float)
+    COP = Column(Float)
+    EER = Column(Float)
+
     
     chiller = relationship("Chiller", back_populates="datas")
