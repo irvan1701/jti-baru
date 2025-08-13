@@ -25,11 +25,13 @@
         --button-bg: #3498db;
         --button-hover: #2980b9;
         --active-link: #3498db;
-        --chiller-card-bg: #283747;
+        --chiller-card-bg: #2c3e50;
+        --chiller-card-bg-gradient: linear-gradient(145deg, #2c3e50, #34495e);
         --chiller-text-color: #ecf0f1;
         --chiller-light-text-color: #bdc3c7;
         --chiller-stop-color: #e74c3c;
-        --chiller-model-serial-bg: #34495e;
+        --chiller-run-color: #2ecc71;
+        --chiller-model-serial-bg: #4a627a;
       }
 
       * {
@@ -140,7 +142,7 @@
         background-color: var(--sidebar-hover);
       }
 
-      .sidebar-nav ul li.active a {
+      .sidebar-nav ul li.active > a {
         background-color: var(--active-link);
         font-weight: 500;
       }
@@ -214,7 +216,7 @@
         font-size: 0.6em;
       }
 
-      .submenu li.active a {
+      .submenu li.active > a {
         background-color: var(--sidebar-hover) !important;
         color: var(--active-link);
       }
@@ -243,49 +245,23 @@
         top: 5px;
       }
 
-      .alarm-item-safety {
-        color: #ff8a80;
-      }
-
-      .alarm-item-safety::before {
-        color: #e53e3e;
-      }
-
-      .alarm-item-warning {
-        color: #ffd180;
-      }
-
-      .alarm-item-warning::before {
-        color: #dd6b20;
-      }
+      .alarm-item-safety { color: #ff8a80; }
+      .alarm-item-safety::before { color: #e53e3e; }
+      .alarm-item-warning { color: #ffd180; }
+      .alarm-item-warning::before { color: #dd6b20; }
 
       @keyframes blink-red {
-        0%, 100% {
-          background-color: rgba(231, 76, 60, 0.4);
-        }
-
-        50% {
-          background-color: transparent;
-        }
+        0%, 100% { background-color: rgba(231, 76, 60, 0.4); }
+        50% { background-color: transparent; }
       }
 
       @keyframes blink-yellow {
-        0%, 100% {
-          background-color: rgba(241, 196, 15, 0.4);
-        }
-
-        50% {
-          background-color: transparent;
-        }
+        0%, 100% { background-color: rgba(241, 196, 15, 0.4); }
+        50% { background-color: transparent; }
       }
 
-      .submenu li.alarm-status-safety > a {
-        animation: blink-red 1.5s infinite;
-      }
-
-      .submenu li.alarm-status-warning > a {
-        animation: blink-yellow 1.5s infinite;
-      }
+      .submenu li.alarm-status-safety > a { animation: blink-red 1.5s infinite; }
+      .submenu li.alarm-status-warning > a { animation: blink-yellow 1.5s infinite; }
 
       .main-content {
         flex-grow: 1;
@@ -326,34 +302,33 @@
       .dashboard-cards {
         padding: 30px;
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
         gap: 25px;
         flex-grow: 1;
         align-content: flex-start;
       }
 
       .chiller-card {
-        background-color: var(--chiller-card-bg);
+        background: var(--chiller-card-bg-gradient);
         border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 8px;
+        border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
         display: flex;
         flex-direction: column;
         color: var(--chiller-text-color);
       }
 
       .chiller-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        transform: translateY(-8px);
+        box-shadow: 0 12px 25px rgba(0, 0, 0, 0.4);
       }
 
       .chiller-card-image {
         width: 100%;
-        height: 150px;
+        height: 180px;
         overflow: hidden;
-        object-fit: contain;
         background-color: #fff;
       }
 
@@ -362,10 +337,14 @@
         height: 100%;
         object-fit: contain;
         display: block;
+        transition: transform 0.3s ease;
+      }
+      .chiller-card:hover .chiller-card-image img {
+        transform: scale(1.05);
       }
 
       .chiller-card-content {
-        padding: 15px 20px;
+        padding: 20px;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
@@ -375,64 +354,60 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 10px;
+        margin-bottom: 15px;
+        gap: 10px;
       }
 
       .chiller-card-title h2 {
-        font-size: 1.4em;
+        font-size: 1.5em;
         margin: 0;
         font-weight: 500;
         color: var(--chiller-text-color);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .title-right-group {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        flex-shrink: 0;
       }
 
       .chiller-status {
         color: white;
-        padding: 4px 10px;
-        border-radius: 4px;
+        padding: 5px 12px;
+        border-radius: 15px;
         font-size: 0.8em;
         font-weight: bold;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
-      .chiller-status.stop {
-        background-color: #e74c3c;
+      .chiller-status.stop { background-color: var(--chiller-stop-color); }
+      .chiller-status.running { background-color: var(--chiller-run-color); }
+
+      .chiller-info-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 15px;
       }
 
-      .chiller-status.running {
-        background-color: #2ecc71;
-      }
-
-      .chiller-info-row {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-        margin-bottom: 10px;
-        font-size: 0.9em;
-        color: var(--chiller-light-text-color);
-      }
-
-      .chiller-info-row .info-label {
+      .info-item {
         background-color: var(--chiller-model-serial-bg);
-        padding: 5px 10px;
-        border-radius: 4px;
+        padding: 8px 12px;
+        border-radius: 6px;
+        font-size: 0.9em;
+      }
+      .info-item .info-label {
         font-weight: bold;
         color: var(--chiller-text-color);
-      }
-
-      .chiller-info-row .info-value {
-        flex-grow: 1;
-        color: var(--chiller-light-text-color);
-      }
-
-      .chiller-info-row .fas {
         margin-right: 5px;
       }
-
-      .chiller-description {
-        font-size: 0.9em;
+      .info-item .info-value {
         color: var(--chiller-light-text-color);
-        margin-bottom: 15px;
-        line-height: 1.4;
       }
 
       .chiller-footer {
@@ -440,39 +415,45 @@
         justify-content: space-between;
         align-items: center;
         padding-top: 15px;
-        border-top: 1px solid rgba(255, 255, 255, 0.05);
+        margin-top: auto;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .chiller-stats {
         display: flex;
         align-items: center;
         gap: 15px;
-        font-size: 1.1em;
+        font-size: 1em;
         color: var(--chiller-text-color);
-        font-weight: 500;
+        font-weight: 400;
       }
 
       .chiller-stats i {
-        font-size: 1.2em;
+        font-size: 1.1em;
         color: var(--active-link);
+        margin-right: 5px;
       }
 
       .monitor-btn {
         background-color: var(--button-bg);
         color: white;
         border: none;
-        padding: 10px 15px;
-        border-radius: 5px;
+        padding: 10px 20px;
+        border-radius: 20px;
         cursor: pointer;
         font-size: 0.9em;
+        font-weight: 500;
         display: inline-flex;
         align-items: center;
         gap: 8px;
-        transition: background-color 0.2s ease;
+        transition: all 0.2s ease;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
       }
 
       .monitor-btn:hover {
         background-color: var(--button-hover);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
       }
 
       .header-right .add-chiller-btn {
@@ -503,7 +484,8 @@
         width: 100%;
         height: 100%;
         overflow: auto;
-        background-color: rgba(0, 0, 0, 0.6);
+        background-color: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(5px);
       }
 
       .modal-content {
@@ -515,6 +497,7 @@
         max-width: 500px;
         border-radius: 8px;
         position: relative;
+        box-shadow: 0 5px 20px rgba(0,0,0,0.4);
       }
 
       .close-btn {
@@ -524,6 +507,7 @@
         right: 20px;
         font-size: 28px;
         font-weight: bold;
+        transition: color 0.2s ease;
       }
 
       .close-btn:hover,
@@ -533,31 +517,18 @@
         cursor: pointer;
       }
 
-      .modal-content h2 {
-        margin-bottom: 20px;
-        text-align: center;
-      }
-
-      .modal-content .form-group {
-        margin-bottom: 15px;
-      }
-
-      .modal-content .form-group label {
-        display: block;
-        margin-bottom: 5px;
-        font-weight: 500;
-      }
-
+      .modal-content h2 { margin-bottom: 20px; text-align: center; }
+      .modal-content .form-group { margin-bottom: 15px; }
+      .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
       .modal-content .form-group input,
       .modal-content .form-group select {
         width: 100%;
         padding: 10px;
         border-radius: 5px;
-        border: 1px solid var(--card-border);
+        border: 1px solid var(--sidebar-hover);
         background-color: #34495e;
         color: #fff;
       }
-
       .modal-content .submit-btn {
         width: 100%;
         padding: 12px;
@@ -569,41 +540,43 @@
         font-size: 1em;
         margin-top: 10px;
       }
-
-      .modal-content .submit-btn:hover {
-        background-color: var(--button-hover);
-      }
+      .modal-content .submit-btn:hover { background-color: var(--button-hover); }
 
       .chiller-card-actions {
         position: relative;
-        display: inline-block;
       }
 
       .chiller-card-actions .dropbtn {
         background: none;
         border: none;
-        color: var(--chiller-text-color);
+        color: var(--chiller-light-text-color);
         font-size: 1.2em;
         cursor: pointer;
         padding: 5px;
-        border-radius: 4px;
+        border-radius: 50%;
+        width: 30px;
+        height: 30px;
+        line-height: 20px;
+        text-align: center;
         transition: background-color 0.2s ease;
       }
 
       .chiller-card-actions .dropbtn:hover {
         background-color: rgba(255, 255, 255, 0.1);
+        color: var(--chiller-text-color);
       }
 
       .chiller-card-actions-content {
         display: none;
         position: absolute;
-        background-color: var(--sidebar-bg);
+        background-color: var(--sidebar-hover);
         min-width: 120px;
         box-shadow: 0px 8px 16px 0px rgba(0, 0, 0, 0.2);
         z-index: 1;
         right: 0;
-        border-radius: 4px;
+        border-radius: 6px;
         overflow: hidden;
+        border: 1px solid rgba(255,255,255,0.1);
       }
 
       .chiller-card-actions-content a,
@@ -611,16 +584,23 @@
         color: var(--chiller-text-color);
         padding: 10px 15px;
         text-decoration: none;
-        display: block;
+        display: flex;
+        align-items: center;
+        gap: 10px;
         font-size: 0.9em;
+        transition: background-color 0.2s ease;
       }
 
       .chiller-card-actions-content a:hover,
       .chiller-card-actions-content button:hover {
-        background-color: var(--sidebar-hover);
+        background-color: var(--button-bg);
       }
 
       .chiller-card-actions-content button {
+        width: 100%;
+        text-align: left;
+        background: none;
+        border: none;
         cursor: pointer;
       }
 
@@ -629,117 +609,20 @@
       }
 
       @media (max-width: 1200px) {
-        .dashboard-cards {
-          grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
-        }
-      }
-
-      @media (max-width: 992px) {
-        .dashboard-cards {
-          grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-          padding: 20px;
-        }
+        .dashboard-cards { grid-template-columns: 1fr; }
       }
 
       @media (max-width: 768px) {
-        .sidebar {
-          width: 60px;
-        }
-
-        .sidebar .logo span,
-        .sidebar-nav ul li a span {
-          display: none;
-        }
-
-        .sidebar-header {
-          padding: 0 10px 20px 10px;
-          justify-content: center;
-        }
-
-        .sidebar .logo img {
-          margin-right: 0;
-        }
-
-        .sidebar-nav ul li a {
-          justify-content: center;
-          padding: 12px 0;
-        }
-
-        .sidebar-nav ul li a i {
-          margin-right: 0;
-        }
-
-        .menu-toggle {
-          display: none;
-        }
-
-        .header {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 10px;
-          padding: 15px 20px;
-        }
-
-        .header-right {
-          width: 100%;
-          justify-content: space-between;
-        }
-
-        .dashboard-cards {
-          grid-template-columns: 1fr;
-          padding: 15px;
-        }
-
-        .chiller-info-row {
-          flex-direction: column;
-          align-items: flex-start;
-          gap: 5px;
-        }
-      }
-
-      @media (max-width: 480px) {
-        .header-left h1 {
-          font-size: 1.3em;
-        }
-
-        .header-right span {
-          font-size: 0.8em;
-        }
-
-        .chiller-card-image {
-          height: 120px;
-        }
-
-        .chiller-card-content {
-          padding: 10px 15px;
-        }
-
-        .chiller-card-title h2 {
-          font-size: 1.2em;
-        }
-
-        .chiller-status {
-          font-size: 0.7em;
-          padding: 3px 8px;
-        }
-
-        .chiller-info-row {
-          font-size: 0.8em;
-        }
-
-        .chiller-description {
-          font-size: 0.85em;
-        }
-
-        .chiller-stats {
-          font-size: 1em;
-          gap: 10px;
-        }
-
-        .monitor-btn {
-          padding: 8px 12px;
-          font-size: 0.85em;
-        }
+        .sidebar { width: 60px; }
+        .sidebar .logo span, .sidebar-nav ul li a span { display: none; }
+        .sidebar-header { padding: 0 10px 20px 10px; justify-content: center; }
+        .sidebar .logo img { margin-right: 0; }
+        .sidebar-nav ul li a { justify-content: center; padding: 12px 0; }
+        .sidebar-nav ul li a i { margin-right: 0; }
+        .menu-toggle { display: none; }
+        .header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 15px 20px; }
+        .header-right { width: 100%; justify-content: space-between; }
+        .dashboard-cards { grid-template-columns: 1fr; padding: 15px; }
       }
     </style>
   </head>
@@ -755,7 +638,7 @@
               src="{{ url_for('static', filename='images/jaya_logo.png') }}"
               alt="JAYA Logo"
             />
-            <span>JTI BAS Dashboard</span>
+            <span>JTI BAS</span>
           </div>
         </div>
         <nav class="sidebar-nav">
@@ -771,7 +654,7 @@
               </a>
               <ul class="submenu">
                 {% for site in all_sites_for_nav %}
-                  <li class="{% if session.get('current_site_id') == site.id %}active{% endif %} alarm-status-{{ site.alarm_status }}">
+                  <li class="{% if session.get('current_site_id')|string == site.id|string %}active{% endif %} alarm-status-{{ site.alarm_status }}">
                       <a href="{{ url_for('select_chiller', site_id=site.id) }}">{{ site.name }}</a>
                       {% if site.alarms %}
                       <ul class="alarm-submenu">
@@ -814,7 +697,7 @@
             {% if session.role == 'Admin' %}
             <button id="addChillerBtn" class="add-chiller-btn"><i class="fas fa-plus"></i> Tambah Chiller</button>
             {% endif %}
-            <span>{{ current_time }}</span>
+            <span id="realtime-clock">{{ current_time }}</span>
             <div class="user-profile">
               <i class="fas fa-user-circle"></i>
             </div>
@@ -827,49 +710,43 @@
             <div class="chiller-card-image">
               <img
                 id="chiller-image-{{ chiller.id }}"
-                src="{{ url_for('static', filename='images/' + ('chiller-active.gif' if chiller.fla_status == 'running' else chiller.gambar_url)) }}"
+                src="{{ url_for('static', filename='images/' + (chiller.gambar_url if chiller.fla_status == 'stop' else 'chiller-active.gif')) }}"
                 alt="{{ chiller.nama_chiller }}"
-                onerror="this.onerror=null;this.src='{{ url_for('static', filename='images/placeholder.jpg') }}';"
+                onerror="this.onerror=null;this.src='''{{ url_for('static', filename='images/chiller.png') }}''';"
               />
             </div>
             <div class="chiller-card-content">
               <div class="chiller-card-title">
                 <h2>{{ chiller.nama_chiller }}</h2>
-                <div class="chiller-card-actions">
-                  {% if session.role == 'Admin' %}
-                  <button class="dropbtn"><i class="fas fa-ellipsis-v"></i></button>
-                  <div class="chiller-card-actions-content">
-                    <a href="#" class="edit-chiller-btn" data-chiller-id="{{ chiller.id }}"
-                        data-chiller-num="{{ chiller.nama_chiller }}"
-                        data-serial-number="{{ chiller.serial_number }}"
-                        data-model-number="{{ chiller.model }}"
-                        data-power-kw="{{ '%.2f' | format(chiller.power_kW) }}"
-                        data-ton-tr="{{ '%.2f' | format(chiller.ton_of_refrigeration) }}"
-                        data-image-url="{{ chiller.gambar_url }}"
-                        data-chiller-type="{{ chiller.chiller_type }}">Edit</a>
-                    <form action="{{ url_for('delete_chiller', chiller_id=chiller.id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus chiller ini?');">
-                        <button type="submit" style="background: none; border: none; width: 100%; text-align: left; padding: 10px 15px; color: #ecf0f1; cursor: pointer;">Delete</button>
-                    </form>
-                  </div>
-                  {% endif %}
+                <div class="title-right-group">
+                    <div class="chiller-status {{ chiller.fla_status }}">{{ chiller.fla_status | capitalize }}</div>
+                    {% if session.role == 'Admin' %}
+                    <div class="chiller-card-actions">
+                      <button class="dropbtn"><i class="fas fa-ellipsis-v"></i></button>
+                      <div class="chiller-card-actions-content">
+                        <a href="#" class="edit-chiller-btn" 
+                            data-chiller-id="{{ chiller.id }}"
+                            data-chiller-num="{{ chiller.nama_chiller }}"
+                            data-serial-number="{{ chiller.serial_number or '' }}"
+                            data-model-number="{{ chiller.model or '' }}"
+                            data-power-kw="{{ '%.2f' | format(chiller.power_kW) if chiller.power_kW is not none else '' }}"
+                            data-ton-tr="{{ '%.2f' | format(chiller.ton_of_refrigeration) if chiller.ton_of_refrigeration is not none else '' }}"
+                            data-chiller-type="{{ chiller.chiller_type or 'default' }}">
+                            <i class="fas fa-edit"></i> Edit
+                        </a>
+                        <form action="{{ url_for('delete_chiller', chiller_id=chiller.id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus chiller ini beserta semua datanya?');">
+                            <button type="submit"><i class="fas fa-trash-alt"></i> Delete</button>
+                        </form>
+                      </div>
+                    </div>
+                    {% endif %}
                 </div>
-                <span id="chiller-status-{{ chiller.id }}" class="chiller-status {{ chiller.fla_status }}">{{ "Running" if chiller.fla_status == 'running' else 'Stop' }}</span>
               </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Model:</span>
-                <span class="info-value">{{ chiller.model }}</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Serial Number:</span>
-                <span class="info-value">{{ chiller.serial_number }}</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Power:</span>
-                <span class="info-value">{{ "%.2f" | format(chiller.power_kW) }} kW</span>
-              </div>
-              <div class="chiller-info-row">
-                <span class="info-label">Ton:</span>
-                <span class="info-value">{{ "%.2f" | format(chiller.ton_of_refrigeration) }} TR</span>
+              <div class="chiller-info-grid">
+                  <div class="info-item"><span class="info-label">Model:</span><span class="info-value">{{ chiller.model or 'N/A' }}</span></div>
+                  <div class="info-item"><span class="info-label">Serial:</span><span class="info-value">{{ chiller.serial_number or 'N/A' }}</span></div>
+                  <div class="info-item"><span class="info-label">Power:</span><span class="info-value">{{ "%.2f" | format(chiller.power_kW) if chiller.power_kW is not none else 'N/A' }} kW</span></div>
+                  <div class="info-item"><span class="info-label">Ton:</span><span class="info-value">{{ "%.2f" | format(chiller.ton_of_refrigeration) if chiller.ton_of_refrigeration is not none else 'N/A' }} TR</span></div>
               </div>
               <div class="chiller-footer">
                 <a
@@ -878,15 +755,11 @@
                 >
                   Monitor <i class="fas fa-arrow-right"></i>
                 </a>
-                <div class="chiller-stats">
-                  <span><i class="fas fa-bolt"></i> {{ "%.2f" | format(chiller.power_kW) }} kW</span>
-                  <span><i class="fas fa-snowflake"></i> {{ "%.2f" | format(chiller.ton_of_refrigeration) }} TR</span>
-                </div>
               </div>
             </div>
           </div>
           {% endfor %} {% else %}
-          <p style="color: black">Tidak ada chiller yang tersedia untuk site ini.</p>
+          <p style="color: black; text-align: center; width: 100%;">Tidak ada chiller yang tersedia untuk site ini.</p>
           {% endif %}
         </section>
       </main>
@@ -900,7 +773,7 @@
         <form action="{{ url_for('add_chiller', site_id=site_id) }}" method="POST" enctype="multipart/form-data">
           <div class="form-group">
             <label for="chiller_id">ID Chiller</label>
-            <input type="text" id="chiller_id" name="chiller_id" placeholder="e.g., chiller_01" required>
+            <input type="text" id="chiller_id" name="chiller_id" placeholder="e.g., btpn_chiller_1" required>
           </div>
           <div class="form-group">
             <label for="chiller_num">Nomor Chiller</label>
@@ -925,17 +798,18 @@
           <div class="form-group">
             <label for="chiller_type">Tipe Chiller</label>
             <select id="chiller_type" name="chiller_type">
-                <option value="default_type">Default</option>
-                <option value="btpn_type">BTPN</option>
-                <option value="btpn2_type">BXC2</option>
-                <option value="bxc2_type">yk-sss</option>
-                <option value="bxc2_type">ys-vsd</option>
-                <option value="bxc2_type">ylaa</option>
-                <option value="bxc2_type">yr-sss</option>
-                <option value="bxc2_type">ys-sss</option>
-                <option value="bxc2_type">yvaa</option>
-                <option value="bxc2_type">yvwa1</option>
-                <option value="bxc2_type">yvwa2</option>
+                <option value="default">Default</option>
+                <option value="btpn">BTPN</option>
+                <option value="btpn2">BTPN 2</option>
+                <option value="bxc2">BXC2</option>
+                <option value="yk-sss">YK-SSS</option>
+                <option value="ys-vsd">YS-VSD</option>
+                <option value="ylaa">YLAA</option>
+                <option value="yr-sss">YR-SSS</option>
+                <option value="ys-sss">YS-SSS</option>
+                <option value="yvaa">YVAA</option>
+                <option value="yvwa1">YVWA1</option>
+                <option value="yvwa2">YVWA2</option>
             </select>
           </div>
           <div class="form-group">
@@ -978,17 +852,18 @@
                 <div class="form-group">
                     <label for="edit_chiller_type">Tipe Chiller</label>
                     <select id="edit_chiller_type" name="chiller_type">
-                        <option value="default_type">Default</option>
-                        <option value="btpn_type">BTPN</option>
-                        <option value="btpn2_type">BXC2</option>
-                        <option value="bxc2_type">yk-sss</option>
-                        <option value="bxc2_type">ys-vsd</option>
-                        <option value="bxc2_type">ylaa</option>
-                        <option value="bxc2_type">yr-sss</option>
-                        <option value="bxc2_type">ys-sss</option>
-                        <option value="bxc2_type">yvaa</option>
-                        <option value="bxc2_type">yvwa1</option>
-                        <option value="bxc2_type">yvwa2</option>
+                        <option value="default">Default</option>
+                        <option value="btpn">BTPN</option>
+                        <option value="btpn2">BTPN 2</option>
+                        <option value="bxc2">BXC2</option>
+                        <option value="yk-sss">YK-SSS</option>
+                        <option value="ys-vsd">YS-VSD</option>
+                        <option value="ylaa">YLAA</option>
+                        <option value="yr-sss">YR-SSS</option>
+                        <option value="ys-sss">YS-SSS</option>
+                        <option value="yvaa">YVAA</option>
+                        <option value="yvwa1">YVWA1</option>
+                        <option value="yvwa2">YVWA2</option>
                     </select>
                 </div>
                 <div class="form-group">
@@ -1004,9 +879,12 @@
       document.addEventListener("DOMContentLoaded", () => {
         const menuToggle = document.getElementById("menuToggle");
         const sidebar = document.querySelector(".sidebar");
-        menuToggle.addEventListener("click", () => {
-          sidebar.classList.toggle("collapsed");
-        });
+        if (menuToggle) {
+            menuToggle.addEventListener("click", () => {
+                sidebar.classList.toggle("collapsed");
+            });
+        }
+
         document.querySelectorAll('.submenu-toggle').forEach(toggle => {
             toggle.addEventListener('click', function(event) {
                 event.preventDefault();
@@ -1020,41 +898,40 @@
         {% if session.role == 'Admin' %}
         const addChillerModal = document.getElementById("addChillerModal");
         const addChillerBtn = document.getElementById("addChillerBtn");
-        const closeChillerModalSpan = addChillerModal.getElementsByClassName("close-btn")[0];
-        addChillerBtn.onclick = function() {
-          addChillerModal.style.display = "block";
-        }
-        closeChillerModalSpan.onclick = function() {
-          addChillerModal.style.display = "none";
+        if (addChillerModal && addChillerBtn) {
+            const closeChillerModalSpan = addChillerModal.getElementsByClassName("close-btn")[0];
+            addChillerBtn.onclick = function() {
+              addChillerModal.style.display = "block";
+            }
+            closeChillerModalSpan.onclick = function() {
+              addChillerModal.style.display = "none";
+            }
         }
 
         const editChillerModal = document.getElementById("editChillerModal");
-        const closeEditModalSpan = editChillerModal.getElementsByClassName("close-btn")[0];
-        const editChillerForm = document.getElementById("editChillerForm");
-        document.querySelectorAll('.edit-chiller-btn').forEach(button => {
-            button.addEventListener('click', function(event) {
-                event.preventDefault();
-                const chillerId = this.dataset.chillerId;
-                const chillerNum = this.dataset.chillerNum;
-                const serialNum = this.dataset.serialNumber;
-                const modelNum = this.dataset.modelNumber;
-                const powerKw = this.dataset.powerKw;
-                const tonTr = this.dataset.tonTr;
-                const chillerType = this.dataset.chillerType;
-                editChillerForm.action = `{{ url_for('edit_chiller', chiller_id='placeholder') }}`.replace('placeholder', chillerId);
-                document.getElementById("edit_chiller_id").value = chillerId;
-                document.getElementById("edit_chiller_num").value = chillerNum;
-                document.getElementById("edit_serial_number").value = serialNum;
-                document.getElementById("edit_model_number").value = modelNum;
-                document.getElementById("edit_power_kW").value = powerKw;
-                document.getElementById("edit_ton_of_refrigeration").value = tonTr;
-                document.getElementById("edit_chiller_type").value = chillerType;
-                editChillerModal.style.display = "block";
+        if (editChillerModal) {
+            const closeEditModalSpan = editChillerModal.getElementsByClassName("close-btn")[0];
+            const editChillerForm = document.getElementById("editChillerForm");
+            document.querySelectorAll('.edit-chiller-btn').forEach(button => {
+                button.addEventListener('click', function(event) {
+                    event.preventDefault();
+                    const chillerId = this.dataset.chillerId;
+                    editChillerForm.action = `{{ url_for('edit_chiller', chiller_id='placeholder') }}`.replace('placeholder', chillerId);
+                    document.getElementById("edit_chiller_id").value = chillerId;
+                    document.getElementById("edit_chiller_num").value = this.dataset.chillerNum;
+                    document.getElementById("edit_serial_number").value = this.dataset.serialNumber;
+                    document.getElementById("edit_model_number").value = this.dataset.modelNumber;
+                    document.getElementById("edit_power_kW").value = this.dataset.powerKw;
+                    document.getElementById("edit_ton_of_refrigeration").value = this.dataset.tonTr;
+                    document.getElementById("edit_chiller_type").value = this.dataset.chillerType;
+                    editChillerModal.style.display = "block";
+                });
             });
-        });
-        closeEditModalSpan.onclick = function() {
-            editChillerModal.style.display = "none";
-        };
+            closeEditModalSpan.onclick = function() {
+                editChillerModal.style.display = "none";
+            };
+        }
+
         window.onclick = function(event) {
           if (event.target == addChillerModal) {
             addChillerModal.style.display = "none";
@@ -1064,17 +941,21 @@
           }
         }
         {% endif %}
+
         document.querySelectorAll('.chiller-card-actions .dropbtn').forEach(button => {
             button.addEventListener('click', function(event) {
+                const dropdown = this.closest('.chiller-card-actions');
+                const wasOpen = dropdown.classList.contains('show');
                 document.querySelectorAll('.chiller-card-actions.show').forEach(openDropdown => {
-                    if (openDropdown !== this.closest('.chiller-card-actions')) {
-                        openDropdown.classList.remove('show');
-                    }
+                    openDropdown.classList.remove('show');
                 });
-                this.closest('.chiller-card-actions').classList.toggle('show');
+                if (!wasOpen) {
+                    dropdown.classList.add('show');
+                }
                 event.stopPropagation();
             });
         });
+
         window.addEventListener('click', function(event) {
             if (!event.target.matches('.chiller-card-actions .dropbtn')) {
                 document.querySelectorAll('.chiller-card-actions.show').forEach(openDropdown => {
@@ -1082,6 +963,29 @@
                 });
             }
         });
+
+        /* Real-time Clock */
+        const clockElement = document.getElementById("realtime-clock");
+        function updateClock() {
+            if (clockElement) {
+                const now = new Date();
+                const options = {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: false
+                };
+                let timeString = now.toLocaleString('id-ID', options);
+                timeString = timeString.replace('pukul', '').replace(/\./g, ':').trim();
+                clockElement.textContent = timeString;
+            }
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
       });
     </script>
   </body>

@@ -545,7 +545,7 @@
                     <h1>{% block header_title %}JTI BAS Dashboard{% endblock %}</h1>
                 </div>
                 <div class="header-right">
-                    <span>{{ current_time }}</span>
+                    <span id="realtime-clock">{{ current_time }}</span>
                     <div class="user-profile">
                         <i class="fas fa-user-circle"></i>
                     </div>
@@ -560,20 +560,18 @@
     </div>
 
     <script>
-        /* JavaScript for Sidebar Toggling */
         document.addEventListener("DOMContentLoaded", () => {
+            /* JavaScript for Sidebar Toggling */
             const menuToggle = document.getElementById("menuToggle");
             const sidebar = document.querySelector(".sidebar");
-            const sidebarNavLinks = document.querySelectorAll(
-                ".sidebar-nav ul li a"
-            );
+            if (menuToggle && sidebar) {
+                menuToggle.addEventListener("click", () => {
+                    sidebar.classList.toggle("collapsed");
+                });
+                
+            }
 
-            // Toggle sidebar collapse
-            menuToggle.addEventListener("click", () => {
-                sidebar.classList.toggle("collapsed");
-            });
-
-            // Dropdown functionality
+            /* Dropdown functionality */
             document.querySelectorAll('.submenu-toggle').forEach(toggle => {
                 toggle.addEventListener('click', function(event) {
                     event.preventDefault();
@@ -584,29 +582,32 @@
                 });
             });
 
-            // Set initial active link based on current URL path (server-side logic is better for Flask)
-            // This client-side logic can be simplified or removed if active class is handled by Flask
-            const currentPath = window.location.pathname;
-            sidebarNavLinks.forEach((link) => {
-                const linkHref = link.getAttribute("href");
-                if (linkHref) { // Check if href exists
-                    const absoluteLinkHref = new URL(linkHref, window.location.origin).pathname;
-                    if (currentPath === absoluteLinkHref ||
-                        (currentPath === '/' && absoluteLinkHref === '{{ url_for("select_site") }}') ||
-                        (currentPath.startsWith('/select_chiller') && absoluteLinkHref.startsWith(new URL("{{ url_for('select_chiller', site_id='') }}", window.location.origin).pathname)) ||
-                        (currentPath.startsWith('/monitor_chiller') && absoluteLinkHref.startsWith(new URL("{{ url_for('select_chiller', site_id='') }}", window.location.origin).pathname)) ||
-                        (currentPath.startsWith('/test') && absoluteLinkHref.startsWith(new URL("{{ url_for('select_chiller', site_id='') }}", window.location.origin).pathname)) ||
-                        (currentPath.startsWith('/manage_users') && absoluteLinkHref === '{{ url_for("manage_users") }}') ||
-                        (currentPath.startsWith('/manage_user_access') && absoluteLinkHref.startsWith(new URL("{{ url_for('manage_user_access', user_id=1) }}", window.location.origin).pathname.slice(0, -1))) || // Adjust for dynamic user_id
-                        (currentPath.startsWith('/user_add_account') && absoluteLinkHref === '{{ url_for("user_add_account") }}') || // New line for Add Account
-                        (currentPath.startsWith('/add_user_by_admin') && absoluteLinkHref === '{{ url_for("add_user_by_admin") }}') # New line for Add User By Admin
-                    ) {
-                        link.parentElement.classList.add("active");
-                    } else {
-                         link.parentElement.classList.remove("active"); // Ensure others are not active
-                    }
+            /* Real-time Clock */
+            const clockElement = document.getElementById("realtime-clock");
+            function updateClock() {
+                if (clockElement) {
+                    const now = new Date();
+                    const options = {
+                        weekday: 'long',
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit',
+                        hour12: false
+                    };
+                    // Use 'id-ID' for Indonesian locale to match the backend format
+                    let timeString = now.toLocaleString('id-ID', options);
+                    // Clean up the string to match format "Hari, Tanggal Bulan Tahun, HH:MM:SS"
+                    timeString = timeString.replace('pukul', '').replace(/\./g, ':').trim();
+                    clockElement.textContent = timeString;
                 }
-            });
+            }
+            // Update the clock every second
+            setInterval(updateClock, 1000);
+            // Initial call to set the clock immediately on load
+            updateClock();
         });
     </script>
 </body>

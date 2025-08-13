@@ -5,6 +5,21 @@
 {% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<style>
+  .value-cell.safe {
+    color: #2ecc71; /* Green */
+    font-weight: bold;
+  }
+  .value-cell.unsafe {
+    color: #e74c3c; /* Red */
+    font-weight: bold;
+  }
+  .icon-circle i {
+    font-size: 24px;
+    color: #fff;
+  }
+</style>
 <div class="chiller-content-wrapper">
     <div class="dashboard-grid">
         <div class="last-updated-info">
@@ -21,15 +36,15 @@
         <div class="faults-section">
             
             <div class="fault-card {% if data.safety_fault and data.safety_fault > 0 %}blink-red{% endif %}">
-                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/shield-icon.png') }}" alt="Safety Fault"></div>
+                <div class="icon-circle"><i class="fas fa-shield-alt"></i></div>
                 <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault_desc if data and data.safety_fault_desc is not none else '-' }}</p></div>
             </div>
             <div class="fault-card {% if data.cycling_fault and data.cycling_fault > 0 %}blink-yellow{% endif %}">
-                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/cycling-icon.png') }}" alt="Cycling Fault"></div>
+                <div class="icon-circle"><i class="fas fa-sync-alt"></i></div>
                 <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault_desc if data and data.cycling_fault_desc is not none else '-' }}</p></div>
             </div>
             <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}">
-                <div class="icon-circle"><img src="{{ url_for('static', filename='icons/bell-icon.png') }}" alt="Warning Fault"></div>
+                <div class="icon-circle"><i class="fas fa-bell"></i></div>
                 <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
             </div>
             
@@ -82,7 +97,7 @@
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="100" data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100" data-width="120" data-height="220" data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"></canvas>
+                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="100" data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Pressure</p>
@@ -100,23 +115,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="hover:bg-gray-700">
+                                <tr class="hover:bg-gray-700" data-param-key="evap_lwt">
                                     <td class="font-medium">LWT</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}">{{ data.evap_lwt if data and data.evap_lwt is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="5.5" data-safe-range-celsius-max="8.8">5.50 - 8.80</td>
+                                    <td data-temp-celsius="{{ data.evap_lwt if data and data.evap_lwt is not none else '' }}">{{ data.evap_lwt if data and data.evap_lwt is not none else '-' }} °C</td>
                                 </tr>
-                                <tr class="hover:bg-gray-700">
+                                <tr class="hover:bg-gray-700" data-param-key="evap_rwt">
                                     <td class="font-medium">RWT</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}">{{ data.evap_rwt if data and data.evap_rwt is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="11.11" data-safe-range-celsius-max="14.44">11.11 - 14.44</td>
+                                    <td data-temp-celsius="{{ data.evap_rwt if data and data.evap_rwt is not none else '' }}">{{ data.evap_rwt if data and data.evap_rwt is not none else '-' }} °C</td>
                                 </tr>
-                                <tr class="hover:bg-gray-700">
+                                <tr class="hover:bg-gray-700" data-param-key="evap_satur_temp">
                                     <td class="font-medium">Satur Temp</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}">{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="3.33" data-safe-range-celsius-max="6.67">3.33 - 6.67</td>
+                                    <td data-temp-celsius="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '' }}">{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '-' }} °C</td>
+                                </tr>
                                 <tr class="hover:bg-gray-700">
                                     <td class="font-medium">Pressure</td>
-                                    <td>-</td>
+                                    <td>220.64 - 275.8</td>
                                     <td>{{ data.evap_pressure if data and data.evap_pressure is not none else '-' }} psi</td>
                                 </tr>
                             </tbody>
@@ -157,24 +173,24 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr class="hover:bg-gray-700">
+                                <tr class="hover:bg-gray-700" data-param-key="cond_lwt">
                                     <td class="font-medium">LWT</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}">{{ data.cond_lwt if data and data.cond_lwt is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="32.22" data-safe-range-celsius-max="35.55">32.22 - 35.55</td>
+                                    <td data-temp-celsius="{{ data.cond_lwt if data and data.cond_lwt is not none else '' }}">{{ data.cond_lwt if data and data.cond_lwt is not none else '-' }} °C</td>
                                 </tr>
-                                <tr class="hover:bg-gray-700">
+                                <tr class="hover:bg-gray-700" data-param-key="cond_rwt">
                                     <td class="font-medium">RWT</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}">{{ data.cond_rwt if data and data.cond_rwt is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="26.67" data-safe-range-celsius-max="30.0">26.67 - 30.00</td>
+                                    <td data-temp-celsius="{{ data.cond_rwt if data and data.cond_rwt is not none else '' }}">{{ data.cond_rwt if data and data.cond_rwt is not none else '-' }} °C</td>
                                 </tr>
-                                <tr class="hover:bg-gray-700">
+                                <tr class="hover:bg-gray-700" data-param-key="cond_satur_temp">
                                     <td class="font-medium">Satur Temp</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}">{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="32.22" data-safe-range-celsius-max="40.56">32.22 - 40.56</td>
+                                    <td data-temp-celsius="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '' }}">{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '-' }} °C</td>
                                 </tr>
                                 <tr class="hover:bg-gray-700">
                                     <td class="font-medium">Pressure</td>
-                                    <td>-</td>
+                                    <td>723.9 - 930.8</td>
                                     <td>{{ data.cond_pressure if data and data.cond_pressure is not none else '-' }} psi</td>
                                 </tr>
                             </tbody>
@@ -220,7 +236,7 @@
                             <tbody>
                                 <tr class="hover:bg-gray-700">
                                     <td class="font-medium">Oil Pressure Diff</td>
-                                    <td>-</td>
+                                    <td>227.5 - 275.8</td>
                                     <td>{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else '-' }} psi</td>
                                 </tr>
                                  <tr class="hover:bg-gray-700">
@@ -228,15 +244,15 @@
                                     <td>-</td>
                                     <td>{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else '-' }} psi</td>
                                 </tr>
-                                 <tr class="hover:bg-gray-700">
+                                 <tr class="hover:bg-gray-700" data-param-key="oil_sump_temp">
                                     <td class="font-medium">Oil Sump Temp</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}">{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="40.56" data-safe-range-celsius-max="53.89">40.56 - 53.89</td>
+                                    <td data-temp-celsius="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '' }}">{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '-' }} °C</td>
                                 </tr>
-                                 <tr class="hover:bg-gray-700">
+                                 <tr class="hover:bg-gray-700" data-param-key="discharge_temp">
                                     <td class="font-medium">Discharge Temp</td>
-                                    <td>-</td>
-                                    <td data-temp-celsius="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}">{{ data.discharge_temp if data and data.discharge_temp is not none else '-' }} °C</td>
+                                    <td data-safe-range-celsius-min="40.56" data-safe-range-celsius-max="53.89">40.56 - 53.89</td>
+                                    <td data-temp-celsius="{{ data.discharge_temp if data and data.discharge_temp is not none else '' }}">{{ data.discharge_temp if data and data.discharge_temp is not none else '-' }} °C</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -303,6 +319,7 @@
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.2.1/chartjs-plugin-annotation.min.js"></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const historicalData = {{ historical_data|tojson }};
@@ -311,11 +328,31 @@
 
         const tempUnitSelect = document.getElementById('temp_unit');
         
-        // Load saved unit preference or default to Celsius
         let currentUnit = localStorage.getItem('temperatureUnit') || 'celsius';
         tempUnitSelect.value = currentUnit;
 
-        // Helper function to convert Celsius to Fahrenheit
+        function getSafeRanges() {
+            const ranges = {};
+            document.querySelectorAll('tr[data-param-key]').forEach(row => {
+                const key = row.dataset.paramKey;
+                const rangeCell = row.children[1];
+                
+                if (key && rangeCell) {
+                    const min = rangeCell.dataset.safeRangeCelsiusMin;
+                    const max = rangeCell.dataset.safeRangeCelsiusMax;
+                    if (min && max) {
+                        ranges[key] = {
+                            min: parseFloat(min),
+                            max: parseFloat(max)
+                        };
+                    }
+                }
+            });
+            return ranges;
+        }
+
+        const safeRanges = getSafeRanges();
+
         function celsiusToFahrenheit(celsius) {
             if (celsius === null || celsius === undefined || isNaN(celsius)) {
                 return null;
@@ -323,7 +360,74 @@
             return (celsius * 9/5) + 32;
         }
 
-        // Function to update all temperature displays (gauges and tables)
+        function updateSafeRangesDisplay(unit) {
+            document.querySelectorAll('td[data-safe-range-celsius-min]').forEach(rangeCell => {
+                const minCelsius = parseFloat(rangeCell.dataset.safeRangeCelsiusMin);
+                const maxCelsius = parseFloat(rangeCell.dataset.safeRangeCelsiusMax);
+
+                if (isNaN(minCelsius) || isNaN(maxCelsius)) return;
+
+                if (unit === 'fahrenheit') {
+                    const minF = celsiusToFahrenheit(minCelsius).toFixed(2);
+                    const maxF = celsiusToFahrenheit(maxCelsius).toFixed(2);
+                    rangeCell.textContent = `${minF} - ${maxF}`;
+                } else {
+                    rangeCell.textContent = `${minCelsius.toFixed(2)} - ${maxCelsius.toFixed(2)}`;
+                }
+            });
+        }
+
+        function checkSafeRanges() {
+            const currentUnit = localStorage.getItem('temperatureUnit') || 'celsius';
+
+            document.querySelectorAll('.parameter-table tbody tr').forEach(row => {
+                const rangeCell = row.children[1];
+                const valueCell = row.children[2];
+
+                if (!rangeCell || !valueCell) return;
+
+                const valueText = valueCell.textContent.trim();
+                const value = parseFloat(valueText);
+
+                valueCell.classList.remove('safe', 'unsafe', 'value-cell');
+
+                if (isNaN(value)) {
+                    return;
+                }
+                
+                const isTemp = valueCell.hasAttribute('data-temp-celsius');
+                let min, max;
+
+                if (isTemp) {
+                    const minCelsius = rangeCell.dataset.safeRangeCelsiusMin;
+                    const maxCelsius = rangeCell.dataset.safeRangeCelsiusMax;
+                    if (!minCelsius || !maxCelsius) return;
+
+                    min = parseFloat(minCelsius);
+                    max = parseFloat(maxCelsius);
+
+                    if (currentUnit === 'fahrenheit') {
+                        min = celsiusToFahrenheit(min);
+                        max = celsiusToFahrenheit(max);
+                    }
+                } else {
+                    const rangeText = rangeCell.textContent.trim();
+                    if (rangeText === '-') return;
+                    [min, max] = rangeText.split('-').map(s => parseFloat(s.trim()));
+                }
+
+                if (isNaN(min) || isNaN(max)) return;
+
+                valueCell.classList.add('value-cell');
+
+                if (value >= min && value <= max) {
+                    valueCell.classList.add('safe');
+                } else {
+                    valueCell.classList.add('unsafe');
+                }
+            });
+        }
+
         function updateTemperatureDisplays(unit) {
             const tempElements = document.querySelectorAll('[data-temp-celsius]');
             tempElements.forEach(el => {
@@ -343,7 +447,8 @@
                 el.textContent = `${displayValue} ${displayUnit}`;
             });
 
-            // Update gauges
+            updateSafeRangesDisplay(unit);
+
             const gaugeCanvases = document.querySelectorAll('canvas[data-type="linear-gauge"]');
             gaugeCanvases.forEach(canvas => {
                 const originalValue = parseFloat(canvas.dataset.originalValue);
@@ -355,29 +460,24 @@
                     newUnit = '°F';
                 }
                 
-                // Re-initialize gauge with new value and unit
-                // This assumes you have a way to re-render/update your gauge library
-                // For now, we'll just update the data-value and data-units attributes
-                // A full re-render might be needed depending on the gauge library
                 canvas.dataset.value = newValue !== null ? newValue.toFixed(2) : 0;
                 canvas.dataset.units = newUnit;
-                // If your gauge library has an update method, call it here.
-                // e.g., if (canvas.gaugeInstance) canvas.gaugeInstance.update({ value: newValue, units: newUnit });
             });
-            // Re-render all gauges after updating their data attributes
-            if (window.drawAllGauges) { // Assuming a global function to redraw gauges
+
+            if (window.drawAllGauges) {
                 window.drawAllGauges();
             }
+
+            checkSafeRanges();
         }
 
         function renderCharts() {
-            // Destroy existing charts before re-rendering
             for (const chartId in currentCharts) {
                 if (currentCharts[chartId]) {
                     currentCharts[chartId].destroy();
                 }
             }
-            currentCharts = {}; // Clear the object
+            currentCharts = {};
 
             if (historicalData && historicalData.length > 0) {
                 const labels = historicalData.map(d => new Date(d.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }));
@@ -385,6 +485,30 @@
                 parameters.forEach(param => {
                     const ctx = document.getElementById(`chart-${param.key}`)?.getContext('2d');
                     if (!ctx) return;
+
+                    const safeRange = safeRanges[param.key];
+                    const annotations = {};
+
+                    if (safeRange) {
+                        let yMin = safeRange.min;
+                        let yMax = safeRange.max;
+
+                        const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
+
+                        if (isTemperature && currentUnit === 'fahrenheit') {
+                            yMin = celsiusToFahrenheit(yMin);
+                            yMax = celsiusToFahrenheit(yMax);
+                        }
+
+                        annotations.safeRangeBox = {
+                            type: 'box',
+                            yMin: yMin,
+                            yMax: yMax,
+                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                            borderColor: '#2ecc71',
+                            borderWidth: 1
+                        };
+                    }
 
                     let datasets;
                     const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
@@ -397,7 +521,6 @@
                     }
 
                     if (param.datasets) {
-                        // Multi-dataset chart (e.g., Motor Phase Currents)
                         datasets = param.datasets.map((ds) => {
                             const r = parseInt(ds.borderColor.slice(1, 3), 16);
                             const g = parseInt(ds.borderColor.slice(3, 5), 16);
@@ -423,7 +546,6 @@
                             };
                         });
                     } else {
-                        // Single-dataset chart
                         const gradient = ctx.createLinearGradient(0, 0, 0, 250);
                         gradient.addColorStop(0, 'rgba(234, 179, 8, 0.4)');
                         gradient.addColorStop(1, 'rgba(234, 179, 8, 0)');
@@ -489,6 +611,9 @@
                                             return label;
                                         }
                                     }
+                                },
+                                annotation: {
+                                    annotations: annotations
                                 }
                             },
                             scales: {
@@ -519,16 +644,14 @@
             }
         }
 
-        // Initial render of charts and temperature displays
         renderCharts();
         updateTemperatureDisplays(currentUnit);
 
-        // Event listener for unit change
         tempUnitSelect.addEventListener('change', function() {
             currentUnit = this.value;
             localStorage.setItem('temperatureUnit', currentUnit);
             updateTemperatureDisplays(currentUnit);
-            renderCharts(); // Re-render charts with new unit
+            renderCharts();
         });
     });
 </script>

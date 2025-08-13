@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Chiller - JTI BAS Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --sidebar-bg: #1f2937;
+            --header-bg: #1f2937;
+            --main-bg: #f4f7f6;
+            --card-bg: #ffffff;
+            --text-color: #ecf0f1;
+            --button-bg: #3498db;
+            --button-hover: #2980b9;
+        }
+        body {
+            font-family: "Roboto", sans-serif;
+            background-color: var(--main-bg);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-image: url("{{ url_for('static', filename='images/logo-3.jpg')}}");
+            background-size: cover;
+            background-attachment: fixed;
+        }
+        .form-container {
+            background-color: var(--sidebar-bg);
+            color: var(--text-color);
+            padding: 30px 40px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            width: 100%;
+            max-width: 600px;
+        }
+        h2 {
+            text-align: center;
+            margin-bottom: 25px;
+            font-weight: 500;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+        }
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 10px;
+            border-radius: 5px;
+            border: 1px solid #34495e;
+            background-color: #34495e;
+            color: #fff;
+            box-sizing: border-box;
+        }
+        .form-group input[readonly] {
+            background-color: #2c3e50;
+            cursor: not-allowed;
+        }
+        .submit-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--button-bg);
+            color: #fff;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 10px;
+            transition: background-color 0.2s ease;
+        }
+        .submit-btn:hover {
+            background-color: var(--button-hover);
+        }
+        .back-link {
+            display: block;
+            text-align: center;
+            margin-top: 20px;
+            color: var(--button-bg);
+            text-decoration: none;
+        }
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h2>Edit Chiller</h2>
+        <form action="{{ url_for('edit_chiller', chiller_id=chiller.id) }}" method="POST" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="edit_chiller_id">ID Chiller (Tidak Dapat Diubah)</label>
+                <input type="text" id="edit_chiller_id" name="chiller_id" value="{{ chiller.id }}" readonly>
+            </div>
+            <div class="form-group">
+                <label for="edit_chiller_num">Nomor Chiller</label>
+                <input type="text" id="edit_chiller_num" name="chiller_num" value="{{ chiller.chiller_num }}" required>
+            </div>
+            <div class="form-group">
+                <label for="edit_serial_number">Serial Number</label>
+                <input type="text" id="edit_serial_number" name="serial_number" value="{{ chiller.serial_number }}">
+            </div>
+            <div class="form-group">
+                <label for="edit_model_number">Model Number</label>
+                <input type="text" id="edit_model_number" name="model_number" value="{{ chiller.model_number }}">
+            </div>
+            <div class="form-group">
+                <label for="edit_power_kW">Power (kW)</label>
+                <input type="number" step="0.01" id="edit_power_kW" name="power_kW" value="{{ '%.2f' | format(chiller.power_kW) if chiller.power_kW is not none }}">
+            </div>
+            <div class="form-group">
+                <label for="edit_ton_of_refrigeration">Ton Refrigeration (TR)</label>
+                <input type="number" step="0.01" id="edit_ton_of_refrigeration" name="ton_of_refrigeration" value="{{ '%.2f' | format(chiller.ton_of_refrigeration) if chiller.ton_of_refrigeration is not none }}">
+            </div>
+            <div class="form-group">
+                <label for="edit_chiller_type">Tipe Chiller</label>
+                <select id="edit_chiller_type" name="chiller_type">
+                    <option value="default" {% if chiller.chiller_type == 'default' %}selected{% endif %}>Default</option>
+                    <option value="btpn" {% if chiller.chiller_type == 'btpn' %}selected{% endif %}>BTPN</option>
+                    <option value="btpn2" {% if chiller.chiller_type == 'btpn2' %}selected{% endif %}>BTPN 2</option>
+                    <option value="bxc2" {% if chiller.chiller_type == 'bxc2' %}selected{% endif %}>BXC2</option>
+                    <option value="yk-sss" {% if chiller.chiller_type == 'yk-sss' %}selected{% endif %}>YK-SSS</option>
+                    <option value="ys-vsd" {% if chiller.chiller_type == 'ys-vsd' %}selected{% endif %}>YS-VSD</option>
+                    <option value="ylaa" {% if chiller.chiller_type == 'ylaa' %}selected{% endif %}>YLAA</option>
+                    <option value="yr-sss" {% if chiller.chiller_type == 'yr-sss' %}selected{% endif %}>YR-SSS</option>
+                    <option value="ys-sss" {% if chiller.chiller_type == 'ys-sss' %}selected{% endif %}>YS-SSS</option>
+                    <option value="yvaa" {% if chiller.chiller_type == 'yvaa' %}selected{% endif %}>YVAA</option>
+                    <option value="yvwa1" {% if chiller.chiller_type == 'yvwa1' %}selected{% endif %}>YVWA1</option>
+                    <option value="yvwa2" {% if chiller.chiller_type == 'yvwa2' %}selected{% endif %}>YVWA2</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="edit_image">Gambar Chiller (Biarkan kosong untuk tidak mengubah)</label>
+                <input type="file" id="edit_image" name="image" accept="image/*">
+            </div>
+            <button type="submit" class="submit-btn">Simpan Perubahan</button>
+        </form>
+        <a href="{{ url_for('select_chiller', site_id=site_id) }}" class="back-link">Kembali ke Daftar Chiller</a>
+    </div>
+</body>
+</html>

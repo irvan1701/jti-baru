@@ -759,17 +759,37 @@ def select_chiller(site_id):
 
             cursor.execute("""
                 SELECT id, chiller_num AS nama_chiller, model_number AS model, serial_number, 
-                       power_kW, ton_of_refrigeration, image_name AS gambar_url
+                       power_kW, ton_of_refrigeration, image_name AS gambar_url, chiller_type
                 FROM chillers
                 WHERE site_id = %s
+                ORDER BY chiller_num
             """, (site_id,))
-            chillers = cursor.fetchall()
+            chillers_raw = cursor.fetchall()
+            chillers = [dict(c) for c in chillers_raw]
+
+            for chiller in chillers:
+                chiller['fla_status'] = 'stop' # Default status
+                try:
+                    # Menggunakan kolom `fla` dan threshold > 5 sesuai permintaan
+                    cursor.execute("""
+                        SELECT fla 
+                        FROM chiller_datas 
+                        WHERE chiller_id = %s 
+                        ORDER BY timestamp DESC 
+                        LIMIT 1
+                    """, (chiller['id'],))
+                    latest_data = cursor.fetchone()
+                    if latest_data and latest_data.get('fla') and latest_data['fla'] > 5:
+                        chiller['fla_status'] = 'running'
+                except mysql.connector.Error as e:
+                    print(f"Warning: Gagal mengambil status untuk chiller {chiller['id']}. Pastikan kolom 'fla' ada. Error: {e}")
+
         except mysql.connector.Error as err:
             flash(f"Error saat mengambil daftar chiller: {err}", 'danger')
         finally:
             if cursor:
                 cursor.close()
-            if conn:
+            if conn.is_connected():
                 conn.close()
     
     session['current_site_id'] = site_id
