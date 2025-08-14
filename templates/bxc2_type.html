@@ -89,19 +89,64 @@
                     <div class="thermometer-group flex-1 flex flex-row space-x-4">
                         <div class="single-thermometer">
                             <p class="thermometer-label">LWT</p>
-                            <canvas data-type="linear-gauge" data-min-value="10" data-max-value="80" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80" data-width="120" data-height="220" data-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-min-value="10"
+                                data-max-value="80"
+                                data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}"
+                                data-highlights='[{"from":5.5,"to":8.8,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">RWT</p>
-                            <canvas data-type="linear-gauge" data-min-value="10" data-max-value="80" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80" data-width="120" data-height="220" data-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-min-value="10"
+                                data-max-value="80"
+                                data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}"
+                                data-min-value="0"
+                                data-max-value="60"
+                                data-highlights='[{"from":11.11,"to":14.44,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="100" data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-min-value="0"
+                                data-max-value="100"
+                                data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"
+                                data-highlights='[{"from":3.33,"to":6.67,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Pressure</p>
-                            <canvas data-type="radial-gauge" data-min-value="230" data-max-value="520" data-major-ticks="230, 250, 280, 330, 380, 430, 480, 520" data-width="180" data-height="180" data-value="{{ data.evap_pressure if data and data.evap_pressure is not none else 0 }}" data-units="psi"></canvas>
+                            <canvas
+                                data-type="radial-gauge"
+                                data-min-value="230"
+                                data-max-value="520"
+                                data-major-ticks="230, 250, 280, 330, 380, 430, 480, 520"
+                                data-width="180"
+                                data-height="180"
+                                data-value="{{ data.evap_pressure if data and data.evap_pressure is not none else 0 }}"
+                                data-units="psi"
+                                data-highlights='[{"from":220.64,"to":275.8,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                     </div>
                     <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
@@ -147,19 +192,63 @@
                     <div class="thermometer-group flex-1 flex flex-row space-x-4">
                         <div class="single-thermometer">
                             <p class="thermometer-label">LWT</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}"
+                                data-min-value="0"
+                                data-max-value="60"
+                                
+                                data-highlights='[{"from":32.22,"to":35.55,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">RWT</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}"
+                                data-min-value="0"
+                                data-max-value="60"
+                                data-highlights='[{"from":26.67,"to":30.0,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-min-value="10" data-max-value="105" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80,90, 105" data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-width="120"
+                                data-height="220"
+                                data-min-value="10"
+                                data-max-value="105"
+                                data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80,90, 105"
+                                data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"
+                                data-min-value="0"
+                                data-max-value="60"
+                                data-highlights='[{"from":32.22,"to":40.56,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Pressure</p>
-                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.cond_pressure if data and data.cond_pressure is not none else 0 }}" data-units="psi" data-min-value="0" data-max-value="400"></canvas>
+                            <canvas
+                                data-type="radial-gauge"
+                                data-width="180"
+                                data-height="180"
+                                data-value="{{ data.cond_pressure if data and data.cond_pressure is not none else 0 }}"
+                                data-units="psi"
+                                data-min-value="0"
+                                data-max-value="1000"
+                                data-major-ticks="0, 100, 200, 300, 400, 500, 600,700,800,900, 1000"
+                                data-highlights='[{"from":723.9,"to":930.8,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                     </div>
                     <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
@@ -207,20 +296,62 @@
                     <div class="thermometer-group flex-1 flex flex-row space-x-4">
                         <div class="single-thermometer">
                             <p class="thermometer-label">Oil Pressure Diff</p>
-                            <canvas data-type="radial-gauge" data-min-value="-5" data-max-value="300" data-major-ticks="-5, 30, 65, 100, 135, 170, 205, 240, 275, 300" data-width="180" data-height="180" data-value="{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else 0 }}" data-units="psi"></canvas>
+                            <canvas
+                                data-type="radial-gauge"
+                                data-min-value="-5"
+                                data-max-value="300"
+                                data-major-ticks="-5, 30, 65, 100, 135, 170, 205, 240, 275, 300"
+                                data-width="180"
+                                data-height="180"
+                                data-value="{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else 0 }}"
+                                data-units="psi"
+                                data-highlights='[{"from":227.5,"to":275.8,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Oil Pump Pressure</p>
-                            <canvas data-type="radial-gauge" min-value="0" data-max-value="1000" data-major-ticks="0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000" data-width="180" data-height="180" data-value="{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else 0 }}" data-units="psi"></canvas>
+                            <canvas
+                                data-type="radial-gauge"
+                                min-value="0"
+                                data-max-value="1000"
+                                data-major-ticks="0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000"
+                                data-width="180"
+                                data-height="180"
+                                data-value="{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else 0 }}"
+                                data-units="psi"
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Oil Sump Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="125" data-major-ticks="0, 15, 30, 45, 60, 75, 90, 105, 120, 125" data-width="120" data-height="220" data-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-min-value="0"
+                                data-max-value="125"
+                                data-major-ticks="0, 15, 30, 45, 60, 75, 90, 105, 120, 125"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}"
+                                data-highlights='[{"from":40.56,"to":53.89,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Discharge Temp</p>
-                            
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="120" data-major-ticks="0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120" data-width="120" data-height="220" data-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}" data-min-value="0" data-max-value="120"></canvas>
+                            <canvas
+                                data-type="linear-gauge"
+                                data-min-value="0"
+                                data-max-value="120"
+                                data-major-ticks="0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120"
+                                data-width="120"
+                                data-height="220"
+                                data-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}"
+                                data-units="°C"
+                                data-original-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}"
+                                data-min-value="0"
+                                data-max-value="120"
+                                data-highlights='[{"from":40.56,"to":53.89,"color":"rgba(46,204,113,0.75)"}]'
+                            ></canvas>
                         </div>
                     </div>
                     <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
@@ -263,7 +394,6 @@
 
         <div class="chart-section">
             <h2 class="text-2xl font-bold text-white mb-4 text-center">Analisis Data Historis</h2>
-            
             <form action="{{ url_for('test') }}" method="get">
                 <input type="hidden" name="chiller_id" value="{{ chiller.id }}">
                 <div class="filter-form">
@@ -276,12 +406,12 @@
                         <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}">
                     </div>
                     <button type="submit">Tampilkan</button>
+                    <button type="button" id="report-button" style="margin-left: 1rem;">Export PDF</button>
                 </div>
             </form>
-
             {% if historical_data %}
             <div class="charts-grid">
-                {% set parameters = [
+                {% set chart_parameters = [
                     { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
                     { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
                     { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
@@ -296,8 +426,7 @@
                     { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
                     { "key": "number_of_start", "label": "Starts", "unit": "" }
                 ] %}
-
-                {% for param in parameters %}
+                {% for param in chart_parameters %}
                 <div class="chart-card-wrapper">
                     <div class="chart-card">
                         <h3 class="chart-card-title">{{ param.label }}</h3>
@@ -315,7 +444,6 @@
             </div>
             {% endif %}
         </div>
-
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -323,7 +451,7 @@
 <script>
     document.addEventListener('DOMContentLoaded', function () {
         const historicalData = {{ historical_data|tojson }};
-        const parameters = {{ parameters | tojson }};
+        const chartParameters = {{ chart_parameters | tojson }};
         let currentCharts = {}; // To store chart instances for destruction
 
         const tempUnitSelect = document.getElementById('temp_unit');
@@ -482,7 +610,7 @@
             if (historicalData && historicalData.length > 0) {
                 const labels = historicalData.map(d => new Date(d.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }));
                 
-                parameters.forEach(param => {
+                chartParameters.forEach(param => {
                     const ctx = document.getElementById(`chart-${param.key}`)?.getContext('2d');
                     if (!ctx) return;
 
@@ -652,6 +780,53 @@
             localStorage.setItem('temperatureUnit', currentUnit);
             updateTemperatureDisplays(currentUnit);
             renderCharts();
+        });
+
+        document.getElementById('report-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            const chillerId = document.querySelector('input[name="chiller_id"]').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const unit = document.getElementById('temp_unit').value; // ambil unit yang dipilih
+
+            // Ambil status alarm dari data yang sudah di-render ke halaman
+            let alarm = 'none';
+            {% if data %}
+                {% if data.safety_fault and data.safety_fault > 0 %}
+                    alarm = 'safety_fault';
+                {% elif data.cycling_fault and data.cycling_fault > 0 %}
+                    alarm = 'cycling_fault';
+                {% elif data.warning_fault and data.warning_fault > 0 %}
+                    alarm = 'warning_fault';
+                {% endif %}
+            {% endif %}
+
+            let reportUrl = `/report/pdf/${chillerId}`;
+            const params = new URLSearchParams();
+            if (startDate) {
+                params.append('start_date', startDate);
+            }
+            if (endDate) {
+                params.append('end_date', endDate);
+            }
+            if (unit) {
+                params.append('unit', unit);
+            }
+            if (alarm) {
+                params.append('alarm', alarm);
+            }
+
+            if (params.toString()) {
+                reportUrl += `?${params.toString()}`;
+            }
+
+            // Open PDF and trigger print
+            const win = window.open(reportUrl, '_blank');
+            if (win) {
+                win.onload = function() {
+                    win.print();
+                };
+            }
         });
     });
 </script>

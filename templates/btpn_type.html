@@ -1,4 +1,5 @@
 {% extends 'sidebar.html' %}
+
 {% block title %}{{ chiller_name or 'Chiller Dashboard' }} - JTI BAS Dashboard{% endblock %}
 
 {% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
@@ -21,7 +22,6 @@
 </style>
 <div class="chiller-content-wrapper">
     <div class="dashboard-grid">
-        
         <div class="last-updated-info">
             <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
             <div class="unit-selection">
@@ -32,8 +32,9 @@
                 </select>
             </div>
         </div>
-
+        
         <div class="faults-section">
+            
             <div class="fault-card {% if data.safety_fault and data.safety_fault > 0 %}blink-red{% endif %}">
                 <div class="icon-circle"><i class="fas fa-shield-alt"></i></div>
                 <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault_desc if data and data.safety_fault_desc is not none else '-' }}</p></div>
@@ -46,6 +47,7 @@
                 <div class="icon-circle"><i class="fas fa-bell"></i></div>
                 <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
             </div>
+            
         </div>
 
         <div class="chiller-details-section">
@@ -56,17 +58,16 @@
                 <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
                 {% endif %}
             </div>
-           <div class="chiller-info-grid">
+            <div class="chiller-info-grid">
                 <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data and data.fla is not none and data.fla > 5 else "Stopped" }}</p></div>
                 <div class="info-card"><p class="label">FLA</p><p class="value">{{ data.fla if data and data.fla is not none else '-' }} %</p></div>
                 <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ data.operating_hour if data and data.operating_hour is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.VSD_Input_Power if data and data.VSD_Input_Power is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.VSD_Input_KWH if data and data.VSD_Input_KWH is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">VSD Out voltage</p><p class="value">{{ data.vsd_out_voltage if data and data.vsd_out_voltage is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Motor PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data and data.vsd_ph_c_current is not none else '-' }}</p></div>
-
+                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data and data.input_power is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data and data.input_kwh is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">Starts</p><p class="value">{{ data.number_of_start if data and data.number_of_start is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '-' }}</p></div>
+                <div class="info-card"><p class="label">VSD PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data and data.vsd_ph_c_current is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Approach Evap</p><p class="value">{{ data.Approach_Evap if data and data.Approach_Evap is not none else '-' }}</p></div>
                 <div class="info-card"><p class="label">Approach Cond</p><p class="value">{{ data.Approach_Cond if data and data.Approach_Cond is not none else '-' }}</p></div>
 
@@ -96,7 +97,7 @@
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="80" data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"></canvas>
+                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="100" data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Pressure</p>
@@ -146,19 +147,19 @@
                     <div class="thermometer-group flex-1 flex flex-row space-x-4">
                         <div class="single-thermometer">
                             <p class="thermometer-label">LWT</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}"></canvas>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">RWT</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}"></canvas>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="10" data-max-value="105" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80,90, 105" data-width="120" data-height="220" data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"></canvas>
+                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-min-value="10" data-max-value="105" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80,90, 105" data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
                         </div>
                         <div class="single-thermometer">
                             <p class="thermometer-label">Pressure</p>
-                            <canvas data-type="radial-gauge" data-width="180" data-min-value="0" data-max-value="900" data-major-ticks="0, 100, 200, 300, 400, 500, 600, 700, 800, 900" data-height="180" data-value="{{ data.cond_pressure if data and data.cond_pressure is not none else 0 }}" data-units="psi"></canvas>
+                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.cond_pressure if data and data.cond_pressure is not none else 0 }}" data-units="psi" data-min-value="0" data-max-value="400"></canvas>
                         </div>
                     </div>
                     <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
@@ -202,7 +203,7 @@
         <div class="oil-discharge-section">
             <div class="section-card">
                 <p class="mb-4">Oil & Discharge</p>
-                 <div class="flex flex-row space-x-4">
+                <div class="flex flex-row space-x-4">
                     <div class="thermometer-group flex-1 flex flex-row space-x-4">
                         <div class="single-thermometer">
                             <p class="thermometer-label">Oil Pressure Diff</p>
@@ -275,6 +276,7 @@
                         <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}">
                     </div>
                     <button type="submit">Tampilkan</button>
+                    <button type="button" id="report-button" style="margin-left: 1rem;">Export PDF</button>
                 </div>
             </form>
 
@@ -290,20 +292,10 @@
                     { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
                     { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
                     { "key": "fla", "label": "FLA", "unit": "%" },
-                    { "key": "VSD_Input_Power", "label": "Input Power", "unit": "kW" },
-                    { "key": "vsd_out_voltage", "label": "VSD Output Voltage", "unit": "V" },
+                    { "key": "input_power", "label": "Input Power", "unit": "kW" },
                     { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
                     { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
-                    { 
-                        "key": "motor_currents", 
-                        "label": "Motor Phase Currents", 
-                        "unit": "A",
-                        "datasets": [
-                            { "key": "vsd_ph_a_current", "label": "Phase A", "borderColor": "#3498db" },
-                            { "key": "vsd_ph_b_current", "label": "Phase B", "borderColor": "#e74c3c" },
-                            { "key": "vsd_ph_c_current", "label": "Phase C", "borderColor": "#2ecc71" }
-                        ]
-                    }
+                    { "key": "number_of_start", "label": "Starts", "unit": "" }
                 ] %}
 
                 {% for param in parameters %}
@@ -661,6 +653,28 @@
             localStorage.setItem('temperatureUnit', currentUnit);
             updateTemperatureDisplays(currentUnit);
             renderCharts();
+        });
+
+        document.getElementById('report-button').addEventListener('click', function(e) {
+            e.preventDefault();
+            const chillerId = document.querySelector('input[name="chiller_id"]').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            
+            let reportUrl = `/report/pdf/${chillerId}`;
+            const params = new URLSearchParams();
+            if (startDate) {
+                params.append('start_date', startDate);
+            }
+            if (endDate) {
+                params.append('end_date', endDate);
+            }
+            
+            if (params.toString()) {
+                reportUrl += `?${params.toString()}`;
+            }
+            
+            window.open(reportUrl, '_blank');
         });
     });
 </script>

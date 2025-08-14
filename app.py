@@ -1,4 +1,9 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session
+from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
+from fpdf import FPDF
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+from io import BytesIO
 from auth import auth_bp
 from datetime import datetime, timedelta
 import locale
@@ -23,476 +28,272 @@ app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'jti-new2')
 bcrypt = Bcrypt(app)
 app.register_blueprint(auth_bp)
 
+
+class PDFWithMargins(FPDF):
+    def __init__(self, orientation='P', unit='mm', format='A4', top_margin=15, bottom_margin=15, left_margin=10, right_margin=10):
+        super().__init__(orientation, unit, format)
+        self.set_top_margin(top_margin)
+        self.set_left_margin(left_margin)
+        self.set_right_margin(right_margin)
+        self.set_auto_page_break(auto=True, margin=bottom_margin)
+
+    def header(self):
+        # This space is reserved for the header.
+        # By having a header method, even if empty, FPDF correctly sets the top margin for the content.
+        pass
+
+    def footer(self):
+        # This space is reserved for the footer.
+        pass
+
 # --- HARDCODED LOOKUP TABLES (Lengkap) ---
 safety_codes = {
-    0: "No Safety Faults Present",
-    1: "Evaporator - Low Pressure",
-    2: "Evaporator - Transducer Or Leaving Liquid Probe",
-    3: "Evaporator - Transducer Or Temperature Sensor",
-    4: "Condenser - High Pressure Contacts Open",
-    5: "Condenser - High Pressure",
-    6: "Condenser - Pressure Transducer Out Of Range",
-    7: "Auxiliary Safety - Contacts Closed",
-    8: "Discharge - Low Temperature",
-    9: "Discharge - High Temperature",
-    10: "Oil - High Sump Temperature",
-    11: "Oil - Low Differential Pressure",
-    12: "Oil - High Differential Pressure",
-    13: "Oil - Pump Pressure Transducer Out Of Range",
-    14: "Oil - Sump Pressure Transducer Out Of Range",
-    15: "Motor - Lack Of Motor Oil Change",
-    16: "Sales Order - Invalid Compressor Model",
-    17: "Sales Order - Invalid Gear Code",
-    18: "Oil - Differential Pressure Calibration",
-    19: "Safety Stop",
-    20: "Oil - Variable Speed Pump - Setpoint Not Achieved",
-    21: "Control Panel - Power Failure",
-    22: "Control Panel - Loss Of Control Voltage",
-    23: "MOTOR OR STARTER - CURRENT IMBALANCE",
-    24: "Thrust Bearing - Proximity Probe Clearance",
-    25: "Thrust Bearing - Proximity Probe Uncalibrated",
-    26: "Thrust Bearing - Proximity Probe Out Of Range",
-    27: "Thrust Bearing - High Oil Temperature",
-    28: "Thrust Bearing - Oil Temperature Sensor",
-    29: "VSD - High Heatsink Temperature",
-    30: "VSD - 105% MOTOR CURRENT OVERLOAD",
-    31: "VSD - HIGH PHASE A INVERTER HEATSINK TEMPERATURE",
+    0: "No Safety Faults Present", 1: "Evaporator - Low Pressure", 2: "Evaporator - Transducer Or Leaving Liquid Probe",
+    3: "Evaporator - Transducer Or Temperature Sensor", 4: "Condenser - High Pressure Contacts Open",
+    5: "Condenser - High Pressure", 6: "Condenser - Pressure Transducer Out Of Range",
+    7: "Auxiliary Safety - Contacts Closed", 8: "Discharge - Low Temperature", 9: "Discharge - High Temperature",
+    10: "Oil - High Sump Temperature", 11: "Oil - Low Differential Pressure", 12: "Oil - High Differential Pressure",
+    13: "Oil - Pump Pressure Transducer Out Of Range", 14: "Oil - Sump Pressure Transducer Out Of Range",
+    15: "Motor - Lack Of Motor Oil Change", 16: "Sales Order - Invalid Compressor Model",
+    17: "Sales Order - Invalid Gear Code", 18: "Oil - Differential Pressure Calibration", 19: "Safety Stop",
+    20: "Oil - Variable Speed Pump - Setpoint Not Achieved", 21: "Control Panel - Power Failure",
+    22: "Control Panel - Loss Of Control Voltage", 23: "MOTOR OR STARTER - CURRENT IMBALANCE",
+    24: "Thrust Bearing - Proximity Probe Clearance", 25: "Thrust Bearing - Proximity Probe Uncalibrated",
+    26: "Thrust Bearing - Proximity Probe Out Of Range", 27: "Thrust Bearing - High Oil Temperature",
+    28: "Thrust Bearing - Oil Temperature Sensor", 29: "VSD - High Heatsink Temperature",
+    30: "VSD - 105% MOTOR CURRENT OVERLOAD", 31: "VSD - HIGH PHASE A INVERTER HEATSINK TEMPERATURE",
     32: "VSD - HIGH PHASE B INVERTER HEATSINK TEMPERATURE",
-    33: "VSD - HIGH PHASE C INVERTER HEATSINK TEMPERATURE",
-    34: "VSD - HIGH CONVERTER HEATSINK TEMPERATURE",
-    35: "VSD - PRECHARGE LOCKOUT",
-    36: "HARMONIC FILTER - HIGH HEATSINK TEMPERATURE",
-    37: "HARMONIC FILTER - HIGH TOTAL DEMAND DISTORTION",
-    38: "LCSSS - PHASE ROTATION",
-    39: "LCSSS - MOTOR OR STARTER - CURRENT IMBALANCE",
-    40: "LCSSS - 105% MOTOR CURRENT OVERLOAD",
-    41: "LCSSS - HIGH INSTANTANEOUS CURRENT",
-    42: "LCSSS - OPEN SCR",
-    43: "LCSSS - PHASE A SHORTED SCR",
-    44: "LCSSS - PHASE B SHORTED SCR",
-    45: "LCSSS - PHASE C SHORTED SCR",
-    46: "LCSSS - HIGH PHASE A HEATSINK TEMPERATURE",
-    47: "LCSSS - HIGH PHASE B HEATSINK TEMPERATURE",
-    48: "LCSSS - HIGH PHASE C HEATSINK TEMPERATURE",
-    49: "Starter - Invalid Motor Selection",
-    50: "Oil or Conduser Transducer Error",
-    51: "Evaporator - Low Pressure",
-    52: "Evaporator - low Pressure - Smart Freeze",
-    53: "Surge Protection - Excess Surge",
-    54: "VSD - HIGH INVERTER BASEPLATE TEMPERATURE",
-    55: "HARMONIC FILTER - HIGH BASEPLATE TEMPERATURE",
-    56: "Thrust Bearing - Proximity Probe Clearance",
-    57: "Thrust Bearing - Limit Switch Open",
-    58: "VGD Actuator - Positioning Fault",
-    59: "Oil - Sump Or Pump Transducer Error",
-    60: "Motor - High Housing Temperature",
-    61: "Motor - High Winding Temperature",
-    62: "Motor - High Bearing Temperature",
-    63: "VSD - HIGH PHASE A INVERTER BASEPLATE TEMPERATURE",
+    33: "VSD - HIGH PHASE C INVERTER HEATSINK TEMPERATURE", 34: "VSD - HIGH CONVERTER HEATSINK TEMPERATURE",
+    35: "VSD - PRECHARGE LOCKOUT", 36: "HARMONIC FILTER - HIGH HEATSINK TEMPERATURE",
+    37: "HARMONIC FILTER - HIGH TOTAL DEMAND DISTORTION", 38: "LCSSS - PHASE ROTATION",
+    39: "LCSSS - MOTOR OR STARTER - CURRENT IMBALANCE", 40: "LCSSS - 105% MOTOR CURRENT OVERLOAD",
+    41: "LCSSS - HIGH INSTANTANEOUS CURRENT", 42: "LCSSS - OPEN SCR", 43: "LCSSS - PHASE A SHORTED SCR",
+    44: "LCSSS - PHASE B SHORTED SCR", 45: "LCSSS - PHASE C SHORTED SCR",
+    46: "LCSSS - HIGH PHASE A HEATSINK TEMPERATURE", 47: "LCSSS - HIGH PHASE B HEATSINK TEMPERATURE",
+    48: "LCSSS - HIGH PHASE C HEATSINK TEMPERATURE", 49: "Starter - Invalid Motor Selection",
+    50: "Oil or Conduser Transducer Error", 51: "Evaporator - Low Pressure",
+    52: "Evaporator - low Pressure - Smart Freeze", 53: "Surge Protection - Excess Surge",
+    54: "VSD - HIGH INVERTER BASEPLATE TEMPERATURE", 55: "HARMONIC FILTER - HIGH BASEPLATE TEMPERATURE",
+    56: "Thrust Bearing - Proximity Probe Clearance", 57: "Thrust Bearing - Limit Switch Open",
+    58: "VGD Actuator - Positioning Fault", 59: "Oil - Sump Or Pump Transducer Error",
+    60: "Motor - High Housing Temperature", 61: "Motor - High Winding Temperature",
+    62: "Motor - High Bearing Temperature", 63: "VSD - HIGH PHASE A INVERTER BASEPLATE TEMPERATURE",
     64: "VSD - HIGH PHASE B INVERTER BASEPLATE TEMPERATURE",
-    65: "VSD - HIGH PHASE C INVERTER BASEPLATE TEMPERATURE",
-    66: "VSD - MOTOR CURRENT IMBALANCE",
-    67: "Condenser - High Pressure - Stopped",
-    68: "OIL - HIGH SUPPLY TEMPERATURE",
-    69: "Motor - High Bearing Vibration",
-    70: "SALES ORDER - INVALID MODEL NUMBER",
-    71: "LCSSS - PHASE A OPEN SCR",
-    72: "LCSSS - PHASE B OPEN SCR",
-    73: "LCSSS - PHASE C OPEN SCR",
-    74: "Motor - Lack Of Bearing Lubrication",
-    75: "VSD - LOW FREQUENCY DETECTED",
-    76: "VSD - Feedback Sensor",
-    77: "VSD - Control Fault",
-    78: "VSD - Drive Boot Failure",
-    79: "MVSSS - PHASE ROTATION",
-    80: "MVSSS - MOTOR OR STARTER - CURRENT IMBALANCE",
-    81: "MVSSS - 105% MOTOR CURRENT OVERLOAD",
-    82: "MVSSS - HIGH INSTANTANEOUS CURRENT",
-    83: "MVSSS - FAILED SCR",
-    84: "MVSSS - HIGH HEATSINK TEMPERATURE",
-    85: "MVSSS - GROUND FAULT",
-    86: "MVSSS - CONTACTOR FAULT",
-    87: "MVSSS - CONTROL BOARD FAULT",
-    88: "MVSSS - DISCONNECT FAULT",
-    89: "VSD - POWER TRANSFORMER HIGH TEMPERATURE",
-    90: "VSD - HIGH OUTPUT FREQUENCY",
-    91: "MVVSD - GROUND FAULT",
-    92: "VSD - MAIN CONTROL BOARD FAULT",
-    93: "MVVSD - CONTACTOR FAULT",
-    94: "MVVSD - INTERLOCK FAULT",
-    95: "VSD - LOGIC BOARD PLUG",
-    96: "VSD - INPUT CURRENT OVERLOAD",
+    65: "VSD - HIGH PHASE C INVERTER BASEPLATE TEMPERATURE", 66: "VSD - MOTOR CURRENT IMBALANCE",
+    67: "Condenser - High Pressure - Stopped", 68: "OIL - HIGH SUPPLY TEMPERATURE",
+    69: "Motor - High Bearing Vibration", 70: "SALES ORDER - INVALID MODEL NUMBER",
+    71: "LCSSS - PHASE A OPEN SCR", 72: "LCSSS - PHASE B OPEN SCR", 73: "LCSSS - PHASE C OPEN SCR",
+    74: "Motor - Lack Of Bearing Lubrication", 75: "VSD - LOW FREQUENCY DETECTED",
+    76: "VSD - Feedback Sensor", 77: "VSD - Control Fault", 78: "VSD - Drive Boot Failure",
+    79: "MVSSS - PHASE ROTATION", 80: "MVSSS - MOTOR OR STARTER - CURRENT IMBALANCE",
+    81: "MVSSS - 105% MOTOR CURRENT OVERLOAD", 82: "MVSSS - HIGH INSTANTANEOUS CURRENT",
+    83: "MVSSS - FAILED SCR", 84: "MVSSS - HIGH HEATSINK TEMPERATURE", 85: "MVSSS - GROUND FAULT",
+    86: "MVSSS - CONTACTOR FAULT", 87: "MVSSS - CONTROL BOARD FAULT", 88: "MVSSS - DISCONNECT FAULT",
+    89: "VSD - POWER TRANSFORMER HIGH TEMPERATURE", 90: "VSD - HIGH OUTPUT FREQUENCY",
+    91: "MVVSD - GROUND FAULT", 92: "VSD - MAIN CONTROL BOARD FAULT", 93: "MVVSD - CONTACTOR FAULT",
+    94: "MVVSD - INTERLOCK FAULT", 95: "VSD - LOGIC BOARD PLUG", 96: "VSD - INPUT CURRENT OVERLOAD",
     97: "VSD - HIGH PHASE A INPUT BASEPLATE TEMPERATURE",
     98: "VSD - HIGH PHASE B INPUT BASEPLATE TEMPERATURE",
-    99: "VSD - HIGH PHASE C INPUT BASEPLATE TEMPERATURE",
-    100: "MOTOR - LOW WINDING TEMPERATURE",
-    101: "VSD - INVALID PWM SOFTWARE",
-    102: "VSD - BASEPLATE TEMPERATURE IMBALANCE",
-    103: "VSD - DC BUS PRE-REGULATION LOCKOUT",
-    104: "VSD - GROUND FAULT",
-    105: "VSD - HIGH INSTANTANEOUS CURRENT",
-    106: "MOTOR CURRENT > 15% FLA",
-    107: "VSD - FREQUENCY > 0 HZ",
-    108: "VSD - PHASE A INPUT DCCT",
-    109: "VSD - PHASE B INPUT DCCT",
-    110: "VSD - PHASE C INPUT DCCT",
-    111: "VSD - HIGH TOTAL DEMAND DISTORTION",
-    112: "Motor - Coiling Coil Leak",
-    113: "MVVSD - Excessive Shutdowns",
-    114: "Isolation Valves - Not Opened",
-    115: "VSD - OUTPUT PHASE ROTATION",
-    116: "VSD - Phase Locked Loop",
+    99: "VSD - HIGH PHASE C INPUT BASEPLATE TEMPERATURE", 100: "MOTOR - LOW WINDING TEMPERATURE",
+    101: "VSD - INVALID PWM SOFTWARE", 102: "VSD - BASEPLATE TEMPERATURE IMBALANCE",
+    103: "VSD - DC BUS PRE-REGULATION LOCKOUT", 104: "VSD - GROUND FAULT",
+    105: "VSD - HIGH INSTANTANEOUS CURRENT", 106: "MOTOR CURRENT > 15% FLA",
+    107: "VSD - FREQUENCY > 0 HZ", 108: "VSD - PHASE A INPUT DCCT", 109: "VSD - PHASE B INPUT DCCT",
+    110: "VSD - PHASE C INPUT DCCT", 111: "VSD - HIGH TOTAL DEMAND DISTORTION", 112: "Motor - Coiling Coil Leak",
+    113: "MVVSD - Excessive Shutdowns", 114: "Isolation Valves - Not Opened",
+    115: "VSD - OUTPUT PHASE ROTATION", 116: "VSD - Phase Locked Loop",
     117: "VSD - HIGH PHASE A INSTANTANEOUS CURRENT",
     118: "VSD - HIGH PHASE B INSTANTANEOUS CURRENT",
-    119: "VSD - HIGH PHASE C INSTANTANEOUS CURRENT",
-    120: "VSD - Line Voltage Phase Rotation",
-    121: "VSD - INPUT DCCT OFFSET LOCKOUT",
-    122: "VSD - LOGIC BOARD HARDWARE",
-    123: "VSD - RECTIFIER PROGRAM FAULT",
-    124: "VSD - INVERTER PROGRAM FAULT",
-    125: "VSD - DC BUS LOCKOUT - DO NOT RECYCLE POWER",
-    126: "VSD - MOTOR CURREN THD FAULT",
-    127: "VSD - HIGH PHASE A MOTOR CURRENT",
-    128: "VSD - HIGH PHASE B MOTOR CURRENT",
+    119: "VSD - HIGH PHASE C INSTANTANEOUS CURRENT", 120: "VSD - Line Voltage Phase Rotation",
+    121: "VSD - INPUT DCCT OFFSET LOCKOUT", 122: "VSD - LOGIC BOARD HARDWARE",
+    123: "VSD - RECTIFIER PROGRAM FAULT", 124: "VSD - INVERTER PROGRAM FAULT",
+    125: "VSD - DC BUS LOCKOUT - DO NOT RECYCLE POWER", 126: "VSD - MOTOR CURREN THD FAULT",
+    127: "VSD - HIGH PHASE A MOTOR CURRENT", 128: "VSD - HIGH PHASE B MOTOR CURRENT",
     129: "VSD - HIGH PHASE C MOTOR CURRENT",
     130: "VSD - HIGH PHASE A MOTOR BASEPLATE TEMPERATURE",
     131: "VSD - HIGH PHASE B MOTOR BASEPLATE TEMPERATURE",
-    132: "VSD - HIGH PHASE C MOTOR BASEPLATE TEMPERATURE",
-    133: "VSD - PHASE A MOTOR DCCT",
-    134: "VSD - PHASE B MOTOR DCCT",
-    135: "VSD - PHASE C MOTOR DCCT",
-    136: "Oil - High Sump Pressure",
-    137: "MBC - OVERSPEED FAULT",
-    138: "MBC - WATCHDOG",
-    139: "MBC - POWER SUPPLY FAULT",
-    140: "MBC - HIGH HEATSINK TEMPERATURE",
-    141: "MBC - HIGH DC BUS VOLTAGE",
-    142: "MBC - AMPLIFIER FUSE",
-    143: "MBC - HIGH BEARING J TEMPERATURE",
-    144: "MBC - HIGH BEARING H1 TEMPERATURE",
-    145: "MBC - HIGH BEARING H2 TEMPERATURE",
-    146: "MBC - HIGH BEARING K TEMPERATURE",
-    147: "MBC - GROUND FAULT",
-    148: "MBC - LOW GATE VOLTAGE",
-    149: "MBC - HIGH GATE VOLTAGE",
-    150: "MBC - HIGH AMPLIFIER TEMPERATURE",
-    151: "MBC - HIGH AMPLIFIER VOLTAGE",
-    152: "MBC - FAULT CONTACTS OPEN",
-    153: "MBC - INITIALIZATION FAILURE",
-    154: "MBC - NOT LEVITATED",
-    155: "SYSTEM - STARTUP FAILURE",
-    156: "UPS - Battery Not Connected",
-    157: "UPS - Inverter Low Battery Voltage",
-    158: "MBC - SPEED SENSOR FAULT",
-    159: "MBC - POWER FAIL LANDING",
-    160: "COMPRESSOR - LOW DISCHARGE SUPERHEAT",
-    161: "MVSSS - HIGH HEATSINK  1 TEMPERATURE",
-    162: "MVSSS - HIGH HEATSINK  2 TEMPERATURE",
-    163: "MVSSS - HIGH HEATSINK  3 TEMPERATURE",
-    164: "MOTOR CONTROLLER - FAULT CONTACTS OPEN",
+    132: "VSD - HIGH PHASE C MOTOR BASEPLATE TEMPERATURE", 133: "VSD - PHASE A MOTOR DCCT",
+    134: "VSD - PHASE B MOTOR DCCT", 135: "VSD - PHASE C MOTOR DCCT",
+    136: "Oil - High Sump Pressure", 137: "MBC - OVERSPEED FAULT", 138: "MBC - WATCHDOG",
+    139: "MBC - POWER SUPPLY FAULT", 140: "MBC - HIGH HEATSINK TEMPERATURE",
+    141: "MBC - HIGH DC BUS VOLTAGE", 142: "MBC - AMPLIFIER FUSE",
+    143: "MBC - HIGH BEARING J TEMPERATURE", 144: "MBC - HIGH BEARING H1 TEMPERATURE",
+    145: "MBC - HIGH BEARING H2 TEMPERATURE", 146: "MBC - HIGH BEARING K TEMPERATURE",
+    147: "MBC - GROUND FAULT", 148: "MBC - LOW GATE VOLTAGE", 149: "MBC - HIGH GATE VOLTAGE",
+    150: "MBC - HIGH AMPLIFIER TEMPERATURE", 151: "MBC - HIGH AMPLIFIER VOLTAGE",
+    152: "MBC - FAULT CONTACTS OPEN", 153: "MBC - INITIALIZATION FAILURE", 154: "MBC - NOT LEVITATED",
+    155: "SYSTEM - STARTUP FAILURE", 156: "UPS - Battery Not Connected",
+    157: "UPS - Inverter Low Battery Voltage", 158: "MBC - SPEED SENSOR FAULT",
+    159: "MBC - POWER FAIL LANDING", 160: "COMPRESSOR - LOW DISCHARGE SUPERHEAT",
+    161: "MVSSS - HIGH HEATSINK  1 TEMPERATURE", 162: "MVSSS - HIGH HEATSINK  2 TEMPERATURE",
+    163: "MVSSS - HIGH HEATSINK  3 TEMPERATURE", 164: "MOTOR CONTROLLER - FAULT CONTACTS OPEN",
     165: "VSD - HIGH PHASE A2 INSTANTANEOUS CURRENT",
     166: "VSD - HIGH PHASE B2 INSTANTANEOUS CURRENT",
     167: "VSD - HIGH PHASE C2 INSTANTANEOUS CURRENT",
     168: "VSD - HIGH PHASE A2 INVERTER BASEPLATE TEMPERATURE",
     169: "VSD - HIGH PHASE B2 INVERTER BASEPLATE TEMPERATURE",
     170: "VSD - HIGH PHASE C2 INVERTER BASEPLATE TEMPERATURE",
-    171: "VSD - HIGH CONVERTER 2 HEATSINK TEMPERATURE",
-    172: "VSD - MOTOR CURRENT 2 IMBALANCE",
-    173: "VSD - MOTOR CURRENT MISMATCH",
-    174: "VSD - HIGH PHASE A INPUT CURRENT",
-    175: "VSD - HIGH PHASE B INPUT CURRENT",
-    176: "VSD - HIGH PHASE C INPUT CURRENT",
-    177: "VSD - HIGH INPUT CURRENT TDD",
-    178: "INTERNAL ERROR - NO TIMER HANDERS AVAILABLE",
-    179: "WATCHDOG - SOFTWARE REBOOT",
-    180: "VSD - PRECHARGE LOCKOUT 2",
+    171: "VSD - HIGH CONVERTER 2 HEATSINK TEMPERATURE", 172: "VSD - MOTOR CURRENT 2 IMBALANCE",
+    173: "VSD - MOTOR CURRENT MISMATCH", 174: "VSD - HIGH PHASE A INPUT CURRENT",
+    175: "VSD - HIGH PHASE B INPUT CURRENT", 176: "VSD - HIGH PHASE C INPUT CURRENT",
+    177: "VSD - HIGH INPUT CURRENT TDD", 178: "INTERNAL ERROR - NO TIMER HANDERS AVAILABLE",
+    179: "WATCHDOG - SOFTWARE REBOOT", 180: "VSD - PRECHARGE LOCKOUT 2",
     181: "VSD - BASEPLATE TEMPERATURE IMBALANCE 2",
-    182: "OIL - VARIABLE SPEED PUMP - HIGH RATE OF CHANGE",
-    183: "VSD - HIGH MOTOR HARMONICS",
-    184: "VSD - CAPACITOR FAULT",
-    185: "VSD - ELECTRICAL SGNATURE BOARD"
+    182: "OIL - VARIABLE SPEED PUMP - HIGH RATE OF CHANGE", 183: "VSD - HIGH MOTOR HARMONICS",
+    184: "VSD - CAPACITOR FAULT", 185: "VSD - ELECTRICAL SGNATURE BOARD"
 }
 
 cycling_codes = {
-     0: "No Cycling Faults Present",
-    1: "Multiunit Cycling - Contacts Open",
-    2: "System Cycling - Contact Open",
-    3: "Oil - Low Temperature Differntial",
-    4: "Oil - Low Sump Temperature",
-    5: "Control Panel - Power Failure",
-    6: "Leaving Chilled Liquid - Low Temperature",
-    7: "Leaving Chilled Liquid - Flow Switch Open",
-    8: "Condenser - Flow Switch Open",
-    9: "MOTOR CONTROLLER - FAULT CONTACTS OPEN",
-    10: "MOTOR CONTROLLER - LOSS OF CURRENT",
-    11: "POWER FAULT",
-    12: "Control Panel - Schedule",
-    13: "Starter - Low Supply Line Voltage",
-    14: "Starter - High Supply Line Voltage",
-    15: "Proximity Probe - Low Supply Voltage",
-    16: "Oil - Variable Speed Pump - Drive Contacts Open",
-    17: "VSD - INITIALIZATION FAILED",
-    18: "VSD Shutdown - Requesting Fault Data",
-    19: "VSD - HIGH PHASE A INSTANTANEOUS CURRENT",
-    20: "VSD - HIGH PHASE B INSTANTANEOUS CURRENT",
-    21: "VSD - HIGH PHASE C INSTANTANEOUS CURRENT",
-    22: "VSD - PHASE A GATE DRIVER",
-    23: "VSD - PHASE B GATE DRIVER",
-    24: "VSD - PHASE C GATE DRIVER",
-    25: "VSD - SINGLE PHASE INPUT POWER",
-    26: "VSD - HIGH DC BUS VOLTAGE",
-    27: "VSD - LOGIC BOARD POWER SUPPLY",
-    28: "VSD - LOW DC BUS VOLTAGE",
-    29: "VSD - DC BUS VOLTAGE IMBALANCE",
-    30: "VSD - HIGH INTERNAL AMBIENT TEMPERATURE",
-    31: "VSD - INVALID CURRENT SCALE SELECTION",
+     0: "No Cycling Faults Present", 1: "Multiunit Cycling - Contacts Open", 2: "System Cycling - Contact Open",
+    3: "Oil - Low Temperature Differntial", 4: "Oil - Low Sump Temperature", 5: "Control Panel - Power Failure",
+    6: "Leaving Chilled Liquid - Low Temperature", 7: "Leaving Chilled Liquid - Flow Switch Open",
+    8: "Condenser - Flow Switch Open", 9: "MOTOR CONTROLLER - FAULT CONTACTS OPEN",
+    10: "MOTOR CONTROLLER - LOSS OF CURRENT", 11: "POWER FAULT", 12: "Control Panel - Schedule",
+    13: "Starter - Low Supply Line Voltage", 14: "Starter - High Supply Line Voltage",
+    15: "Proximity Probe - Low Supply Voltage", 16: "Oil - Variable Speed Pump - Drive Contacts Open",
+    17: "VSD - INITIALIZATION FAILED", 18: "VSD Shutdown - Requesting Fault Data",
+    19: "VSD - HIGH PHASE A INSTANTANEOUS CURRENT", 20: "VSD - HIGH PHASE B INSTANTANEOUS CURRENT",
+    21: "VSD - HIGH PHASE C INSTANTANEOUS CURRENT", 22: "VSD - PHASE A GATE DRIVER",
+    23: "VSD - PHASE B GATE DRIVER", 24: "VSD - PHASE C GATE DRIVER", 25: "VSD - SINGLE PHASE INPUT POWER",
+    26: "VSD - HIGH DC BUS VOLTAGE", 27: "VSD - LOGIC BOARD POWER SUPPLY",
+    28: "VSD - LOW DC BUS VOLTAGE", 29: "VSD - DC BUS VOLTAGE IMBALANCE",
+    30: "VSD - HIGH INTERNAL AMBIENT TEMPERATURE", 31: "VSD - INVALID CURRENT SCALE SELECTION",
     32: "VSD - LOW PHASE A INVERTER HEATSINK TEMPERATURE",
     33: "VSD - LOW PHASE B INVERTER HEATSINK TEMPERATURE",
-    34: "VSD - LOW PHASE C INVERTER HEATSINK TEMPERATURE",
-    35: "VSD - LOW CONVERTER HEATSINK TEMPERATURE",
+    34: "VSD - LOW PHASE C INVERTER HEATSINK TEMPERATURE", 35: "VSD - LOW CONVERTER HEATSINK TEMPERATURE",
     36: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE",
-    37: "VSD - PRECHARGE - LOW DC BUS VOLTAGE",
-    38: "VSD - LOGIC BOARD PROCESSOR",
-    39: "VSD - RUN SIGNAL",
-    40: "VSD - SERIAL RECEIVE",
-    41: "VSD - Stop Contacts Open",
-    42: "Harmonic Filter - Logic Board Or Communications",
-    43: "HARMONIC FILTER - HIGH DC BUS VOLTAGE",
-    44: "HARMONIC FILTER - HIGH PHASE A CURRENT",
-    45: "HARMONIC FILTER - HIGH PHASE B CURRENT",
-    46: "HARMONIC FILTER - HIGH PHASE C CURRENT",
-    47: "HARMONIC FILTER - PHASE LOCKED LOOP",
-    48: "Harmonic Filter - Precharge - Low DC Bus Voltage",
-    49: "HARMONIC FILTER - LOW DC BUS VOLTAGE",
+    37: "VSD - PRECHARGE - LOW DC BUS VOLTAGE", 38: "VSD - LOGIC BOARD PROCESSOR",
+    39: "VSD - RUN SIGNAL", 40: "VSD - SERIAL RECEIVE", 41: "VSD - Stop Contacts Open",
+    42: "Harmonic Filter - Logic Board Or Communications", 43: "HARMONIC FILTER - HIGH DC BUS VOLTAGE",
+    44: "HARMONIC FILTER - HIGH PHASE A CURRENT", 45: "HARMONIC FILTER - HIGH PHASE B CURRENT",
+    46: "HARMONIC FILTER - HIGH PHASE C CURRENT", 47: "HARMONIC FILTER - PHASE LOCKED LOOP",
+    48: "Harmonic Filter - Precharge - Low DC Bus Voltage", 49: "HARMONIC FILTER - LOW DC BUS VOLTAGE",
     50: "HARMONIC FILTER - DC BUS VOLTAGE IMBALANCE",
-    51: "HARMONIC FILTER - INPUT CURRENT OVERLOAD",
-    52: "HARMONIC FILTER - LOGIC BOARD POWER SUPPLY",
-    53: "HARMONIC FILTER - RUN SIGNAL",
-    54: "HARMONIC FILTER - DC CURRENT TRANSFORMER 1",
-    55: "HARMONIC FILTER - DC CURRENT TRANSFORMER 2",
-    56: "LCSSS Initialization Failed",
-    57: "LCSSS Shutdown - Requesting Full Data",
-    58: "LCSSS - LOW PHASE A TEMPERATURE SENSOR",
-    59: "LCSSS - LOW PHASE B TEMPERATURE SENSOR",
-    60: "LCSSS - LOW PHASE C TEMPERATURE SENSOR",
-    61: "LCSSS - PHASE LOCKED LOOP",
-    62: "LCSSS - POWER FAULT",
-    63: "LCSSS - HIGH SUPPLY LINE VOLTAGE",
-    64: "LCSSS - LOW SUPPLY LINE VOLTAGE",
-    65: "LCSSS - INVALID CURRENT SCALE SELECTION",
-    66: "LCSSS - RUN SIGNAL",
-    67: "LCSSS - SERIAL RECEIVE",
-    68: "LCSSS - Stop Contacts Open",
-    69: "Motor Auto Lubrication In Progress",
-    70: "Control Panel - Loss Of Control Voltage",
-    71: "LCSSS - LOGIC BOARD PROCESSOR",
-    72: "LCSSS - LOGIC BOARD POWER SUPPLY",
-    73: "VSD - Serial Communications",
-    74: "LCSSS - Serial Communications",
-    75: "LCSSS - PHASE LOSS",
-    76: "VSD - LOW INVERTER BASEPLATE TEMPERATURE",
-    77: "Expansion I/O - Serial Communications",
+    51: "HARMONIC FILTER - INPUT CURRENT OVERLOAD", 52: "HARMONIC FILTER - LOGIC BOARD POWER SUPPLY",
+    53: "HARMONIC FILTER - RUN SIGNAL", 54: "HARMONIC FILTER - DC CURRENT TRANSFORMER 1",
+    55: "HARMONIC FILTER - DC CURRENT TRANSFORMER 2", 56: "LCSSS Initialization Failed",
+    57: "LCSSS Shutdown - Requesting Full Data", 58: "LCSSS - LOW PHASE A TEMPERATURE SENSOR",
+    59: "LCSSS - LOW PHASE B TEMPERATURE SENSOR", 60: "LCSSS - LOW PHASE C TEMPERATURE SENSOR",
+    61: "LCSSS - PHASE LOCKED LOOP", 62: "LCSSS - POWER FAULT",
+    63: "LCSSS - HIGH SUPPLY LINE VOLTAGE", 64: "LCSSS - LOW SUPPLY LINE VOLTAGE",
+    65: "LCSSS - INVALID CURRENT SCALE SELECTION", 66: "LCSSS - RUN SIGNAL", 67: "LCSSS - SERIAL RECEIVE",
+    68: "LCSSS - Stop Contacts Open", 69: "Motor Auto Lubrication In Progress",
+    70: "Control Panel - Loss Of Control Voltage", 71: "LCSSS - LOGIC BOARD PROCESSOR",
+    72: "LCSSS - LOGIC BOARD POWER SUPPLY", 73: "VSD - Serial Communications",
+    74: "LCSSS - Serial Communications", 75: "LCSSS - PHASE LOSS",
+    76: "VSD - LOW INVERTER BASEPLATE TEMPERATURE", 77: "Expansion I/O - Serial Communications",
     78: "VSD - LOW PHASE A INVERTER BASEPLATE TEMPERATURE",
     79: "VSD - LOW PHASE B INVERTER BASEPLATE TEMPERATURE",
-    80: "VSD - LOW PHASE C INVERTER BASEPLATE TEMPERATURE",
-    81: "Motor Controller - Contacts Open",
-    82: "MVVSD - Serial Communications",
-    83: "VSD - Input Power Transformer",
-    84: "VSD - Input Over-Voltage",
-    85: "VSD - LOSS OF COOLING FAN",
-    86: "VSD - HIGH INSTANTANEOUS CURRENT",
-    87: "MVSSS - Initialization Failed",
-    88: "MVSSS Shutdown - Requesting Full Data",
-    89: "MVSSS - POWER FAULT",
-    90: "MVSSS - HIGH SUPPLY LINE VOLTAGE",
-    91: "MVSSS - LOW SUPPLY LINE VOLTAGE",
-    92: "MVSSS - RUN SIGNAL",
-    93: "MVSSS - Serial Communications",
-    94: "MVSSS - Stop Contacts Open",
-    95: "MVSSS - LOGIC BOARD POWER SUPPLY",
-    96: "MVSSS - PHASE LOSS",
-    97: "REFRIGERANT TYPE NOT SET",
-    98: "VSD - Serial Communications",
-    99: "LCSSS - Serial Comms",
-    100: "VSD - Serial Communications",
-    101: "Auto Detect - Serial Communications",
-    102: "VSD - DC BUS VOLTAGE IMBALANCE - AU",
-    103: "VSD - DC BUS VOLTAGE IMBALANCE - AL",
-    104: "VSD - DC BUS VOLTAGE IMBALANCE - BU",
-    105: "VSD - DC BUS VOLTAGE IMBALANCE - BL",
-    106: "VSD - DC BUS VOLTAGE IMBALANCE - CU",
-    107: "VSD - DC BUS VOLTAGE IMBALANCE - CL",
+    80: "VSD - LOW PHASE C INVERTER BASEPLATE TEMPERATURE", 81: "Motor Controller - Contacts Open",
+    82: "MVVSD - Serial Communications", 83: "VSD - Input Power Transformer",
+    84: "VSD - Input Over-Voltage", 85: "VSD - LOSS OF COOLING FAN",
+    86: "VSD - HIGH INSTANTANEOUS CURRENT", 87: "MVSSS - Initialization Failed",
+    88: "MVSSS Shutdown - Requesting Full Data", 89: "MVSSS - POWER FAULT",
+    90: "MVSSS - HIGH SUPPLY LINE VOLTAGE", 91: "MVSSS - LOW SUPPLY LINE VOLTAGE",
+    92: "MVSSS - RUN SIGNAL", 93: "MVSSS - Serial Communications",
+    94: "MVSSS - Stop Contacts Open", 95: "MVSSS - LOGIC BOARD POWER SUPPLY",
+    96: "MVSSS - PHASE LOSS", 97: "REFRIGERANT TYPE NOT SET",
+    98: "VSD - Serial Communications", 99: "LCSSS - Serial Comms",
+    100: "VSD - Serial Communications", 101: "Auto Detect - Serial Communications",
+    102: "VSD - DC BUS VOLTAGE IMBALANCE - AU", 103: "VSD - DC BUS VOLTAGE IMBALANCE - AL",
+    104: "VSD - DC BUS VOLTAGE IMBALANCE - BU", 105: "VSD - DC BUS VOLTAGE IMBALANCE - BL",
+    106: "VSD - DC BUS VOLTAGE IMBALANCE - CU", 107: "VSD - DC BUS VOLTAGE IMBALANCE - CL",
     108: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - AU",
     109: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - AL",
     110: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - BU",
     111: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - BL",
     112: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - CU",
-    113: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - CL",
-    114: "VSD - HIGH DC BUS VOLTAGE - AU",
-    115: "VSD - HIGH DC BUS VOLTAGE - AL",
-    116: "VSD - HIGH DC BUS VOLTAGE - BU",
-    117: "VSD - HIGH DC BUS VOLTAGE - BL",
-    118: "VSD - HIGH DC BUS VOLTAGE - CU",
-    119: "VSD - HIGH DC BUS VOLTAGE - CL",
-    120: "VSD - GATE DRIVER - ANU",
-    121: "VSD - GATE DRIVER - ANL",
-    122: "VSD - GATE DRIVER - AMU",
-    123: "VSD - GATE DRIVER - AML",
-    124: "VSD - GATE DRIVER - BNU",
-    125: "VSD - GATE DRIVER - BNL",
-    126: "VSD - GATE DRIVER - BMU",
-    127: "VSD - GATE DRIVER - BML",
-    128: "VSD - GATE DRIVER - CNU",
-    129: "VSD - GATE DRIVER - CNL",
-    130: "VSD - GATE DRIVER - CMU",
-    131: "VSD - GATE DRIVER - CML",
-    132: "VSD - INPUT POWER SUPPLY",
-    133: "VSD - HIGH PHASE A INPUT CURRENT",
-    134: "VSD - HIGH PHASE B INPUT CURRENT",
-    135: "VSD - HIGH PHASE C INPUT CURRENT",
-    136: "VSD - HIGH PHASE A MOTOR CURRENT",
-    137: "VSD - HIGH PHASE B MOTOR CURRENT",
-    138: "VSD - HIGH PHASE C MOTOR CURRENT",
-    139: "VSD - PHASE A INPUT GATE DRIVER",
-    140: "VSD - PHASE B INPUT GATE DRIVER",
-    141: "VSD - PHASE C INPUT GATE DRIVER",
-    142: "VGD Actuator - Serial Communications",
-    143: "VSD - INVALID VSD MODEL",
-    144: "VSD - BASEPLATE TEMPERATURE IMBALANCE",
+    113: "VSD - PRECHARGE - DC BUS VOLTAGE IMBALANCE - CL", 114: "VSD - HIGH DC BUS VOLTAGE - AU",
+    115: "VSD - HIGH DC BUS VOLTAGE - AL", 116: "VSD - HIGH DC BUS VOLTAGE - BU",
+    117: "VSD - HIGH DC BUS VOLTAGE - BL", 118: "VSD - HIGH DC BUS VOLTAGE - CU",
+    119: "VSD - HIGH DC BUS VOLTAGE - CL", 120: "VSD - GATE DRIVER - ANU",
+    121: "VSD - GATE DRIVER - ANL", 122: "VSD - GATE DRIVER - AMU",
+    123: "VSD - GATE DRIVER - AML", 124: "VSD - GATE DRIVER - BNU",
+    125: "VSD - GATE DRIVER - BNL", 126: "VSD - GATE DRIVER - BMU",
+    127: "VSD - GATE DRIVER - BML", 128: "VSD - GATE DRIVER - CNU",
+    129: "VSD - GATE DRIVER - CNL", 130: "VSD - GATE DRIVER - CMU",
+    131: "VSD - GATE DRIVER - CML", 132: "VSD - INPUT POWER SUPPLY",
+    133: "VSD - HIGH PHASE A INPUT CURRENT", 134: "VSD - HIGH PHASE B INPUT CURRENT",
+    135: "VSD - HIGH PHASE C INPUT CURRENT", 136: "VSD - HIGH PHASE A MOTOR CURRENT",
+    137: "VSD - HIGH PHASE B MOTOR CURRENT", 138: "VSD - HIGH PHASE C MOTOR CURRENT",
+    139: "VSD - PHASE A INPUT GATE DRIVER", 140: "VSD - PHASE B INPUT GATE DRIVER",
+    141: "VSD - PHASE C INPUT GATE DRIVER", 142: "VGD Actuator - Serial Communications",
+    143: "VSD - INVALID VSD MODEL", 144: "VSD - BASEPLATE TEMPERATURE IMBALANCE",
     145: "VSD - LOW PHASE A INPUT BASEPLATE TEMPERATURE",
     146: "VSD - LOW PHASE B INPUT BASEPLATE TEMPERATURE",
-    147: "VSD - LOW PHASE C INPUT BASEPLATE TEMPERATURE",
-    148: "VSD - PHASE LOCKED LOOP",
-    149: "VSD - LINE VOLTAGE PHASE ROTATION",
-    150: "VSD - PRECHARGE - LOW DC BUS VOLTAGE 1",
-    151: "VSD - Input Voltage Imbalance",
-    152: "VSD - DC BUS PRE-REGULATION",
-    153: "VSD - LOGIC BOARD PROCESSOR",
-    154: "MVSSS - SERIAL RECEIVE",
-    155: "VSD - Identifying Drive",
-    156: "Leaving Condensor Liquid - High Temperature",
-    157: "Condenser - Freeze Threat - Flow Switch Open",
-    158: "Isolation Valves - Not Closed",
-    159: "VSD - PHASE A INPUT DCCT OFFSET",
-    160: "VSD - PHASE B INPUT DCCT OFFSET",
-    161: "VSD - PHASE C INPUT DCCT OFFSET",
-    162: "VSD - INVALID SETPOINTS",
-    163: "VSD - PRECHARGE - LOW DC BUS VOLTAGE 2",
-    164: "VSD - SERIAL RECEIVE",
-    165: "VSD - PHASE A MOTOR GATE DRIVER",
-    166: "VSD - PHASE B MOTOR GATE DRIVER",
+    147: "VSD - LOW PHASE C INPUT BASEPLATE TEMPERATURE", 148: "VSD - PHASE LOCKED LOOP",
+    149: "VSD - LINE VOLTAGE PHASE ROTATION", 150: "VSD - PRECHARGE - LOW DC BUS VOLTAGE 1",
+    151: "VSD - Input Voltage Imbalance", 152: "VSD - DC BUS PRE-REGULATION",
+    153: "VSD - LOGIC BOARD PROCESSOR", 154: "MVSSS - SERIAL RECEIVE",
+    155: "VSD - Identifying Drive", 156: "Leaving Condensor Liquid - High Temperature",
+    157: "Condenser - Freeze Threat - Flow Switch Open", 158: "Isolation Valves - Not Closed",
+    159: "VSD - PHASE A INPUT DCCT OFFSET", 160: "VSD - PHASE B INPUT DCCT OFFSET",
+    161: "VSD - PHASE C INPUT DCCT OFFSET", 162: "VSD - INVALID SETPOINTS",
+    163: "VSD - PRECHARGE - LOW DC BUS VOLTAGE 2", 164: "VSD - SERIAL RECEIVE",
+    165: "VSD - PHASE A MOTOR GATE DRIVER", 166: "VSD - PHASE B MOTOR GATE DRIVER",
     167: "VSD - PHASE C MOTOR GATE DRIVER",
     168: "VSD - LOW PHASE A MOTOR BASEPLATE TEMPERATURE",
     169: "VSD - LOW PHASE B MOTOR BASEPLATE TEMPERATURE",
-    170: "VSD - LOW PHASE C MOTOR BASEPLATE TEMPERATURE",
-    171: "VSD - NOT RUNNING",
-    172: "Motor - Lack Of Bearing Lubrication",
-    173: "Evaporator - Low Pressure",
-    174: "Expansion I/O - Serial Communications",
-    175: "Evaporator - Low Pressure - Smart Freeze",
-    176: "MBC - LOW DC BUS VOLTAGE",
-    177: "MBC - J RADIAL POSITION",
-    178: "MBC - K RADIAL POSITION",
-    179: "MBC - H AXIAL POSITION",
-    180: "MBC - FAULT CONTACTS OPEN",
-    181: "MBC - SERIAL COMMUNICATIONS",
-    182: "SYSTEM - STARTUP FAILURE",
-    183: "UPS - Line Low Battery Voltage",
-    184: "MBC - CALIBRATION FAULT",
-    185: "MBC - BEARING CALIBRATION REQUIRED",
-    186: "MOTOR CONTROLLER - INITIALIZATION FAILURE",
+    170: "VSD - LOW PHASE C MOTOR BASEPLATE TEMPERATURE", 171: "VSD - NOT RUNNING",
+    172: "Motor - Lack Of Bearing Lubrication", 173: "Evaporator - Low Pressure",
+    174: "Expansion I/O - Serial Communications", 175: "Evaporator - Low Pressure - Smart Freeze",
+    176: "MBC - LOW DC BUS VOLTAGE", 177: "MBC - J RADIAL POSITION",
+    178: "MBC - K RADIAL POSITION", 179: "MBC - H AXIAL POSITION", 180: "MBC - FAULT CONTACTS OPEN",
+    181: "MBC - SERIAL COMMUNICATIONS", 182: "SYSTEM - STARTUP FAILURE",
+    183: "UPS - Line Low Battery Voltage", 184: "MBC - CALIBRATION FAULT",
+    185: "MBC - BEARING CALIBRATION REQUIRED", 186: "MOTOR CONTROLLER - INITIALIZATION FAILURE",
     187: "MOTOR CONTROLLER - SERIAL COMMUNICATION",
     188: "HARMONIC FILTER - PRECHARGE - LOW DC BUS VOLTAGE 1",
     189: "HARMONIC FILTER - PRECHARGE - LOW DC BUS VOLTAGE 2",
     190: "VSD - HIGH PHASE A2 INSTANTANEOUS CURRENT",
     191: "VSD - HIGH PHASE B2 INSTANTANEOUS CURRENT",
-    192: "VSD - HIGH PHASE C2 INSTANTANEOUS CURRENT",
-    193: "VSD - PHASE A2 GATE DRIVER",
-    194: "VSD - PHASE B2 GATE DRIVER",
-    195: "VSD - PHASE C2 GATE DRIVER",
-    196: "VSD - HIGH DC BUS 2 VOLTAGE",
-    197: "VSD - LOW DC BUS 2 VOLTAGE",
+    192: "VSD - HIGH PHASE C2 INSTANTANEOUS CURRENT", 193: "VSD - PHASE A2 GATE DRIVER",
+    194: "VSD - PHASE B2 GATE DRIVER", 195: "VSD - PHASE C2 GATE DRIVER",
+    196: "VSD - HIGH DC BUS 2 VOLTAGE", 197: "VSD - LOW DC BUS 2 VOLTAGE",
     198: "VSD - DC BUS 2 VOLTAGE IMBALANCE",
     199: "VSD - LOW PHASE A2 INVERTER BASEPLATE TEMPERATURE",
     200: "VSD - LOW PHASE B2 INVERTER BASEPLATE TEMPERATURE",
-    201: "VSD - LOW PHASE C2 INVERTER BASEPLATE TEMPERATURE",
-    202: "VSD - LOW CONVERTER 2 HEATSINK TEMPERATURE",
+    201: "VSD - LOW PHASE C2 INVERTER BASEPLATE TEMPERATURE", 202: "VSD - LOW CONVERTER 2 HEATSINK TEMPERATURE",
     203: "VSD - PRECHARGE - DC BUS 2 VOLTAGE IMBALANCE",
-    204: "VSD - PRECHARGE - LOW DC BUS 2 VOLTAGE 1",
-    205: "VSD - PRECHARGE - LOW DC BUS 2 VOLTAGE 2",
-    206: "VSD - DC BUS VOLTAGE MISMATCH",
-    207: "UPS - NOT CHARGING",
-    208: "VSD - SINGLE PHASE INPUT POWER 2",
-    209: "VSD - 105% MOTOR CURRENT OVERLOAD",
+    204: "VSD - PRECHARGE - LOW DC BUS 2 VOLTAGE 1", 205: "VSD - PRECHARGE - LOW DC BUS 2 VOLTAGE 2",
+    206: "VSD - DC BUS VOLTAGE MISMATCH", 207: "UPS - NOT CHARGING",
+    208: "VSD - SINGLE PHASE INPUT POWER 2", 209: "VSD - 105% MOTOR CURRENT OVERLOAD",
     210: "VSD - BASEPLATE TEMPERATURE IMBALANCE 2"
 }
 
 warning_codes = {
-     0: "No Warning Present",
-    1: "Real-Time Clock Failure",
-    2: "Setpoint Override",
-    3: "Condensor Or Evaporator Transducer Error",
-    4: "Evaporator - Low Pressure Limit",
-    5: "Condensor - High Pressure Limit",
-    6: "OIL - HIGH SUPPLY TEMPERATURE",
-    7: "COMPRESSOR - LOW DISCHARGE SUPERHEAT LIMIT",
-    8: "WARNING - CONDENSER - HIGH TUBE CLEANING TIME",
-    9: "Standby Lube - Low Oil Pressure",
-    10: "Warning - Standby Lube Inihibited",
+     0: "No Warning Present", 1: "Real-Time Clock Failure", 2: "Setpoint Override",
+    3: "Condensor Or Evaporator Transducer Error", 4: "Evaporator - Low Pressure Limit",
+    5: "Condensor - High Pressure Limit", 6: "OIL - HIGH SUPPLY TEMPERATURE",
+    7: "COMPRESSOR - LOW DISCHARGE SUPERHEAT LIMIT", 8: "WARNING - CONDENSER - HIGH TUBE CLEANING TIME",
+    9: "Standby Lube - Low Oil Pressure", 10: "Warning - Standby Lube Inihibited",
     11: "WARNING - VSD - HIGH CONVERTER OR INVERTER TEMPERATURE",
-    12: "WARNING - SALES ORDER - INVALID SERIAL NUMBER",
-    13: "VGD Not Calibrated",
-    14: "VGD Actuator Switch Open",
-    15: "PRV Not Calibrated",
-    16: "Vanes Uncalibrated - Fixed Speed",
-    17: "WARNING - HARMONIC FILTER - OPERATION INIHIBITED",
-    18: "Harmonic Filter - Data Loss",
-    19: "Auto Lube Req'd On Next Shutdown",
-    20: "Auto Lube Grease Level Low",
-    21: "Auto Lube Failed",
-    22: "Motor Oil Change Suggested",
-    23: "Motor Oil Change Required",
-    24: "Lack Of Motor Oil Change",
-    25: "Seal Lubrication In Process",
-    26: "External I/O - Serial Communications",
+    12: "WARNING - SALES ORDER - INVALID SERIAL NUMBER", 13: "VGD Not Calibrated",
+    14: "VGD Actuator Switch Open", 15: "PRV Not Calibrated", 16: "Vanes Uncalibrated - Fixed Speed",
+    17: "WARNING - HARMONIC FILTER - OPERATION INIHIBITED", 18: "Harmonic Filter - Data Loss",
+    19: "Auto Lube Req'd On Next Shutdown", 20: "Auto Lube Grease Level Low", 21: "Auto Lube Failed",
+    22: "Motor Oil Change Suggested", 23: "Motor Oil Change Required", 24: "Lack Of Motor Oil Change",
+    25: "Seal Lubrication In Process", 26: "External I/O - Serial Communications",
     27: "WARNIING - MMB - SERIAL COMMUNICATIONS",
     28: "WARNING - HARMONIC FILTER - INPUT FREQUENCY RANGE",
-    29: "Surge Protection - Excess Surge Limit",
-    30: "Excess Surge Detected",
-    31: "WARNING - HARMONIC FILTER - INVALID MODEL",
-    32: "Motor - High Housing Temperature",
-    33: "KW Meter Not Calibrated",
-    34: "Condenser Or VGD Sensor Failure",
-    35: "Conditions Override VGD",
-    36: "Motor Bearing Lube Suggested",
-    37: "Motor Bearing Lube Required",
-    38: "Motor Bearing Lube Not Done",
-    39: "WARNING - HARMONIC FILTER - DATA LOSS",
-    40: "Motor - High Winding Temperature",
-    41: "Motor - High Bearing Temperature",
-    42: "Motor - High Bearing Vibration",
+    29: "Surge Protection - Excess Surge Limit", 30: "Excess Surge Detected",
+    31: "WARNING - HARMONIC FILTER - INVALID MODEL", 32: "Motor - High Housing Temperature",
+    33: "KW Meter Not Calibrated", 34: "Condenser Or VGD Sensor Failure", 35: "Conditions Override VGD",
+    36: "Motor Bearing Lube Suggested", 37: "Motor Bearing Lube Required", 38: "Motor Bearing Lube Not Done",
+    39: "WARNING - HARMONIC FILTER - DATA LOSS", 40: "Motor - High Winding Temperature",
+    41: "Motor - High Bearing Temperature", 42: "Motor - High Bearing Vibration",
     43: "Motor - Bearing Vibration Baseline Not Set",
-    44: "WARNING - VSD - INPUT VOLTAGE IMBALANCE",
-    45: "WARNING - HARMONIC FILTER - NOT RUNNING",
-    46: "Condenser - freeze Threat From Low Pressure",
-    47: "Liquid Level Setpoint Not Achieved",
-    48: "VSD - DC Bus Active",
-    49: "WARNING - LOSS OF SUBCOOLER LIQUID SEAL",
+    44: "WARNING - VSD - INPUT VOLTAGE IMBALANCE", 45: "WARNING - HARMONIC FILTER - NOT RUNNING",
+    46: "Condenser - freeze Threat From Low Pressure", 47: "Liquid Level Setpoint Not Achieved",
+    48: "VSD - DC Bus Active", 49: "WARNING - LOSS OF SUBCOOLER LIQUID SEAL",
     50: "Oil - High Sump Pressure",
-    51: "ECON LCSSS - Invalid Current Scale Selection",
-    52: "ECON LCSSS - Phase Loss",
-    53: "ECON LCSSS - Phase Locked Loop",
-    54: "ECON LCSSS - Power Fault",
-    55: "ECON LCSSS - Run Signal",
-    56: "ECON LCSSS - Motor Current Imbalance",
-    57: "ECON LCSSS - 105% Motor Current Overload",
-    58: "ECON LCSSS - High Motor Current",
-    59: "ECON LCSSS - High Supply Line Voltage",
-    60: "ECON LCSSS - Low Supply Line Voltage",
-    61: "ECON LCSSS - Open SCR",
-    62: "ECON LCSSS - Phase A Shorted SCR",
-    63: "ECON LCSSS - Phase B Shorted SCR",
-    64: "ECON LCSSS - Phase C Shorted SCR",
+    51: "ECON LCSSS - Invalid Current Scale Selection", 52: "ECON LCSSS - Phase Loss",
+    53: "ECON LCSSS - Phase Locked Loop", 54: "ECON LCSSS - Power Fault",
+    55: "ECON LCSSS - Run Signal", 56: "ECON LCSSS - Motor Current Imbalance",
+    57: "ECON LCSSS - 105% Motor Current Overload", 58: "ECON LCSSS - High Motor Current",
+    59: "ECON LCSSS - High Supply Line Voltage", 60: "ECON LCSSS - Low Supply Line Voltage",
+    61: "ECON LCSSS - Open SCR", 62: "ECON LCSSS - Phase A Shorted SCR",
+    63: "ECON LCSSS - Phase B Shorted SCR", 64: "ECON LCSSS - Phase C Shorted SCR",
     65: "ECON LCSSS - High Phase A Heatsink Temp - Stopped",
     66: "ECON LCSSS - High Phase B Heatsink Temp - Stopped",
     67: "ECON LCSSS - High Phase C Heatsink Temp - Stopped",
@@ -501,76 +302,48 @@ warning_codes = {
     70: "ECON LCSSS - High Phase C Heatsink Temperature",
     71: "ECON LCSSS - Low Phase A Temperature Sensor",
     72: "ECON LCSSS - Low Phase B Temperature Sensor",
-    73: "ECON LCSSS - Low Phase C Temperature Sensor",
-    74: "ECON LCSSS - Serial Receive",
-    75: "ECON LCSSS - Logic Board Power Supply",
-    76: "ECON LCSSS - Phase Rotation",
-    77: "ECON LCSSS - Undefined Fault",
-    78: "COND OR ECON XDCR ERROR",
-    79: "EVAP OR ECON XDCR ERROR",
-    80: "COND OR ECON VGD XDCR FAILURE",
-    81: "ECON HIGH STALL - VGD OVERRIDE",
-    82: "ECON STANDBY FAULT - LOW OIL PRESSURE",
-    83: "ECON SEAL LUBRICATION INHIBITED",
-    84: "ECON MOTOR - BEARING LUBE SUGGESTED",
-    85: "ECON MOTOR - BEARING LUBE REQUIRED",
+    73: "ECON LCSSS - Low Phase C Temperature Sensor", 74: "ECON LCSSS - Serial Receive",
+    75: "ECON LCSSS - Logic Board Power Supply", 76: "ECON LCSSS - Phase Rotation",
+    77: "ECON LCSSS - Undefined Fault", 78: "COND OR ECON XDCR ERROR",
+    79: "EVAP OR ECON XDCR ERROR", 80: "COND OR ECON VGD XDCR FAILURE", 81: "ECON HIGH STALL - VGD OVERRIDE",
+    82: "ECON STANDBY FAULT - LOW OIL PRESSURE", 83: "ECON SEAL LUBRICATION INHIBITED",
+    84: "ECON MOTOR - BEARING LUBE SUGGESTED", 85: "ECON MOTOR - BEARING LUBE REQUIRED",
     86: "ECON MOTOR - BEARING LUBE NOT ACHIEVED",
-    87: "ECON LIQUID LEVEL SETPOINT NOT ACHIEVED",
-    88: "ECONOMIZER - LEVEL HIGH",
-    89: "ECON ANTI-RECYCLE",
-    90: "ECON COMPRESSOR - PRV MOTOR SWITCH",
-    91: "ECONOMIZER - PRESSURE XDCR FAILURE",
-    92: "ECON COMPRESSOR - HPCO SWITCH OPEN",
-    93: "ECON COMPRESSOR - GEAR RATIO INVALID",
-    94: "ECON MOTOR - LINE FREQUENCY NOT SET",
-    95: "ECON DISCHARGE - LOW TEMPERATURE",
+    87: "ECON LIQUID LEVEL SETPOINT NOT ACHIEVED", 88: "ECONOMIZER - LEVEL HIGH", 89: "ECON ANTI-RECYCLE",
+    90: "ECON COMPRESSOR - PRV MOTOR SWITCH", 91: "ECONOMIZER - PRESSURE XDCR FAILURE",
+    92: "ECON COMPRESSOR - HPCO SWITCH OPEN", 93: "ECON COMPRESSOR - GEAR RATIO INVALID",
+    94: "ECON MOTOR - LINE FREQUENCY NOT SET", 95: "ECON DISCHARGE - LOW TEMPERATURE",
     96: "ECON DISCHARGE - HIGH TEMPERATURE",
     97: "ECON THRUST BEARING - LIMIT SWITCH OPEN",
-    98: "ECON OIL - VSD PUMP - FAULT CONTACTS OPEN",
-    99: "ECON OIL - PUMP PRESSURE XDCR FAILURE",
+    98: "ECON OIL - VSD PUMP - FAULT CONTACTS OPEN", 99: "ECON OIL - PUMP PRESSURE XDCR FAILURE",
     100: "ECON OIL - DIFF PRESSURE CALIBRATION",
-    101: "ECON OIL - LOW DIFFERENTIAL PRESSURE",
-    102: "ECON OIL - HIGH DIFFERENTIAL PRESSURE",
+    101: "ECON OIL - LOW DIFFERENTIAL PRESSURE", 102: "ECON OIL - HIGH DIFFERENTIAL PRESSURE",
     103: "ECON OIL - VSD PUMP - SETPOINT NOT ACHIEVED",
     104: "ECON MOTOR CONTROLLER - LOSS OF CURRENT",
     105: "ECON MOTOR CONTROLLER - SERIAL COMMUNICATIONS",
     106: "ECON MOTOR CONTROLLER - INITIALIZATION FAILED",
     107: "ECON MOTOR CONTROLLER - FAULT CONTACTS OPEN",
     108: "ECON MOTOR - LACK OF BEARING LUBRICATION",
-    109: "ECON MOTOR - CURRENT > 15% FLA",
-    110: "ECON COMPRESSOR - PRV NOT CALIBRATED",
+    109: "ECON MOTOR - CURRENT > 15% FLA", 110: "ECON COMPRESSOR - PRV NOT CALIBRATED",
     111: "ECONOMIZEER - HIGH LEVEL (STOPPED)",
-    112: "SALES ORDER - INVALID MOTOR VOLTS OR FLA",
-    113: "ECON MOTOR - HIGH WINDING TEMP",
-    114: "ECON MOTOR - HIGH BEARING TEMP",
-    115: "ECON MOTOR - HIGH BEARING VIBRATION",
-    116: "ECON MOTOR - VIBRATION BASELINE NOT SET",
-    117: "ECON MOTOR - HIGH WINDING TEMP SHUTDOWN",
+    112: "SALES ORDER - INVALID MOTOR VOLTS OR FLA", 113: "ECON MOTOR - HIGH WINDING TEMP",
+    114: "ECON MOTOR - HIGH BEARING TEMP", 115: "ECON MOTOR - HIGH BEARING VIBRATION",
+    116: "ECON MOTOR - VIBRATION BASELINE NOT SET", 117: "ECON MOTOR - HIGH WINDING TEMP SHUTDOWN",
     118: "ECON MOTOR - HIGH BEARING TEMP SHUTDOWN",
     119: "ECON MOTOR - HIGH BEARING VIBRATION SHUTDOWN",
-    120: "ECON MOTOR - AUTO LUBRICATION IN PROGRESS",
-    121: "ECON AUTO LUBE REG'D ON NEXT SHUTDOWN",
-    122: "ECON AUTO LUBE GREASE LEVEL LOW",
-    123: "ECON AUTO LUBE FAILED",
+    120: "ECON MOTOR - AUTO LUBRICATION IN PROGRESS", 121: "ECON AUTO LUBE REG'D ON NEXT SHUTDOWN",
+    122: "ECON AUTO LUBE GREASE LEVEL LOW", 123: "ECON AUTO LUBE FAILED",
     124: "ECON MMB I/O SERIAL COMMUNICATIONS",
-    125: "WARNING - UPS - BATTERY TEST FAILED",
-    126: "MBC - LOW AMPLIFIER RESISTANCE",
-    127: "MBC - HIGH AMPLIFIER RESISTANCE",
-    128: "MBC - LOW AMPLIFIER CURRENT",
-    129: "MBC - HIGH AMPLIFIER CURRENT",
-    130: "MBC - POSITION SENSOR ERROR",
-    131: "WARNING - UPS - NOT CHARGING",
-    132: "UPS - Line Low Battery Voltage",
-    133: "UPS - Battery Not Connected",
-    134: "UPS - Check Battery Connected",
-    135: "WARNING - PURGE - HIGH COIL TEMP",
-    136: "WARNING - PURGE - HIGH COIL TEMP INHIBIT",
-    137: "WARNING - PURGE - HIGH REGEN TANK TEMP",
-    138: "WARNING - PURGE - HIGH LEVEL",
+    125: "WARNING - UPS - BATTERY TEST FAILED", 126: "MBC - LOW AMPLIFIER RESISTANCE",
+    127: "MBC - HIGH AMPLIFIER RESISTANCE", 128: "MBC - LOW AMPLIFIER CURRENT",
+    129: "MBC - HIGH AMPLIFIER CURRENT", 130: "MBC - POSITION SENSOR ERROR",
+    131: "WARNING - UPS - NOT CHARGING", 132: "UPS - Line Low Battery Voltage",
+    133: "UPS - Battery Not Connected", 134: "UPS - Check Battery Connected",
+    135: "WARNING - PURGE - HIGH COIL TEMP", 136: "WARNING - PURGE - HIGH COIL TEMP INHIBIT",
+    137: "WARNING - PURGE - HIGH REGEN TANK TEMP", 138: "WARNING - PURGE - HIGH LEVEL",
     139: "WARNING - PURGE - EXCESS PURGE",
     140: "WARNING - PURGE - EQUALIZATION LOW SUCTION TEMP",
-    141: "WARNING - PURGE - POSSIBLE AIR IN SYSTEM",
-    142: "WARNING - PURGE - OPERATION INHIBITED",
+    141: "WARNING - PURGE - POSSIBLE AIR IN SYSTEM", 142: "WARNING - PURGE - OPERATION INHIBITED",
     143: "ECON MOTOR CONTROLLER - CONTACTS OPEN",
     144: "ECON MOTOR CONTROLLER - POWER FAULT",
     145: "WARNING - QUARTERLY SERVICE REQUIRED - CONTACT JCI",
@@ -1690,6 +1463,275 @@ def inject_sites_for_nav():
             
     return dict(all_sites_for_nav=sites_with_status)
 
+
+
+@app.route('/report/pdf/<string:chiller_id>')
+def report_pdf(chiller_id):
+    try:
+        # 1. Get data
+        start_date_str = request.args.get('start_date')
+        end_date_str = request.args.get('end_date')
+
+        now = datetime.now()
+        start_date = datetime.fromisoformat(start_date_str) if start_date_str else now - timedelta(hours=12)
+        end_date = datetime.fromisoformat(end_date_str) if end_date_str else now
+
+        # Fetch chiller details
+        conn = get_db_connection()
+        chiller_details = {}
+        if conn:
+            try:
+                cursor = conn.cursor(dictionary=True)
+                cursor.execute("SELECT * FROM chillers WHERE id = %s", (chiller_id,))
+                chiller_details = cursor.fetchone()
+            except Exception as e:
+                print(f"Database error fetching chiller details: {e}")
+            finally:
+                if conn.is_connected():
+                    cursor.close()
+                    conn.close()
+
+        # Fetch historical data from API
+        historical_data = []
+        try:
+            params = {
+                'start_date': start_date.strftime('%Y-%m-%dT%H:%M:%S'),
+                'end_date': end_date.strftime('%Y-%m-%dT%H:%M:%S')
+            }
+            api_url = f'http://127.0.0.1:8000/chillers/{chiller_id}/history'
+            response_history = requests.get(api_url, params=params)
+            response_history.raise_for_status() # Raise HTTPError for bad responses (4xx or 5xx)
+            historical_data = response_history.json()
+        except requests.exceptions.RequestException as e:
+            print(f"API request failed: {e}")
+            flash(f'Gagal mengambil data dari API untuk laporan: {e}', 'danger')
+            return redirect(url_for('test', chiller_id=chiller_id))
+
+        if not historical_data:
+            flash('Tidak ada data historis untuk periode yang dipilih untuk dibuatkan laporan.', 'warning')
+            return redirect(url_for('test', chiller_id=chiller_id, start_date=start_date.strftime('%Y-%m-%dT%H:%M'), end_date=end_date.strftime('%Y-%m-%dT%H:%M')))
+
+        # Define safe ranges for chart visualization
+        safe_ranges = {
+            "evap_lwt": {"min": 5.5, "max": 8.8},
+            "evap_rwt": {"min": 11.11, "max": 14.44},
+            "evap_satur_temp": {"min": 3.33, "max": 6.67},
+            "cond_lwt": {"min": 32.22, "max": 35.55},
+            "cond_rwt": {"min": 26.67, "max": 30.0},
+            "cond_satur_temp": {"min": 32.22, "max": 40.56},
+            "oil_sump_temp": {"min": 40.56, "max": 53.89},
+            "discharge_temp": {"min": 40.56, "max": 53.89},
+        }
+
+        # 2. Create PDF
+        pdf = FPDF()
+        three_lines_margin = 5 * 5
+        pdf.set_margins(left=10, top=three_lines_margin, right=10)
+        pdf.set_auto_page_break(auto=True, margin=three_lines_margin)
+        
+        pdf.add_page()
+        pdf.set_font('helvetica', 'B', 16)
+        
+        # Title
+        site_name = session.get('current_site_name', 'Unknown Site')
+        chiller_name = chiller_details.get('chiller_num', chiller_id) if chiller_details else chiller_id
+        pdf.cell(0, 10, f'Laporan Chiller - {site_name}', 0, 1, 'C')
+        pdf.cell(0, 10, f'Chiller: {chiller_name}', 0, 1, 'C')
+        pdf.cell(0, 10, f'Periode: {start_date.strftime("%d-%m-%Y %H:%M")} s/d {end_date.strftime("%d-%m-%Y %H:%M")}', 0, 1, 'C')
+        pdf.ln(10)
+
+        # 3. Generate and add charts
+        chart_sections = {
+            "Evaporator": [
+                {"key": "evap_lwt", "label": "Evap LWT (°C)"},
+                {"key": "evap_rwt", "label": "Evap RWT (°C)"},
+                {"key": "evap_pressure", "label": "Evap Pressure (kPa)"},
+                {"key": "evap_satur_temp", "label": "Evap Sat. Temp (°C)"},
+            ],
+            "Condenser": [
+                {"key": "cond_lwt", "label": "Cond LWT (°C)"},
+                {"key": "cond_rwt", "label": "Cond RWT (°C)"},
+                {"key": "cond_pressure", "label": "Cond Pressure (kPa)"},
+                {"key": "cond_satur_temp", "label": "Cond Sat. Temp (°C)"},
+            ],
+            "Oil & Discharge": [
+                {"key": "oil_sump_temp", "label": "Oil Sump Temp (°C)"},
+                {"key": "discharge_temp", "label": "Discharge Temp (°C)"},
+            ],
+            "Power": [
+                {"key": "fla", "label": "FLA (%)"},
+                {"key": "input_power", "label": "Input Power (kW)"},
+            ]
+        }
+
+        timestamps = [datetime.fromisoformat(d['timestamp']) for d in historical_data]
+
+        for section_title, parameters_in_section in chart_sections.items():
+            # Check if any parameter in the section exists in the data to avoid printing empty sections
+            if not any(p['key'] in historical_data[0] for p in parameters_in_section):
+                continue
+
+            # Add a page break if it's not the first section
+            if section_title != "Evaporator":
+                # A simple check to see if we are at the top of a page
+                if pdf.get_y() > 40: # If not near the top, add a new page
+                    pdf.add_page()
+                    pdf.set_y(three_lines_margin)
+
+            pdf.set_font('helvetica', 'B', 14)
+            pdf.cell(0, 10, section_title, 0, 1, 'L')
+            pdf.ln(2)
+
+            for param in parameters_in_section:
+                if param['key'] in historical_data[0] and historical_data[0][param['key']] is not None:
+                    values = [d.get(param['key']) for d in historical_data]
+                    
+                    plot_data = [(t, v) for t, v in zip(timestamps, values) if v is not None]
+                    if not plot_data:
+                        continue
+
+                    plot_timestamps, plot_values = zip(*plot_data)
+
+                    # Check if a new page is needed before drawing the chart
+                    # Approximate height of a chart + note section is ~90mm
+                    if pdf.get_y() + 90 > pdf.page_break_trigger:
+                        pdf.add_page()
+                        pdf.set_y(three_lines_margin)
+                        # Redraw section title on new page
+                        pdf.set_font('helvetica', 'B', 14)
+                        pdf.cell(0, 10, section_title, 0, 1, 'L')
+                        pdf.ln(2)
+
+                    fig, ax = plt.subplots(figsize=(10, 4))
+                    ax.plot(plot_timestamps, plot_values, marker='.', linestyle='-', markersize=4, zorder=2)
+
+                    # Add safe range shading
+                    if param['key'] in safe_ranges:
+                        s_range = safe_ranges[param['key']]
+                        ax.axhspan(s_range['min'], s_range['max'], color='green', alpha=0.2, label='Safe Range', zorder=1)
+                        ax.legend()
+
+                    ax.set_title(param['label'], fontsize=14)
+                    ax.set_xlabel('Waktu', fontsize=10)
+                    ax.set_ylabel(param['label'].split(' ')[-1], fontsize=10)
+                    ax.grid(True)
+                    fig.autofmt_xdate()
+                    plt.tight_layout()
+
+                    img_buffer = BytesIO()
+                    fig.savefig(img_buffer, format='png', dpi=100)
+                    img_buffer.seek(0)
+                    
+                    pdf.image(img_buffer, x=None, y=None, w=190)
+                    plt.close(fig)
+
+                    # Add NOTE section
+                    pdf.ln(2)
+                    pdf.set_font('helvetica', 'B', 10)
+                    pdf.cell(0, 5, 'NOTE:', 0, 1, 'L')
+                    pdf.ln(20) # Add 20mm of blank space for notes
+
+        # 4. Add data table
+        if historical_data:
+            # --- Data Preparation ---
+            parameters_to_plot = []
+            for section_params in chart_sections.values():
+                parameters_to_plot.extend(section_params)
+            
+            valid_parameters = [
+                p for p in parameters_to_plot 
+                if p['key'] in historical_data[0] and any(d.get(p['key']) is not None for d in historical_data)
+            ]
+
+            # --- Table Pagination ---
+            data_points_per_table = 10
+            data_chunks = [historical_data[i:i + data_points_per_table] for i in range(0, len(historical_data), data_points_per_table)]
+
+            # --- Calculate table height for layout planning ---
+            header_height = 10
+            row_height = 6
+            # Add a small buffer for safety
+            table_height = header_height + (len(valid_parameters) * row_height) + 5 
+
+            # --- Draw tables with page break logic ---
+            pdf.add_page(orientation='L')
+            pdf.set_y(three_lines_margin)
+            pdf.set_font('helvetica', 'B', 12)
+            pdf.cell(0, 10, 'Data Historis', 0, 1, 'L')
+            
+            is_first_table_on_page = True
+            for table_data in data_chunks:
+                # Check if the next table fits on the current page.
+                if not is_first_table_on_page and (pdf.get_y() + table_height > pdf.page_break_trigger):
+                    pdf.add_page(orientation='L')
+                    pdf.set_y(three_lines_margin)
+                    is_first_table_on_page = True
+                
+                # Add a small space before the table, unless it's the first one on a page
+                if not is_first_table_on_page:
+                    pdf.ln(5)
+
+                # --- Timestamps and Headers for the current chunk ---
+                timestamps = [datetime.fromisoformat(d['timestamp']).strftime('%H:%M\n%d-%m-%y') for d in table_data]
+                header_labels = ['Parameter'] + timestamps
+
+                # --- Column Widths ---
+                param_col_width = 55
+                num_data_cols = len(table_data)
+                data_col_width = (pdf.w - 20 - param_col_width) / num_data_cols if num_data_cols > 0 else 0
+                col_widths = [param_col_width] + [data_col_width] * num_data_cols
+
+                # --- Draw Header ---
+                pdf.set_font('helvetica', 'B', 8)
+                y_start = pdf.get_y()
+                x_start = pdf.get_x()
+                
+                pdf.multi_cell(col_widths[0], header_height, header_labels[0], border=1, align='C')
+                
+                current_x = x_start + col_widths[0]
+                for i, header in enumerate(header_labels[1:]):
+                    pdf.set_xy(current_x, y_start)
+                    pdf.multi_cell(col_widths[i+1], header_height / 2, header, border=1, align='C')
+                    current_x += col_widths[i+1]
+                
+                pdf.set_y(y_start + header_height)
+
+                # --- Draw Data Rows ---
+                pdf.set_font('helvetica', '', 10)
+
+                for param_info in valid_parameters:
+                    param_key = param_info['key']
+                    param_label = param_info['label']
+                    
+                    pdf.cell(col_widths[0], row_height, param_label, 1)
+                    
+                    for data_point in table_data:
+                        value = data_point.get(param_key)
+                        
+                        if value is None:
+                            display_value = '-'
+                        elif isinstance(value, float):
+                            display_value = f'{value:.2f}'
+                        else:
+                            display_value = str(value)
+                        
+                        pdf.cell(data_col_width, row_height, display_value, 1, align='C')
+                    
+                    pdf.ln()
+                
+                is_first_table_on_page = False
+
+        # 5. Return PDF
+        pdf_output = bytes(pdf.output())
+        return Response(pdf_output,
+                        mimetype='application/pdf',
+                        headers={'Content-Disposition': f'inline; filename=report_{chiller_id}_{start_date.strftime("%Y%m%d")}.pdf'})
+    except Exception as e:
+        import traceback
+        print(f"An error occurred during PDF generation for chiller {chiller_id}:")
+        traceback.print_exc()
+        flash(f"Gagal membuat laporan PDF karena kesalahan internal: {e}", "danger")
+        return redirect(url_for('test', chiller_id=chiller_id))
 
 
 if __name__ == '__main__':
