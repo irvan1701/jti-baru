@@ -71,6 +71,14 @@ COLUMN_MAPPING = {
     "Ch_Liq_Flow_Switch": "ch_liq_flow_switch",
     "Cond_Liq_Flow_Switch": "cond_liq_flow_switch",
     "Cond_Liq_Pump_Sts": "cond_liq_pump_sts",
+    "Approach_Evap": "approach_evap",
+    "Approach_Cond": "approach_cond",
+    "EER": "eer",
+    "COP": "cop",
+    "Efficiency": "efficiency",
+    "Cooling_Capacity": "cooling_capacity",
+    "Cond_DT": "cond_dt",
+    "Evap_DT": "evap_dt",
     
     # Tag-tag Fahrenheit:
     "Evap_RWT_Fahrenheit": "evap_rwt_fahrenheit",
@@ -142,6 +150,11 @@ COLUMN_MAPPING = {
     "Filter_Diff_Press": "filter_diff_press",
     "Output_Voltage": "output_voltage",
 }
+
+
+def c_to_f(celsius):
+    """Mengonversi suhu dari Celsius ke Fahrenheit."""
+    return (celsius * 9/5) + 32
 
 
 def initialize_mysql_connection():
@@ -262,12 +275,67 @@ def insert_data_to_mysql(data, topic):
             if not params:
                 continue
 
+            # --- CALCULATIONS ---
+            try:
+                evap_lwt_c = params.get("evap_lwt")
+                evap_satur_temp_c = params.get("evap_satur_temp")
+                evap_rwt_c = params.get("evap_rwt")
+                cond_lwt_c = params.get("cond_lwt")
+                cond_rwt_c = params.get("cond_rwt")
+                cond_satur_temp_c = params.get("cond_satur_temp")
+                input_power = params.get("input_power")
+
+                # Convert temperatures to Fahrenheit for calculation
+                evap_lwt = c_to_f(evap_lwt_c) if evap_lwt_c is not None else None
+                evap_satur_temp = c_to_f(evap_satur_temp_c) if evap_satur_temp_c is not None else None
+                evap_rwt = c_to_f(evap_rwt_c) if evap_rwt_c is not None else None
+                cond_lwt = c_to_f(cond_lwt_c) if cond_lwt_c is not None else None
+                cond_rwt = c_to_f(cond_rwt_c) if cond_rwt_c is not None else None
+                cond_satur_temp = c_to_f(cond_satur_temp_c) if cond_satur_temp_c is not None else None
+                
+                if evap_lwt is not None and evap_satur_temp is not None:
+                    params["approach_evap"] = evap_lwt - evap_satur_temp
+                
+                if cond_satur_temp is not None and cond_lwt is not None:
+                    params["approach_cond"] = cond_satur_temp - cond_lwt
+
+                evap_dt = None
+                if evap_rwt is not None and evap_lwt is not None:
+                    evap_dt = evap_rwt - evap_lwt
+                    params["evap_dt"] = evap_dt
+                
+                if cond_lwt is not None and cond_rwt is not None:
+                    params["cond_dt"] = cond_lwt - cond_rwt
+
+                cooling_capacity = None
+                if evap_dt is not None:
+                    cooling_capacity = evap_dt * 1296 / 24
+                    params["cooling_capacity"] = cooling_capacity
+
+                if input_power is not None and cooling_capacity is not None and cooling_capacity > 0:
+                    efficiency = input_power / cooling_capacity
+                    params["efficiency"] = efficiency
+                    if efficiency > 0:
+                        params["cop"] = 12 / efficiency / 3.142
+                        params["eer"] = 12 / efficiency
+                    else:
+                        params["cop"] = 0.0
+                        params["eer"] = 0.0
+                else:
+                    params["efficiency"] = 0.0
+                    params["cop"] = 0.0
+                    params["eer"] = 0.0
+
+            except (TypeError, ValueError) as e:
+                print(f"Could not perform calculations for {current_full_chiller_id}: {e}")
+
+
             insert_columns = ['timestamp', 'chiller_id']
             insert_values = [timestamp, current_full_chiller_id]
             update_set_clauses = []
 
             for param_name, param_value in params.items():
-                insert_columns.append(f"`{param_name}`") # Gunakan backticks untuk nama kolom yang mungkin sensitif
+                insert_columns.append(f"`{param_name}`")
                 insert_values.append(param_value)
                 update_set_clauses.append(f"`{param_name}` = VALUES(`{param_name}`)")
 
@@ -284,14 +352,13 @@ def insert_data_to_mysql(data, topic):
                 cursor.execute(insert_query, tuple(insert_values))
                 print(f"[{datetime.now().strftime('%H:%M:%S')}] Data for Chiller ID {current_full_chiller_id} at {timestamp} processed.")
             except mysql.connector.Error as err:
-                # Menangkap error Foreign Key
-                if err.errno == 1452: # MySQL error code for foreign key constraint fails
+                if err.errno == 1452:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] Error processing data for {current_full_chiller_id} at {timestamp}: Chiller ID '{current_full_chiller_id}' **NOT FOUND** in `chillers` table. Please add this chiller first.")
                 else:
                     print(f"[{datetime.now().strftime('%H:%M:%S')}] Error processing data for {current_full_chiller_id} at {timestamp}: {err}")
-                global_mysql_conn.rollback() # Rollback transaksi jika ada error pada chiller ini
+                global_mysql_conn.rollback()
                 
-        global_mysql_conn.commit() # Commit koneksi global setelah semua chiller dalam payload diproses
+        global_mysql_conn.commit()
         print(f"[{datetime.now().strftime('%H:%M:%S')}] All chiller data for {timestamp} processed and committed successfully for site {site_id}.")
 
     except json.JSONDecodeError as e:

@@ -129,9 +129,6 @@ def insert_or_update_chiller_data(payload, topic):
             if chiller_num_raw not in chiller_data:
                 chiller_data[chiller_num_raw] = {}
 
-            if data_field_name in ["Evap_LWT", "Evap_RWT", "Evap_Satur_Temp", "Cond_RWT", "Cond_LWT", "Cond_Satur_Temp", "Discharge_Temp", "Oil_Sump_Temp", "Evap_Refrigerant_Temp"]:
-                value = c_to_f(value)
-            
             chiller_data[chiller_num_raw][data_field_name] = value
         
         for chiller_num_raw, data_values in chiller_data.items():
@@ -156,79 +153,81 @@ def insert_or_update_chiller_data(payload, topic):
                     columns_to_insert.append(db_column_name)
                     values_to_insert.append(value)
                     updates.append(f"{db_column_name} = VALUES({db_column_name})")
-                print(f"Data dari payload (setelah konversi jika suhu): {tag_name} = {value}")
+                print(f"Data dari payload (sebelum konversi): {tag_name} = {value}")
 
             try:
-                evap_lwt = data_values.get("Evap_LWT")
-                evap_satur_temp = data_values.get("Evap_Satur_Temp")
-                evap_rwt = data_values.get("Evap_RWT")
-                cond_lwt = data_values.get("Cond_LWT")
-                cond_rwt = data_values.get("Cond_RWT")
-                cond_satur_temp = data_values.get("Cond_Satur_Temp")
+                evap_lwt_c = data_values.get("Evap_LWT")
+                evap_satur_temp_c = data_values.get("Evap_Satur_Temp")
+                evap_rwt_c = data_values.get("Evap_RWT")
+                cond_lwt_c = data_values.get("Cond_LWT")
+                cond_rwt_c = data_values.get("Cond_RWT")
+                cond_satur_temp_c = data_values.get("Cond_Satur_Temp")
                 fla = data_values.get("FLA")
                 input_power = data_values.get("Input_Power")
+
+                # Convert temperatures to Fahrenheit for calculation
+                evap_lwt = c_to_f(evap_lwt_c) if evap_lwt_c is not None else None
+                evap_satur_temp = c_to_f(evap_satur_temp_c) if evap_satur_temp_c is not None else None
+                evap_rwt = c_to_f(evap_rwt_c) if evap_rwt_c is not None else None
+                cond_lwt = c_to_f(cond_lwt_c) if cond_lwt_c is not None else None
+                cond_rwt = c_to_f(cond_rwt_c) if cond_rwt_c is not None else None
+                cond_satur_temp = c_to_f(cond_satur_temp_c) if cond_satur_temp_c is not None else None
                 
-                if fla is not None and fla < 5:
-                    print(f"Peringatan: FLA ({fla}) di bawah 5. Chiller dianggap mati. Efficiency, COP, dan EER diatur ke 0.0.")
-                    efficiency = 0.0
-                    cop = 0.0
-                    eer = 0.0
-                else:
-                    if evap_lwt is not None and evap_satur_temp is not None:
-                        approach_evap = evap_lwt - evap_satur_temp
-                        columns_to_insert.append("approach_evap")
-                        values_to_insert.append(approach_evap)
-                        updates.append("approach_evap = VALUES(approach_evap)")
-                        print(f"approach_evap (Evap LWT - Evap Satur Temp): {approach_evap}")
-                    
-                    if cond_satur_temp is not None and cond_lwt is not None:
-                        approach_cond = cond_satur_temp - cond_lwt
-                        columns_to_insert.append("approach_cond")
-                        values_to_insert.append(approach_cond)
-                        updates.append("approach_cond = VALUES(approach_cond)")
-                        print(f"approach_cond (Cond Satur - Cond LWT): {approach_cond}")
+                if evap_lwt is not None and evap_satur_temp is not None:
+                    approach_evap = evap_lwt - evap_satur_temp
+                    columns_to_insert.append("approach_evap")
+                    values_to_insert.append(approach_evap)
+                    updates.append("approach_evap = VALUES(approach_evap)")
+                    print(f"approach_evap (Evap LWT F - Evap Satur Temp F): {approach_evap}")
+                
+                if cond_satur_temp is not None and cond_lwt is not None:
+                    approach_cond = cond_satur_temp - cond_lwt
+                    columns_to_insert.append("approach_cond")
+                    values_to_insert.append(approach_cond)
+                    updates.append("approach_cond = VALUES(approach_cond)")
+                    print(f"approach_cond (Cond Satur F - Cond LWT F): {approach_cond}")
 
-                    evap_dt = None
-                    if evap_rwt is not None and evap_lwt is not None:
-                        evap_dt = evap_rwt - evap_lwt
-                        columns_to_insert.append("evap_dt")
-                        values_to_insert.append(evap_dt)
-                        updates.append("evap_dt = VALUES(evap_dt)")
-                        print(f"evap_dt (Evap RWT - Evap LWT): {evap_dt}")
-                    
-                    if cond_lwt is not None and cond_rwt is not None:
-                        cond_dt = cond_lwt - cond_rwt
-                        columns_to_insert.append("cond_dt")
-                        values_to_insert.append(cond_dt)
-                        updates.append("cond_dt = VALUES(cond_dt)")
-                        print(f"cond_dt (Cond LWT - Cond RWT): {cond_dt}")
+                evap_dt = None
+                if evap_rwt is not None and evap_lwt is not None:
+                    evap_dt = evap_rwt - evap_lwt
+                    columns_to_insert.append("evap_dt")
+                    values_to_insert.append(evap_dt)
+                    updates.append("evap_dt = VALUES(evap_dt)")
+                    print(f"evap_dt (Evap RWT F - Evap LWT F): {evap_dt}")
+                
+                if cond_lwt is not None and cond_rwt is not None:
+                    cond_dt = cond_lwt - cond_rwt
+                    columns_to_insert.append("cond_dt")
+                    values_to_insert.append(cond_dt)
+                    updates.append("cond_dt = VALUES(cond_dt)")
+                    print(f"cond_dt (Cond LWT F - Cond RWT F): {cond_dt}")
 
-                    if evap_dt is not None:
-                        cooling_capacity = evap_dt * 1296 / 24
-                        columns_to_insert.append("cooling_capacity")
-                        values_to_insert.append(cooling_capacity)
-                        updates.append("cooling_capacity = VALUES(cooling_capacity)")
-                        print(f"cooling_capacity (Evap DT * 1296 / 24): {cooling_capacity}")
+                if evap_dt is not None:
+                    cooling_capacity = evap_dt * 1296 / 24
+                    columns_to_insert.append("cooling_capacity")
+                    values_to_insert.append(cooling_capacity)
+                    updates.append("cooling_capacity = VALUES(cooling_capacity)")
+                    print(f"cooling_capacity (Evap DT F * 1296 / 24): {cooling_capacity}")
 
-                        if input_power is not None and cooling_capacity is not None and cooling_capacity > 0:
-                            efficiency = input_power / cooling_capacity
-                            if efficiency > 0:
-                                cop = 12 / efficiency / 3.142
-                                eer = 12 / efficiency
-                            else:
-                                cop = 0.0
-                                eer = 0.0
-                                print("Peringatan: Nilai Efficiency nol, COP dan EER diatur ke 0.0.")
+                    if input_power is not None and cooling_capacity is not None and cooling_capacity > 0:
+                        efficiency = input_power / cooling_capacity
+                        if efficiency > 0:
+                            cop = 12 / efficiency / 3.142
+                            eer = 12 / efficiency
                         else:
-                            print("Peringatan: Cooling_Capacity atau Input_Power tidak valid atau Cooling_Capacity nol. Efficiency, COP, dan EER diatur ke 0.0.")
-                            efficiency = 0.0
                             cop = 0.0
                             eer = 0.0
+                            print("Peringatan: Nilai Efficiency nol, COP dan EER diatur ke 0.0.")
                     else:
-                        print("Peringatan: Evap_DT tidak valid. Efficiency, COP, dan EER diatur ke 0.0.")
+                        print("Peringatan: Cooling_Capacity atau Input_Power tidak valid atau Cooling_Capacity nol. Efficiency, COP, dan EER diatur ke 0.0.")
                         efficiency = 0.0
                         cop = 0.0
                         eer = 0.0
+                else:
+                    print("Peringatan: Evap_DT tidak valid. Efficiency, COP, dan EER diatur ke 0.0.")
+                    efficiency = 0.0
+                    cop = 0.0
+                    eer = 0.0
             
             except (TypeError, ValueError) as calc_err:
                 print(f"Peringatan: Gagal melakukan perhitungan untuk chiller {full_chiller_id}: {calc_err}")

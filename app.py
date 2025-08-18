@@ -30,21 +30,33 @@ app.register_blueprint(auth_bp)
 
 
 class PDFWithMargins(FPDF):
-    def __init__(self, orientation='P', unit='mm', format='A4', top_margin=15, bottom_margin=15, left_margin=10, right_margin=10):
+    def __init__(self, orientation='P', unit='mm', format='A4', top_margin=15, bottom_margin=15, left_margin=10, right_margin=10, generation_time=""):
         super().__init__(orientation, unit, format)
         self.set_top_margin(top_margin)
         self.set_left_margin(left_margin)
         self.set_right_margin(right_margin)
         self.set_auto_page_break(auto=True, margin=bottom_margin)
+        self.generation_time = generation_time
 
     def header(self):
-        # This space is reserved for the header.
-        # By having a header method, even if empty, FPDF correctly sets the top margin for the content.
-        pass
+        # Set font for header
+        self.set_font('helvetica', 'I', 8)
+        # Get page width
+        page_width = self.w - self.l_margin - self.r_margin
+        # Calculate width of the text
+        text_width = self.get_string_width(f'Generated at: {self.generation_time}')
+        # Set position to the top right
+        self.set_x(page_width - text_width + self.l_margin)
+        # Add the cell
+        self.cell(text_width, 10, f'Generated at: {self.generation_time}', 0, 0, 'R')
+        # Move down to start content below header
+        self.ln(15)
 
     def footer(self):
-        # This space is reserved for the footer.
-        pass
+        # Page number
+        self.set_y(-15)
+        self.set_font('helvetica', 'I', 8)
+        self.cell(0, 10, 'Page %s' % self.page_no(), 0, 0, 'C')
 
 # --- HARDCODED LOOKUP TABLES (Lengkap) ---
 safety_codes = {
@@ -1524,21 +1536,51 @@ def report_pdf(chiller_id):
         }
 
         # 2. Create PDF
-        pdf = FPDF()
-        three_lines_margin = 5 * 5
-        pdf.set_margins(left=10, top=three_lines_margin, right=10)
-        pdf.set_auto_page_break(auto=True, margin=three_lines_margin)
-        
+        generation_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
+        pdf = PDFWithMargins(generation_time=generation_time)
+        pdf.set_auto_page_break(auto=True, margin=25) # Standard bottom margin
         pdf.add_page()
+
+        # --- First Page Content ---
         pdf.set_font('helvetica', 'B', 16)
-        
-        # Title
         site_name = session.get('current_site_name', 'Unknown Site')
         chiller_name = chiller_details.get('chiller_num', chiller_id) if chiller_details else chiller_id
+        
+        # The header is added automatically, now add the title below it
         pdf.cell(0, 10, f'Laporan Chiller - {site_name}', 0, 1, 'C')
         pdf.cell(0, 10, f'Chiller: {chiller_name}', 0, 1, 'C')
-        pdf.cell(0, 10, f'Periode: {start_date.strftime("%d-%m-%Y %H:%M")} s/d {end_date.strftime("%d-%m-%Y %H:%M")}', 0, 1, 'C')
         pdf.ln(10)
+
+        # Add image
+        image_path = os.path.join(app.static_folder, 'images', 'chiller.png')
+        if os.path.exists(image_path):
+            pdf.image(image_path, x='C', y=pdf.get_y(), w=150)
+            pdf.ln(85) # Adjust space after image
+
+        # Add chiller details table
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.cell(0, 10, 'Chiller Details', 0, 1, 'C')
+        pdf.ln(5)
+
+        if chiller_details:
+            pdf.set_font('helvetica', '', 10)
+            table_width = 150
+            col_width_key = 60
+            col_width_value = 90
+            start_x = (pdf.w - table_width) / 2
+            details_to_show = {
+                "Model Number": chiller_details.get('model_number'),
+                "Serial Number": chiller_details.get('serial_number'),
+                "Refrigerant": chiller_details.get('refrigerant'),
+                "net WT" : chiller_details.get('net_weight'),
+                "Compressor Model": chiller_details.get('compressor_model'),
+                "Charge": chiller_details.get('charge')
+            }
+            for key, value in details_to_show.items():
+                pdf.set_x(start_x)
+                pdf.cell(col_width_key, 10, f'{key}:', 1, 0)
+                pdf.cell(col_width_value, 10, str(value), 1, 1)
+            pdf.ln(10)
 
         # 3. Generate and add charts
         chart_sections = {
@@ -1567,17 +1609,10 @@ def report_pdf(chiller_id):
         timestamps = [datetime.fromisoformat(d['timestamp']) for d in historical_data]
 
         for section_title, parameters_in_section in chart_sections.items():
-            # Check if any parameter in the section exists in the data to avoid printing empty sections
             if not any(p['key'] in historical_data[0] for p in parameters_in_section):
                 continue
 
-            # Add a page break if it's not the first section
-            if section_title != "Evaporator":
-                # A simple check to see if we are at the top of a page
-                if pdf.get_y() > 40: # If not near the top, add a new page
-                    pdf.add_page()
-                    pdf.set_y(three_lines_margin)
-
+            pdf.add_page()
             pdf.set_font('helvetica', 'B', 14)
             pdf.cell(0, 10, section_title, 0, 1, 'L')
             pdf.ln(2)
@@ -1592,20 +1627,15 @@ def report_pdf(chiller_id):
 
                     plot_timestamps, plot_values = zip(*plot_data)
 
-                    # Check if a new page is needed before drawing the chart
-                    # Approximate height of a chart + note section is ~90mm
                     if pdf.get_y() + 90 > pdf.page_break_trigger:
                         pdf.add_page()
-                        pdf.set_y(three_lines_margin)
-                        # Redraw section title on new page
                         pdf.set_font('helvetica', 'B', 14)
                         pdf.cell(0, 10, section_title, 0, 1, 'L')
                         pdf.ln(2)
 
                     fig, ax = plt.subplots(figsize=(10, 4))
-                    ax.plot(plot_timestamps, plot_values, marker='.', linestyle='-', markersize=4, zorder=2)
+                    ax.plot(plot_timestamps, plot_values, marker='.', linestyle='-', markersize=8, zorder=2)
 
-                    # Add safe range shading
                     if param['key'] in safe_ranges:
                         s_range = safe_ranges[param['key']]
                         ax.axhspan(s_range['min'], s_range['max'], color='green', alpha=0.2, label='Safe Range', zorder=1)
@@ -1625,15 +1655,13 @@ def report_pdf(chiller_id):
                     pdf.image(img_buffer, x=None, y=None, w=190)
                     plt.close(fig)
 
-                    # Add NOTE section
                     pdf.ln(2)
                     pdf.set_font('helvetica', 'B', 10)
                     pdf.cell(0, 5, 'NOTE:', 0, 1, 'L')
-                    pdf.ln(20) # Add 20mm of blank space for notes
+                    pdf.ln(20)
 
         # 4. Add data table
         if historical_data:
-            # --- Data Preparation ---
             parameters_to_plot = []
             for section_params in chart_sections.values():
                 parameters_to_plot.extend(section_params)
@@ -1643,45 +1671,34 @@ def report_pdf(chiller_id):
                 if p['key'] in historical_data[0] and any(d.get(p['key']) is not None for d in historical_data)
             ]
 
-            # --- Table Pagination ---
             data_points_per_table = 10
             data_chunks = [historical_data[i:i + data_points_per_table] for i in range(0, len(historical_data), data_points_per_table)]
 
-            # --- Calculate table height for layout planning ---
             header_height = 10
             row_height = 6
-            # Add a small buffer for safety
             table_height = header_height + (len(valid_parameters) * row_height) + 5 
 
-            # --- Draw tables with page break logic ---
             pdf.add_page(orientation='L')
-            pdf.set_y(three_lines_margin)
             pdf.set_font('helvetica', 'B', 12)
             pdf.cell(0, 10, 'Data Historis', 0, 1, 'L')
             
             is_first_table_on_page = True
             for table_data in data_chunks:
-                # Check if the next table fits on the current page.
                 if not is_first_table_on_page and (pdf.get_y() + table_height > pdf.page_break_trigger):
                     pdf.add_page(orientation='L')
-                    pdf.set_y(three_lines_margin)
                     is_first_table_on_page = True
                 
-                # Add a small space before the table, unless it's the first one on a page
                 if not is_first_table_on_page:
                     pdf.ln(5)
 
-                # --- Timestamps and Headers for the current chunk ---
                 timestamps = [datetime.fromisoformat(d['timestamp']).strftime('%H:%M\n%d-%m-%y') for d in table_data]
                 header_labels = ['Parameter'] + timestamps
 
-                # --- Column Widths ---
                 param_col_width = 55
                 num_data_cols = len(table_data)
                 data_col_width = (pdf.w - 20 - param_col_width) / num_data_cols if num_data_cols > 0 else 0
                 col_widths = [param_col_width] + [data_col_width] * num_data_cols
 
-                # --- Draw Header ---
                 pdf.set_font('helvetica', 'B', 8)
                 y_start = pdf.get_y()
                 x_start = pdf.get_x()
@@ -1696,7 +1713,6 @@ def report_pdf(chiller_id):
                 
                 pdf.set_y(y_start + header_height)
 
-                # --- Draw Data Rows ---
                 pdf.set_font('helvetica', '', 10)
 
                 for param_info in valid_parameters:
