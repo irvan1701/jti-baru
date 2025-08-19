@@ -19,6 +19,12 @@
     font-size: 24px;
     color: #fff;
   }
+  .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
+  .modal-content { background-color: #2d3748; color: #e2e8f0; margin: 15% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px; text-align: center; position: relative; }
+  .close-button { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; }
+  .close-button:hover, .close-button:focus { color: #fff; text-decoration: none; cursor: pointer; }
+  .modal-buttons button { background-color: #4a5568; color: white; padding: 12px 24px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
+  .modal-buttons button:hover { background-color: #5a6578; }
 </style>
 <div class="chiller-content-wrapper">
     <div class="dashboard-grid">
@@ -257,6 +263,18 @@
                             </tbody>
                         </table>
                     </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="export-modal" class="modal">
+            <div class="modal-content">
+                <span class="close-button">&times;</span>
+                <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Pilih Unit Laporan</h2>
+                <p style="margin-bottom: 1.5rem;">Pilih unit temperatur untuk laporan PDF Anda.</p>
+                <div class="modal-buttons">
+                    <button id="export-celsius-btn">Export (°C)</button>
+                    <button id="export-fahrenheit-btn">Export (°F)</button>
                 </div>
             </div>
         </div>
@@ -655,27 +673,56 @@
             renderCharts();
         });
 
-        document.getElementById('report-button').addEventListener('click', function(e) {
-            e.preventDefault();
+        const modal = document.getElementById('export-modal');
+        const btn = document.getElementById('report-button');
+        const span = document.getElementsByClassName('close-button')[0];
+        const exportCelsiusBtn = document.getElementById('export-celsius-btn');
+        const exportFahrenheitBtn = document.getElementById('export-fahrenheit-btn');
+
+        function exportPdfWithUnit(unit) {
             const chillerId = document.querySelector('input[name="chiller_id"]').value;
             const startDate = document.getElementById('start_date').value;
             const endDate = document.getElementById('end_date').value;
-            
+            let alarm = 'none';
+            {% if data %}
+                {% if data.safety_fault and data.safety_fault > 0 %}
+                    alarm = 'safety_fault';
+                {% elif data.cycling_fault and data.cycling_fault > 0 %}
+                    alarm = 'cycling_fault';
+                {% elif data.warning_fault and data.warning_fault > 0 %}
+                    alarm = 'warning_fault';
+                {% endif %}
+            {% endif %}
             let reportUrl = `/report/pdf/${chillerId}`;
             const params = new URLSearchParams();
-            if (startDate) {
-                params.append('start_date', startDate);
+            if (startDate) { params.append('start_date', startDate); }
+            if (endDate) { params.append('end_date', endDate); }
+            params.append('unit', unit);
+            if (alarm) { params.append('alarm', alarm); }
+            if (params.toString()) { reportUrl += `?${params.toString()}`; }
+            const win = window.open(reportUrl, '_blank');
+            if (win) { win.onload = function() { win.print(); }; }
+        }
+
+        btn.onclick = function() {
+            modal.style.display = "block";
+        }
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
             }
-            if (endDate) {
-                params.append('end_date', endDate);
-            }
-            
-            if (params.toString()) {
-                reportUrl += `?${params.toString()}`;
-            }
-            
-            window.open(reportUrl, '_blank');
-        });
+        }
+        exportCelsiusBtn.onclick = function() {
+            exportPdfWithUnit('celsius');
+            modal.style.display = "none";
+        }
+        exportFahrenheitBtn.onclick = function() {
+            exportPdfWithUnit('fahrenheit');
+            modal.style.display = "none";
+        }
 
         setTimeout(function() {
             location.reload();
