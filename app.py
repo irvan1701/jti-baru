@@ -1717,6 +1717,279 @@ def report_pdf(chiller_id):
             conn.close()
 
 
+@app.route('/yvaa_type')
+def yvaa_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YVAA'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('yvaa_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/yvwa1_type')
+def yvwa1_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YVWA1'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('yvwa1_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/yvwa2_type')
+def yvwa2_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YVWA2'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('yvwa2_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/ys_sss_type')
+def ys_sss_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YS-SSS'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('ys-sss_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/yr_sss_type')
+def yr_sss_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YR-SSS'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('yr-sss_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/ylaa_type')
+def ylaa_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YLAA'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('ylaa_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/yk_sss_type')
+def yk_sss_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YK-SSS'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('yk-sss_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+@app.route('/yk_vsd_type')
+def yk_vsd_type():
+    dummy_data = {
+        'evap_rwt': 12.5, 'evap_lwt': 7.2, 'evap_pressure': 450.1, 'evap_satur_temp': 5.3,
+        'cond_rwt': 29.8, 'cond_lwt': 35.1, 'cond_pressure': 1200.5, 'cond_satur_temp': 38.2,
+        'oil_sump_temp': 55.6, 'oil_feed_pressure': 850.3, 'oil_feed_temp': 50.1,
+        'compressor_starts': 1234, 'compressor_hours': 5678, 'fla': 85.2,
+        'safety_fault_desc': 'No Safety Faults Present', 'cycling_fault_desc': 'No Cycling Faults Present', 'warning_fault_desc': 'No Warning Present'
+    }
+    dummy_chiller = {
+        'id': 'dummy_chiller', 'chiller_num': 'Dummy Chiller', 'model_number': 'DUMMY-123',
+        'serial_number': 'DUMMY-SN-456', 'power_kW': 500, 'ton_of_refrigeration': 150,
+        'image_name': 'chiller.png', 'chiller_type': 'YK-VSD'
+    }
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
+    now = datetime.now()
+    start_date = (now - timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
+    return render_template('yk-vsd_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
+
+
 if __name__ == '__main__':
     try:
         locale.setlocale(locale.LC_ALL, 'id_ID.UTF-8')
