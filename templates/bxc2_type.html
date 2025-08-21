@@ -49,7 +49,7 @@
                 <div class="icon-circle"><i class="fas fa-sync-alt"></i></div>
                 <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault_desc if data and data.cycling_fault_desc is not none else '-' }}</p></div>
             </div>
-            <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}">
+            <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}" data-warning-code="{{ data.warning_fault if data else '' }}">
                 <div class="icon-circle"><i class="fas fa-bell"></i></div>
                 <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
             </div>
@@ -397,17 +397,48 @@
                 </div>
             </div>
         </div>
-        <div id="export-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Pilih Unit Laporan</h2>
-                <p style="margin-bottom: 1.5rem;">Pilih unit temperatur untuk laporan PDF Anda.</p>
-                <div class="modal-buttons">
-                    <button id="export-celsius-btn">Export (°C)</button>
-                    <button id="export-fahrenheit-btn">Export (°F)</button>
-                </div>
+<!-- Analysis Modal -->
+<div id="analysis-modal" class="modal" style="display: none; z-index: 1060;">
+    <div class="modal-content" style="width: 80%; max-width: 800px; text-align: left;">
+        <span class="close-analysis-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
+        <h2 id="analysis-modal-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Warning Analysis</h2>
+        <div id="analysis-modal-body" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+            <!-- Analysis will be loaded here -->
+            <p>Loading analysis...</p>
+        </div>
+    </div>
+</div>
+        <div id="report-preview-modal" class="modal" style="display: none; z-index: 1050; text-align: left;">
+    <div class="modal-content" style="width: 90%; max-width: 1200px;">
+        <span class="close-preview-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
+        <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Report Preview & Notes</h2>
+        
+        <div id="pdf-preview-area" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+            <div id="preview-header" style="text-align: center; margin-bottom: 20px;">
+                <h3 style="font-size: 1.2rem; font-weight: bold;">Laporan Chiller - {{ session.current_site_name }}</h3>
+                <h4 style="font-size: 1.1rem;">Chiller: {{ chiller.chiller_num }}</h4>
+            </div>
+
+            <div id="preview-chiller-details" style="margin-bottom: 20px;">
+                <h5 style="font-weight: bold; text-align: center;">Chiller Details</h5>
+                <!-- Details will be populated here -->
+            </div>
+
+            <div id="preview-charts-and-notes">
+                <!-- Charts and notes textareas will be populated here -->
             </div>
         </div>
+
+        <form id="pdf-report-form" method="POST" action="" target="_blank" style="margin-top: 20px;">
+            <input type="hidden" name="unit" id="report-unit-input">
+            <!-- The notes will be collected from the textareas in the preview area -->
+            <div id="hidden-notes-inputs"></div>
+            <div style="text-align: right;">
+                 <button type="submit" id="print-pdf-btn" class="modal-buttons" style="background-color: #38a169; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Generate and Print PDF</button>
+            </div>
+        </form>
+    </div>
+</div>
 
         <div class="chart-section">
             <h2 class="text-2xl font-bold text-white mb-4 text-center">Analisis Data Historis</h2>
@@ -466,10 +497,10 @@
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.2.1/chartjs-plugin-annotation.min.js"></script>
 <script>
+    window.currentCharts = {};
     document.addEventListener('DOMContentLoaded', function () {
         const historicalData = {{ historical_data|tojson }};
         const chartParameters = {{ chart_parameters | tojson }};
-        let currentCharts = {}; // To store chart instances for destruction
 
         const tempUnitSelect = document.getElementById('temp_unit');
         
@@ -617,12 +648,12 @@
         }
 
         function renderCharts() {
-            for (const chartId in currentCharts) {
-                if (currentCharts[chartId]) {
-                    currentCharts[chartId].destroy();
+            for (const chartId in window.currentCharts) {
+                if (window.currentCharts[chartId]) {
+                    window.currentCharts[chartId].destroy();
                 }
             }
-            currentCharts = {};
+            window.currentCharts = {};
 
             if (historicalData && historicalData.length > 0) {
                 const labels = historicalData.map(d => new Date(d.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }));
@@ -712,7 +743,7 @@
                         }];
                     }
 
-                    currentCharts[param.key] = new Chart(ctx, {
+                    window.currentCharts[param.key] = new Chart(ctx, {
                         type: 'line',
                         data: {
                             labels: labels,
@@ -799,56 +830,165 @@
             renderCharts();
         });
 
-        const modal = document.getElementById('export-modal');
-        const btn = document.getElementById('report-button');
-        const span = document.getElementsByClassName('close-button')[0];
-        const exportCelsiusBtn = document.getElementById('export-celsius-btn');
-        const exportFahrenheitBtn = document.getElementById('export-fahrenheit-btn');
+        const reportButton = document.getElementById('report-button');
+        const previewModal = document.getElementById('report-preview-modal');
+        const closePreviewModal = document.querySelector('.close-preview-modal');
+        const pdfReportForm = document.getElementById('pdf-report-form');
+        const previewChartsAndNotes = document.getElementById('preview-charts-and-notes');
+        const hiddenNotesInputs = document.getElementById('hidden-notes-inputs');
 
-        function exportPdfWithUnit(unit) {
+        function renderPreview() {
+            // Clear previous preview
+            previewChartsAndNotes.innerHTML = '';
+            hiddenNotesInputs.innerHTML = '';
+
+            // 1. Render Chiller Details
+            const previewChillerDetails = document.getElementById('preview-chiller-details');
+            previewChillerDetails.innerHTML = ''; // clear
+
+
+            // 2. Render Charts and Notes Textareas
+            const chartCards = document.querySelectorAll('.chart-card-wrapper');
+            chartCards.forEach(card => {
+                const canvas = card.querySelector('canvas');
+                if (!canvas) return;
+                const chartKey = canvas.id.replace('chart-', '');
+                const chartTitle = card.querySelector('.chart-card-title').textContent;
+
+                const previewGroup = document.createElement('div');
+                previewGroup.style.marginBottom = '20px';
+                previewGroup.style.border = '1px solid #eee';
+                previewGroup.style.padding = '10px';
+                previewGroup.style.borderRadius = '5px';
+
+
+                const title = document.createElement('h5');
+                title.textContent = chartTitle;
+                title.style.fontWeight = 'bold';
+                previewGroup.appendChild(title);
+
+                const chartCanvas = document.createElement('canvas');
+                chartCanvas.style.maxHeight = '150px';
+                previewGroup.appendChild(chartCanvas);
+
+                const noteTextarea = document.createElement('textarea');
+                noteTextarea.name = `notes_${chartKey}`;
+                noteTextarea.placeholder = `Add notes for ${chartTitle}...`;
+                noteTextarea.style.width = '100%';
+                noteTextarea.style.marginTop = '10px';
+                noteTextarea.style.padding = '8px';
+                noteTextarea.style.borderRadius = '4px';
+                noteTextarea.style.border = '1px solid #ccc';
+                previewGroup.appendChild(noteTextarea);
+
+                previewChartsAndNotes.appendChild(previewGroup);
+
+                // Re-render chart in modal
+                if (window.currentCharts[chartKey]) {
+                    const chartConfig = window.currentCharts[chartKey].config;
+                    chartConfig.options.maintainAspectRatio = false;
+                    new Chart(chartCanvas.getContext('2d'), chartConfig);
+                }
+            });
+        }
+
+        reportButton.onclick = function() {
             const chillerId = document.querySelector('input[name="chiller_id"]').value;
             const startDate = document.getElementById('start_date').value;
             const endDate = document.getElementById('end_date').value;
-            let alarm = 'none';
-            {% if data %}
-                {% if data.safety_fault and data.safety_fault > 0 %}
-                    alarm = 'safety_fault';
-                {% elif data.cycling_fault and data.cycling_fault > 0 %}
-                    alarm = 'cycling_fault';
-                {% elif data.warning_fault and data.warning_fault > 0 %}
-                    alarm = 'warning_fault';
-                {% endif %}
-            {% endif %}
+            const unit = tempUnitSelect.value;
+
             let reportUrl = `/report/pdf/${chillerId}`;
             const params = new URLSearchParams();
             if (startDate) { params.append('start_date', startDate); }
             if (endDate) { params.append('end_date', endDate); }
-            params.append('unit', unit);
-            if (alarm) { params.append('alarm', alarm); }
-            if (params.toString()) { reportUrl += `?${params.toString()}`; }
-            const win = window.open(reportUrl, '_blank');
-            if (win) { win.onload = function() { win.print(); }; }
+            
+            pdfReportForm.action = reportUrl + '?' + params.toString();
+            document.getElementById('report-unit-input').value = unit;
+            
+            renderPreview();
+            previewModal.style.display = 'block';
         }
 
-        btn.onclick = function() {
-            modal.style.display = "block";
+        pdfReportForm.addEventListener('submit', function() {
+            const textareas = previewChartsAndNotes.querySelectorAll('textarea');
+            hiddenNotesInputs.innerHTML = '';
+            textareas.forEach(ta => {
+                const hiddenInput = document.createElement('input');
+                hiddenInput.type = 'hidden';
+                hiddenInput.name = ta.name;
+                hiddenInput.value = ta.value;
+                hiddenNotesInputs.appendChild(hiddenInput);
+            });
+        });
+
+        closePreviewModal.onclick = function() {
+            previewModal.style.display = 'none';
         }
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
+
         window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
+            if (event.target == previewModal) {
+                previewModal.style.display = 'none';
             }
         }
-        exportCelsiusBtn.onclick = function() {
-            exportPdfWithUnit('celsius');
-            modal.style.display = "none";
+
+        const warningCard = document.querySelector('[data-warning-code]');
+        const analysisModal = document.getElementById('analysis-modal');
+        const closeAnalysisModal = document.querySelector('.close-analysis-modal');
+        const analysisModalBody = document.getElementById('analysis-modal-body');
+        const analysisModalTitle = document.getElementById('analysis-modal-title');
+
+        if (warningCard) {
+            warningCard.addEventListener('click', function() {
+                const warningCode = this.dataset.warningCode;
+                if (!warningCode || warningCode == '0') return;
+
+                const warningDescription = this.querySelector('.fault-value').textContent;
+                analysisModalTitle.textContent = `Analysis for: ${warningDescription}`;
+                analysisModalBody.innerHTML = '<p>Loading analysis...</p>';
+                analysisModal.style.display = 'block';
+
+                fetch(`/analyze_warning/${warningCode}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.error) {
+                            analysisModalBody.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                        } else {
+                            let formatted_analysis = data.analysis;
+                            // ### to h3
+                            formatted_analysis = formatted_analysis.replace(/### (.*)/g, '<h3>$1</h3>');
+                            // **text** to <strong>text</strong>
+                            formatted_analysis = formatted_analysis.replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>');
+                            // * list item to <li>
+                            formatted_analysis = formatted_analysis.replace(/^\* (.*)/gm, '<li>$1</li>');
+                            // newlines to <br>
+                            formatted_analysis = formatted_analysis.replace(/\n/g, '<br>');
+                            // wrap li in ul
+                            if(formatted_analysis.includes('<li>')) {
+                                formatted_analysis = '<ul>' + formatted_analysis.replace(/<br><li>/g, '<li>') + '</ul>';
+                                // clean up extra <br> inside ul
+                                formatted_analysis = formatted_analysis.replace(/<\/li><br>/g, '<\/li>');
+                            }
+                            analysisModalBody.innerHTML = formatted_analysis;
+                        }
+                    })
+                    .catch(error => {
+                        analysisModalBody.innerHTML = `<p style="color: red;">An error occurred: ${error}</p>`;
+                    });
+            });
         }
-        exportFahrenheitBtn.onclick = function() {
-            exportPdfWithUnit('fahrenheit');
-            modal.style.display = "none";
+
+        if(closeAnalysisModal) {
+            closeAnalysisModal.onclick = function() {
+                analysisModal.style.display = 'none';
+            }
         }
+
+        window.addEventListener('click', function(event) {
+            if (event.target == analysisModal) {
+                analysisModal.style.display = 'none';
+            }
+        });
     });
 </script>
 {% endblock %}

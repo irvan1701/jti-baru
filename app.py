@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, flash, session, Response
+from flask import Flask, render_template, request, redirect, url_for, flash, session, Response, jsonify
 from fpdf import FPDF
 import matplotlib
 matplotlib.use('Agg')
@@ -1482,11 +1482,21 @@ def celsius_to_fahrenheit(celsius):
         return None
     return (celsius * 9/5) + 32
 
-@app.route('/report/pdf/<string:chiller_id>')
+@app.route('/report/pdf/<string:chiller_id>', methods=['GET', 'POST'])
 def report_pdf(chiller_id):
     if 'logged_in' not in session:
         flash('Anda harus login untuk mengakses laporan.', 'warning')
         return redirect(url_for('auth.login'))
+
+    notes = {}
+    if request.method == 'POST':
+        for key, value in request.form.items():
+            if key.startswith('notes_'):
+                notes[key[6:]] = value
+        unit = request.form.get('unit', 'celsius')
+    else:
+        unit = request.args.get('unit', 'celsius')
+
 
     conn = get_db_connection()
     if not conn:
@@ -1515,7 +1525,6 @@ def report_pdf(chiller_id):
 
         start_date_str = request.args.get('start_date')
         end_date_str = request.args.get('end_date')
-        unit = request.args.get('unit', 'celsius')
         now = datetime.now()
         start_date = datetime.fromisoformat(start_date_str) if start_date_str else now - timedelta(hours=12)
         end_date = datetime.fromisoformat(end_date_str) if end_date_str else now
@@ -1643,16 +1652,22 @@ def report_pdf(chiller_id):
                     pdf.image(img_buffer, x=None, y=None, w=190)
                     plt.close(fig)
                     pdf.ln(2)
+                    note = notes.get(param['key'], '').strip()
                     pdf.set_font('helvetica', 'B', 10)
                     pdf.cell(0, 5, 'NOTE:', 0, 1, 'L')
-                    pdf.ln(20)
+                    pdf.set_font('helvetica', '', 10)
+                    if note:
+                        pdf.multi_cell(0, 5, note)
+                    else:
+                        pdf.multi_cell(0, 5, '-')
+                    pdf.ln(10)
 
         if historical_data:
             parameters_to_plot = []
             for section_params in chart_sections.values():
                 parameters_to_plot.extend(section_params)
             valid_parameters = [p for p in parameters_to_plot if p['key'] in historical_data[0] and any(d.get(p['key']) is not None for d in historical_data)]
-            data_points_per_table = 10
+            data_points_per_table =10
             data_chunks = [historical_data[i:i + data_points_per_table] for i in range(0, len(historical_data), data_points_per_table)]
             header_height = 8
             row_height = 5
@@ -1989,6 +2004,44 @@ def yk_vsd_type():
     end_date = (now + timedelta(hours=12)).strftime('%Y-%m-%dT%H:%M')
     return render_template('yk-vsd_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
 
+
+@app.route('/analyze_warning/<int:warning_code>')
+def analyze_warning(warning_code):
+    groq_api_key = os.environ.get('GROQ_API_KEY', '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')
+    if not groq_api_key:
+        return jsonify({"error": "GROQ_API_KEY not set."}), 500
+
+    warning_description = warning_codes.get(warning_code, "Unknown Warning")
+
+    prompt = f"Berikan analisis mendalam untuk peringatan chiller berikut: '{warning_description}' (Kode: {warning_code}). Jelaskan kemungkinan penyebabnya dan berikan panduan langkah demi langkah untuk mengatasi masalah tersebut untuk engineer. Gunakan bahasa Indonesia."
+
+    try:
+        response = requests.post(
+            "https://api.groq.com/openai/v1/chat/completions",
+            headers={
+                "Authorization": f"Bearer {groq_api_key}",
+                "Content-Type": "application/json",
+            },
+            json={
+                "model": "llama3-8b-8192",
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": "Anda adalah teknisi HVAC ahli yang berspesialisasi dalam chiller. Berikan jawaban dalam bahasa Indonesia."
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    }
+                ],
+            },
+        )
+        
+        response.raise_for_status()
+        analysis = response.json()['choices'][0]['message']['content']
+        return jsonify({"analysis": analysis})
+    except requests.exceptions.RequestException as e:
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == '__main__':
     try:

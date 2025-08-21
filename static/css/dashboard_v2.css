@@ -603,3 +603,58 @@
 .data-unavailable-box .back-button:hover {
     background-color: #2980b9;
 }
+
+/* Analysis Modal Styles */
+#analysis-modal .modal-content {
+    background-color: #f4f4f9;
+    color: #333;
+    border-radius: 10px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+#analysis-modal-title {
+    color: #1a202c;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 1rem;
+}
+
+#analysis-modal-body {
+    background-color: #fff;
+    border-radius: 5px;
+    padding: 20px;
+    color: #2d3748;
+    line-height: 1.6;
+}
+
+#analysis-modal-body h3 {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: #2c5282;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+}
+
+#analysis-modal-body ul {
+    list-style-type: disc;
+    padding-left: 20px;
+}
+
+#analysis-modal-body li {
+    margin-bottom: 0.5rem;
+}
+
+#analysis-modal-body code {
+    background-color: #e2e8f0;
+    padding: 2px 5px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.close-analysis-modal {
+    color: #718096;
+    transition: color 0.3s ease;
+}
+
+.close-analysis-modal:hover {
+    color: #1a202c;
+}

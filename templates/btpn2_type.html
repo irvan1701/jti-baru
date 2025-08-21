@@ -49,7 +49,7 @@
                 <div class="icon-circle"><i class="fas fa-sync-alt"></i></div>
                 <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault_desc if data and data.cycling_fault_desc is not none else '-' }}</p></div>
             </div>
-            <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}">
+            <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}" data-warning-code="{{ data.warning_fault if data else '' }}">
                 <div class="icon-circle"><i class="fas fa-bell"></i></div>
                 <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
             </div>
@@ -266,6 +266,28 @@
                 </div>
             </div>
         </div>
+<!-- Analysis Modal -->
+<div id="analysis-modal" class="modal" style="display: none; z-index: 1060;">
+    <div class="modal-content" style="width: 80%; max-width: 800px; text-align: left;">
+        <span class="close-analysis-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
+        <h2 id="analysis-modal-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Warning Analysis</h2>
+        <div id="analysis-modal-body" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+            <!-- Analysis will be loaded here -->
+            <p>Loading analysis...</p>
+        </div>
+    </div>
+</div>
+<!-- Analysis Modal -->
+<div id="analysis-modal" class="modal" style="display: none; z-index: 1060;">
+    <div class="modal-content" style="width: 80%; max-width: 800px; text-align: left;">
+        <span class="close-analysis-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
+        <h2 id="analysis-modal-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Warning Analysis</h2>
+        <div id="analysis-modal-body" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
+            <!-- Analysis will be loaded here -->
+            <p>Loading analysis...</p>
+        </div>
+    </div>
+</div>
 
         <div id="export-modal" class="modal">
             <div class="modal-content">
