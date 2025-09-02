@@ -1,5 +1,8 @@
 {
   "dependencies": {
-    "canvas-gauges": "^2.1.7"
+    "canvas-gauges": "^2.1.7",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "mysql2": "^3.14.4"
   }
 }

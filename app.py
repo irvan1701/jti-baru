@@ -1773,6 +1773,9 @@ Arif.Imran@jayateknik.com / email
             pdf.cell(col_width_value, 10, str(value), 1, 1)
         pdf.ln(10)
 
+        # --- Checklist Section ---
+       
+
         # --- Penambahan Halaman Customer On Call ---
         pdf.add_page()
 
@@ -1849,6 +1852,8 @@ Arif.Imran@jayateknik.com / email
             pdf.ln()
 
         pdf.ln(10)
+
+        
         # --- Penambahan Halaman Work Order ---
         pdf.add_page()
 
@@ -2183,7 +2188,7 @@ Arif.Imran@jayateknik.com / email
                 if not is_first_table_on_page:
                     pdf.ln(2)
                 timestamps = [datetime.fromisoformat(d['timestamp']).strftime('%H:%M %d-%m-%y') for d in table_data]
-                header_labels = ['Parameter', 'Safe Range'] + timestamps # Added 'Safe Range'
+                header_labels = ['Parameter', 'Range'] + timestamps # Added 'Safe Range'
                 
                 param_col_width = 55
                 safe_range_col_width = 30 # New column width
@@ -2247,8 +2252,117 @@ Arif.Imran@jayateknik.com / email
                         pdf.cell(data_col_width, row_height, display_value, 1, align='C')
                     pdf.ln()
                 is_first_table_on_page = False
+                
+                
+                
+        # --- Halaman Alarm Overview ---
+        pdf.add_page()
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.cell(0, 10, 'Alarm Overview', 0, 1, 'C')
+        pdf.ln(10)
+
+        alarms = []
+        active_alarms = {}
+
+        fault_types = [
+            ('safety_fault', safety_codes, 'Safety'),
+            ('cycling_fault', cycling_codes, 'Cycling'),
+            ('warning_fault', warning_codes, 'Warning')
+        ]
+
+        if historical_data:
+            # Sort data by timestamp to process chronologically
+            historical_data.sort(key=lambda x: x['timestamp'])
+            
+            # Add a final data point to ensure all alarms are closed
+            final_data_point = historical_data[-1].copy()
+            final_timestamp = datetime.fromisoformat(final_data_point['timestamp']) + timedelta(seconds=1)
+            final_data_point['timestamp'] = final_timestamp.isoformat()
+            for fault_key, _, _ in fault_types:
+                final_data_point[fault_key] = 0
+            
+            extended_historical_data = historical_data + [final_data_point]
+
+            for data_point in extended_historical_data:
+                timestamp = datetime.fromisoformat(data_point['timestamp'])
+                
+                for fault_key, code_dict, alarm_type in fault_types:
+                    fault_code = data_point.get(fault_key, 0)
+                    
+                    active_alarm = active_alarms.get(fault_key)
+
+                    if active_alarm is not None:
+                        if fault_code != active_alarm['code']:
+                            alarm = active_alarms.pop(fault_key)
+                            alarm['end_date'] = timestamp
+                            alarms.append(alarm)
+                    
+                    if fault_code != 0 and fault_key not in active_alarms:
+                        active_alarms[fault_key] = {
+                            'code': fault_code,
+                            'description': code_dict.get(fault_code, "Unknown"),
+                            'start_date': timestamp,
+                            'type': alarm_type
+                        }
+
+        if alarms:
+            pdf.set_font('helvetica', 'B', 9)
+            # Headers
+            pdf.cell(20, 10, 'Type', 1, 0, 'C')
+            pdf.cell(20, 10, 'Code', 1, 0, 'C')
+            pdf.cell(70, 10, 'Description', 1, 0, 'C')
+            pdf.cell(40, 10, 'Start Time', 1, 0, 'C')
+            pdf.cell(40, 10, 'End Time', 1, 1, 'C')
+            pdf.set_font('helvetica', '', 8)
+
+            for alarm in alarms:
+                line_height = 5
+                # Calculate height of the row based on description
+                lines = pdf.multi_cell(70, line_height, alarm['description'], split_only=True)
+                row_height = len(lines) * line_height
+                if row_height < 10:
+                    row_height = 10
+
+                # Check for page break
+                if pdf.get_y() + row_height > pdf.page_break_trigger:
+                    pdf.add_page()
+                    pdf.set_font('helvetica', 'B', 9)
+                    pdf.cell(20, 10, 'Type', 1, 0, 'C')
+                    pdf.cell(20, 10, 'Code', 1, 0, 'C')
+                    pdf.cell(70, 10, 'Description', 1, 0, 'C')
+                    pdf.cell(40, 10, 'Start Time', 1, 0, 'C')
+                    pdf.cell(40, 10, 'End Time', 1, 1, 'C')
+                    pdf.set_font('helvetica', '', 8)
+
+                y_start = pdf.get_y()
+                x_start = pdf.get_x()
+
+                pdf.multi_cell(20, row_height, alarm['type'], 1, 'C', ln=3)
+                pdf.set_xy(x_start + 20, y_start)
+                
+                pdf.multi_cell(20, row_height, str(alarm['code']), 1, 'C', ln=3)
+                pdf.set_xy(x_start + 40, y_start)
+
+                pdf.multi_cell(70, line_height, alarm['description'], 1, 'L', ln=3)
+                pdf.set_xy(x_start + 110, y_start)
+                
+                start_time_str = alarm['start_date'].strftime('%Y-%m-%d\n%H:%M')
+                pdf.multi_cell(40, row_height/2, start_time_str, 1, 'C', ln=3)
+                pdf.set_xy(x_start + 150, y_start)
+
+                end_time_str = alarm['end_date'].strftime('%Y-%m-%d\n%H:%M') if alarm['end_date'] else 'Ongoing'
+                pdf.multi_cell(40, row_height/2, end_time_str, 1, 'C', ln=3)
+
+                pdf.set_y(y_start + row_height)
+
+        else:
+            pdf.set_font('helvetica', 'I', 12)
+            pdf.cell(0, 10, 'No alarms recorded during this period.', 0, 1, 'C')
+        
+        pdf.ln(10)
 
         # --- Penambahan Halaman Checklist ---
+       # --- Penambahan Halaman Checklist ---
         pdf.add_page()
         # Header block untuk Checklist
         block_height = 10
@@ -2265,23 +2379,16 @@ Arif.Imran@jayateknik.com / email
             pdf.image(image_path, x='C', y=pdf.get_y(), w=200) # Adjust width as needed
             pdf.ln(85) # Adjust line break after image
         # --- Akhir Penambahan Halaman Checklist ---
+
         # --- Tambahkan Tabel Checklist seperti di gambar ---
-        pdf.ln(10)  # Spasi dari gambar sebelumnya
-        
-        # Header tabel
-        pdf.set_font('helvetica', 'B', 12)
-        pdf.set_fill_color(0, 123, 255)
-        pdf.set_text_color(255, 255, 255)
-
-        header_widths = [10, 60, 40, 40, 40]
-        header_texts = ['NO', 'Description', 'Range', 'Remarks', 'Note']
-
-        for i, header_text in enumerate(header_texts):
-            pdf.cell(header_widths[i], 10, header_text, 1, 0, 'C', True)
-        pdf.ln()
-
         # Data untuk tabel dari gambar
         checklist_sections = [
+            {'title' : 'Spring / Mounting Pad', 'items' : [
+                ('Cek Spring Mounting Pad A', 'Baik / Tidak'),
+                ('Cek Spring Mounting Pad B', 'Baik / Tidak'),
+                ('Cek Spring Mounting Pad C', 'Baik / Tidak'),
+                ('Cek Spring Mounting Pad D', 'Baik / Tidak'),
+            ]},
             {'title': 'Evaporator', 'items': [
                 ('LWT Sensor', ''),
                 ('Cek Sensor', 'Baik / Tidak'),
@@ -2321,32 +2428,215 @@ Arif.Imran@jayateknik.com / email
                 ('Cek Kondisi Insulasi', 'Baik / Tidak'),
                 ('Cek visual dari kebocoran', 'Baik / Tidak'),
             ]},
-            # Tambahkan section lain jika ada
+            {'title' : 'condenser', 'items' : [
+                ('LWT Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Sensor Well', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('RWT Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Sensor Well', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('Inlet Pressure Gauge', ''),
+                ('Cek Pressure Gauge', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Valve', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Pipa', 'Baik / Tidak'),
+                ('Outlet Pressure Gauge', ''),
+                ('Cek Pressure Gauge', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Valve', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Pipa', 'Baik / Tidak'),
+                ('Flow Switch', ''),
+                ('Cek kondisi Flow Switch', 'Baik / Tidak'),
+                ('Flow Meter', ''),
+                ('Cek Kondisi Flow meter', 'Baik / Tidak'),
+                ('Water box', ''),
+                ('Cek Kondisi Water Box', 'Baik / Tidak'),
+                ('Cek Kanal Gasket', 'Baik / Tidak'),
+                ('Cek Kondisi Endsheet', 'Baik / Tidak'),
+                ('Condenser Pressure Transducer', ''),
+                ('Cek Kondisi Transducer', 'Baik / Tidak'),
+                ('Cek Kondisi Socket Transducer', 'Baik / Tidak'),
+                ('Condenser drop leg Temp Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Sensor Well', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('Level Refrigerant  Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('Sight Glass', ''),
+                ('Cek Kondisi Sight Glass', 'Baik / Tidak'),
+                ('Cek Kondisi Koneksi Sight Glass', 'Baik / Tidak'),
+                ('Condenser Body', ''),
+                ('Cek Kondisi Insulasi', 'Baik / Tidak'),
+                ('Cek visual dari kebocoran', 'Baik / Tidak'),
+            ]},
+            {
+                'title': 'Oil System',
+                'items': [
+                    ('Oil Temperature Sensor', ''),
+                    ('Cek Sensor', 'Baik / Tidak'),
+                    ('Cek Socket Sensor', 'Baik / Tidak'),
+                    ('Cek Sensor', 'Baik / Tidak'),
+                    ('Oil Pressure Transducer HOP', ''),
+                    ('Cek Kondisi Transducer', 'Baik / Tidak'),
+                    ('Cek Kondisi Socket Transducer', 'Baik / Tidak'),
+                    ('Oil Pressure Transducer LOP', ''),
+                    ('Cek Kondisi Transducer', 'Baik / Tidak'),
+                    ('Cek Kondisi Socket Transducer', 'Baik / Tidak'),
+                    ('Solenoid Valve', ''),
+                    ('Cek Kondisi Solenoid', 'Baik / Tidak'),
+                    ('Oil Heater', ''),
+                    ('Cek Kondisi Oil Heater', 'Baik / Tidak'),
+                    ('Cek Koneksi Oil Heater', 'Baik / Tidak'),
+                    ('Oil Filter', ''),
+                    ('Cek Kondisi Body Oil Filter', 'Baik / Tidak'),
+                    ('Cek Kondisi Valve Oil Filter', 'Baik / Tidak'),
+                    ('Cek Kondisi Seal dari kebocoran', 'Baik / Tidak'),
+                    ('Sight Glass', ''),
+                    ('Cek Kondisi Sight Glass', 'Baik / Tidak'),
+                    ('Cek Kondisi Koneksi Sight Glass', 'Baik / Tidak'),
+                    ('Oil Sump', ''),
+                    ('Cek Kondisi Oil Sump', 'Baik / Tidak'),
+                    ('Cek Tutup Oil Sump dari kebocoran', 'Baik / Tidak'),
+                    ('Oil Piping', ''),
+                    ('Cek Kondisi Oil Piping', 'Baik / Tidak'),
+                    ('Cek Oil piping dari kebocoran', 'Baik / Tidak'),
+                    ('Oil Cooler', ''),
+                    ('Cek TXV Oil Cooler', 'Baik / Tidak'),
+                    ('Cek Oil Cooler', 'Baik / Tidak'),
+                    ('Cek Oil Cooler Piping', 'Baik / Tidak'),
+                    ('VSOP', ''),
+                    ('Cek VSOP body', 'Baik / Tidak'),
+                    ('Cek VSOP board', 'Baik / Tidak'),
+                ]
+            },
+            {
+                'title': 'Compressor',
+                'items': [
+                    ('Cek Compressor Body', 'Baik / Tidak'),
+                    ('Cek Pipa Discharge', 'Baik / Tidak'),
+                    ('Cek Pipa Suction', 'Baik / Tidak'),
+                    ('Proximity Sensor', ''),
+                    ('Cek Sensor', 'Baik / Tidak'),
+                    ('Cek Socket Sensor', 'Baik / Tidak'),
+                    ('PRV Actuator', ''),
+                    ('Cek Kondisi Body PRV Actuator', 'Baik / Tidak'),
+                    ('Cek Kondisi Lever PRV', 'Baik / Tidak'),
+                    ('Shaft Seal', ''),
+                    ('Cek Kondisi Penampungan Oli Shaft Seal', '0 - 100%'),
+                    ('HPCO', ''),
+                    ('Cek Kondisi HPCO', 'Baik / Tidak'),
+                    ('Motor', ''),
+                    ('Motor Body', ''),
+                ]
+            },
+            {
+                'title': 'Matering Device',
+                'items': [
+                    ('Orifice', ''),
+                    ('Cek Kondisi Actuator Orrifice', 'Baik / Tidak'),
+                    ('Cek Body Orrifice', 'Baik / Tidak'),
+                    ('Charging Valve', ''),
+                    ('Cek Kondisi Charging Valve', 'Baik / Tidak'),
+                    ('Cek kebocoran Charging Valve', 'Baik / Tidak'),
+                    ('Pemipaan', ''),
+                    ('Cek Kondisi Pipa', 'Baik / Tidak'),
+                ]
+            },
+            {
+                'title': 'Control Center',
+                'items': [
+                    ('Cek Kondisi Body Panel', 'Baik / Tidak'),
+                    ('Cek Kondisi Keypad', 'Baik / Tidak'),
+                    ('Cek Kondisi Display', 'Baik / Tidak'),
+                    ('Cek Kondisi Rocker Switch', 'Baik / Tidak'),
+                    ('Cek Kondisi Microboard', 'Baik / Tidak'),
+                    ('Cek Kondisi CM2', 'Baik / Tidak'),
+                    ('Cek Kondisi IO Board', 'Baik / Tidak'),
+                    ('Cek Kondisi Kabel', 'Baik / Tidak'),
+                    ('Cek Kondisi Trafo', 'Baik / Tidak'),
+                    ('Cek Kondisi Fuse', 'Baik / Tidak'),
+                    ('Thermographic', 'Baik / Tidak'),
+                ]
+            },
+            {
+                'title': 'Panel Starter',
+                'items': [
+                    ('Cek Kondisi Kontaktor', 'Baik / Tidak'),
+                    ('Cek Kondisi timer', 'Baik / Tidak'),
+                    ('Cek kondisi Kabel', 'Baik / Tidak'),
+                    ('Cek kondisi Kabel Power', 'Baik / Tidak'),
+                    ('Cek Kondisi Trafo', 'Baik / Tidak'),
+                    ('Cek Kondisi Panel', 'Baik / Tidak'),
+                    ('Thermographic', 'Baik / Tidak'),
+                ]
+            }
         ]
 
+        def to_roman(n):
+            """Converts an integer to a Roman numeral."""
+            if n > 3999: return str(n)
+            thousands = ["", "M", "MM", "MMM"]
+            hundreds = ["", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"]
+            tens = ["", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"]
+            ones = ["", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"]
+            return (thousands[n // 1000] + hundreds[n % 1000 // 100] +
+                    tens[n % 100 // 10] + ones[n % 10])
+
         row_height = 8
+        header_widths = [10, 60, 40, 40, 40]
+        header_texts = ['NO', 'Description', 'Range', 'Remarks', 'Note']
         no_counter = 1
-        
+
         pdf.set_font('helvetica', '', 10)
         pdf.set_text_color(0, 0, 0)
         pdf.set_fill_color(255, 255, 255)
 
         for section in checklist_sections:
-            # Print the main section row
+            # Logic to force a new page for the Compressor section and add image spacing
+            if section['title'] == 'Compressor':
+                pdf.add_page()
+                image_path_compressor = os.path.join(app.static_folder, 'images', 'compressor.png')
+                if os.path.exists(image_path_compressor):
+                    # Set image height to avoid overlap and provide sufficient space
+                    image_height = 150
+                    pdf.image(image_path_compressor, x='C', y=pdf.get_y(), w=150, h=image_height)
+                    # Add a line break to ensure the table starts below the image
+                    pdf.ln(image_height + 1)
+            else:
+                # Add a break before each new table for other sections
+                pdf.ln(10)
+
+            # Header tabel
+            pdf.set_font('helvetica', 'B', 12)
+            pdf.set_fill_color(0, 123, 255)
+            pdf.set_text_color(255, 255, 255)
+            for i, header_text in enumerate(header_texts):
+                pdf.cell(header_widths[i], 10, header_text, 1, 0, 'C', True)
+            pdf.ln()
             pdf.set_font('helvetica', 'B', 10)
-            pdf.cell(header_widths[0], row_height, str(no_counter), 1, 0, 'C')
+            pdf.set_text_color(0, 0, 0)
+
+            # Print the main section row
+            pdf.cell(header_widths[0], row_height, to_roman(no_counter), 1, 0, 'C')
             pdf.cell(header_widths[1], row_height, section['title'], 1, 0, 'L')
             pdf.cell(header_widths[2] + header_widths[3] + header_widths[4], row_height, '', 1, 1, 'L')
             pdf.set_font('helvetica', '', 10)
-            
-            no_counter += 1
-            
+
             # Print the sub-items
             for i, (description, range_val) in enumerate(section['items']):
                 # Check for page break
                 if pdf.get_y() + row_height > pdf.page_break_trigger:
                     pdf.add_page()
-                    # Re-print header on new page
+                    # Draw 'Checklist' header on new page
+                    pdf.set_fill_color(0, 123, 255)
+                    pdf.set_font('helvetica', 'B', 16)
+                    pdf.set_text_color(255, 255, 255)
+                    pdf.cell(block_width, block_height, 'Checklist', 0, 0, 'L', True)
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.ln(block_height + 5)
+                    
+                    # Re-print table header on new page
                     pdf.set_font('helvetica', 'B', 12)
                     pdf.set_fill_color(0, 123, 255)
                     pdf.set_text_color(255, 255, 255)
@@ -2371,12 +2661,32 @@ Arif.Imran@jayateknik.com / email
                 pdf.cell(header_widths[3], row_height, '', 1, 0, 'C', True)
                 pdf.cell(header_widths[4], row_height, '', 1, 1, 'C', True)
 
-        # Baris "Recommendation"
-        pdf.ln(2) # Spasi kecil
-        pdf.set_font('helvetica', 'B', 10)
-        pdf.cell(header_widths[0] + header_widths[1], row_height, 'Recommendation:', 1, 0, 'L')
-        pdf.cell(header_widths[2] + header_widths[3] + header_widths[4], row_height, '', 1, 1, 'C')
-        pdf.ln(5) # Spasi setelah tabel
+            # Logic to only add Recommendation for the first section and fill the rest of the page
+            if section['title'] == 'Spring / Mounting Pad':
+                # Add Recommendation row
+                pdf.ln(2) # Small space
+                pdf.set_font('helvetica', 'B', 10)
+                pdf.cell(header_widths[0] + header_widths[1], row_height, 'Recommendation:', 1, 0, 'L')
+                pdf.cell(header_widths[2] + header_widths[3] + header_widths[4], row_height, '', 1, 1, 'C')
+
+                # Calculate remaining space and fill with empty rows
+                # 1. Height of the Recommendation row
+                current_y_rec = pdf.get_y()
+                # 2. Page bottom margin
+                bottom_margin = pdf.h - pdf.b_margin
+                # 3. Available height
+                available_height = bottom_margin - current_y_rec
+                
+                num_fill_rows = int(available_height / row_height)
+                
+                for _ in range(num_fill_rows):
+                    pdf.cell(header_widths[0] + header_widths[1], row_height, '', 1, 0, 'L')
+                    pdf.cell(header_widths[2] + header_widths[3] + header_widths[4], row_height, '', 1, 1, 'C')
+
+            # Add a final space after each table
+            pdf.ln(5)
+
+            no_counter += 1
 
         # --- Akhir Tabel Checklist ---
 
