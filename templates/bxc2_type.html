@@ -25,6 +25,49 @@
   .close-button:hover, .close-button:focus { color: #fff; text-decoration: none; cursor: pointer; }
   .modal-buttons button { background-color: #4a5568; color: white; padding: 12px 24px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
   .modal-buttons button:hover { background-color: #5a6578; }
+  .data-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    width: 100%;
+  }
+  .data-card {
+    background-color: #4a5568;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .data-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  }
+  .data-card .label {
+    font-size: 0.9em;
+    color: #cbd5e0;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .data-card .value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .data-card .safe-range {
+    font-size: 0.75em;
+    color: #a0aec0;
+    margin-top: 3px;
+  }
+  .data-card .value.safe {
+    color: #2ecc71;
+  }
+  .data-card .value.unsafe {
+    color: #e74c3c;
+  }
 </style>
 <div class="chiller-content-wrapper">
     <div class="dashboard-grid">
@@ -91,205 +134,163 @@
         <div class="evap-cond-section">
             <div class="section-card">
                 <p class="mb-4">Evap</p>
-                <div class="flex flex-row space-x-4">
-                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">LWT</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-min-value="10"
-                                data-max-value="80"
-                                data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}"
-                                data-highlights='[{"from":5.5,"to":8.8,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">RWT</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-min-value="10"
-                                data-max-value="80"
-                                data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}"
-                                data-min-value="0"
-                                data-max-value="60"
-                                data-highlights='[{"from":11.11,"to":14.44,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Satur Temp</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-min-value="0"
-                                data-max-value="100"
-                                data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"
-                                data-highlights='[{"from":3.33,"to":6.67,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Pressure</p>
-                            <canvas
-                                data-type="radial-gauge"
-                                data-min-value="230"
-                                data-max-value="520"
-                                data-major-ticks="230, 250, 280, 330, 380, 430, 480, 520"
-                                data-width="180"
-                                data-height="180"
-                                data-value="{{ data.evap_pressure if data and data.evap_pressure is not none else 0 }}"
-                                data-units="psi"
-                                data-highlights='[{"from":220.64,"to":275.8,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
+                <div class="data-card-grid">
+                    {% set evap_lwt_min = 5.5 %} {% set evap_lwt_max = 8.8 %} {% set
+                    evap_lwt_value = data.evap_lwt if data and data.evap_lwt is not none
+                    else none %}
+                    <div class="data-card">
+                        <p class="label">LWT</p>
+                        <p class="value {% if evap_lwt_value is not none and evap_lwt_min is not none and evap_lwt_max is not none %}{% if evap_lwt_value >= evap_lwt_min and evap_lwt_value <= evap_lwt_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ evap_lwt_value if evap_lwt_value is not none else '' }}">
+                            {{ evap_lwt_value if evap_lwt_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if evap_lwt_min is not none and evap_lwt_max is not none %}
+                            Min: {{ evap_lwt_min }} °C, Max: {{ evap_lwt_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
                     </div>
-                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
-                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Evaporator</h3>
-                        <table class="parameter-table min-w-full">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Parameter</th>
-                                    <th scope="col">Safe Range</th>
-                                    <th scope="col">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="hover:bg-gray-700" data-param-key="evap_lwt">
-                                    <td class="font-medium">LWT</td>
-                                    <td data-safe-range-celsius-min="5.5" data-safe-range-celsius-max="8.8">5.50 - 8.80</td>
-                                    <td data-temp-celsius="{{ data.evap_lwt if data and data.evap_lwt is not none else '' }}">{{ data.evap_lwt if data and data.evap_lwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="evap_rwt">
-                                    <td class="font-medium">RWT</td>
-                                    <td data-safe-range-celsius-min="11.11" data-safe-range-celsius-max="14.44">11.11 - 14.44</td>
-                                    <td data-temp-celsius="{{ data.evap_rwt if data and data.evap_rwt is not none else '' }}">{{ data.evap_rwt if data and data.evap_rwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="evap_satur_temp">
-                                    <td class="font-medium">Satur Temp</td>
-                                    <td data-safe-range-celsius-min="3.33" data-safe-range-celsius-max="6.67">3.33 - 6.67</td>
-                                    <td data-temp-celsius="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '' }}">{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Pressure</td>
-                                    <td>220.64 - 275.8</td>
-                                    <td>{{ data.evap_pressure if data and data.evap_pressure is not none else '-' }} psi</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    {% set evap_rwt_min = 11.11 %} {% set evap_rwt_max = 14.44 %} {% set
+                    evap_rwt_value = data.evap_rwt if data and data.evap_rwt is not none
+                    else none %}
+                    <div class="data-card">
+                        <p class="label">RWT</p>
+                        <p class="value {% if evap_rwt_value is not none and evap_rwt_min is not none and evap_rwt_max is not none %}{% if evap_rwt_value >= evap_rwt_min and evap_rwt_value <= evap_rwt_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ evap_rwt_value if evap_rwt_value is not none else '' }}">
+                            {{ evap_rwt_value if evap_rwt_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if evap_rwt_min is not none and evap_rwt_max is not none %}
+                            Min: {{ evap_rwt_min }} °C, Max: {{ evap_rwt_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    {% set evap_satur_temp_min = 3.33 %} {% set evap_satur_temp_max = 6.67
+                    %} {% set evap_satur_temp_value = data.evap_satur_temp if data and
+                    data.evap_satur_temp is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Satur Temp</p>
+                        <p class="value {% if evap_satur_temp_value is not none and evap_satur_temp_min is not none and evap_satur_temp_max is not none %}{% if evap_satur_temp_value >= evap_satur_temp_min and evap_satur_temp_value <= evap_satur_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ evap_satur_temp_value if evap_satur_temp_value is not none else '' }}">
+                            {{ evap_satur_temp_value if evap_satur_temp_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if evap_satur_temp_min is not none and evap_satur_temp_max is
+                            not none %} Min: {{ evap_satur_temp_min }} °C, Max: {{ evap_satur_temp_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    {% set evap_pressure_min = 220.64 %} {% set evap_pressure_max = 275.8
+                    %} {% set evap_pressure_value = data.evap_pressure if data and
+                    data.evap_pressure is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Pressure</p>
+                        <p class="value {% if evap_pressure_value is not none and evap_pressure_min is not none and evap_pressure_max is not none %}{% if evap_pressure_value >= evap_pressure_min and evap_pressure_value <= evap_pressure_max %}safe{% else %}unsafe{% endif %}{% endif %}">
+                            {{ evap_pressure_value if evap_pressure_value is not none else '-' }} psi
+                        </p>
+                        <p class="safe-range">
+                            {% if evap_pressure_min is not none and evap_pressure_max is not
+                            none %} Min: {{ evap_pressure_min }} psi, Max: {{ evap_pressure_max }} psi {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="data-card">
+                        <p class="label">STD</p>
+                        <p class="value">
+                            {{ data.evap_std if data and data.evap_std is not none else '-' }}
+                        </p>
+                        <p class="safe-range">no defined range</p>
+                    </div>
+                    <div class="data-card">
+                        <p class="label">Refri lvl</p>
+                        <p class="value">
+                            {{ data.evap_refri_lvl if data and data.evap_refri_lvl is not none
+                            else '-' }}
+                        </p>
+                        <p class="safe-range">no defined range</p>
                     </div>
                 </div>
             </div>
 
             <div class="section-card">
                 <p class="mb-4">Condenser</p>
-                <div class="flex flex-row space-x-4">
-                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">LWT</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}"
-                                data-min-value="0"
-                                data-max-value="60"
-                                
-                                data-highlights='[{"from":32.22,"to":35.55,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">RWT</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}"
-                                data-min-value="0"
-                                data-max-value="60"
-                                data-highlights='[{"from":26.67,"to":30.0,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Satur Temp</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-width="120"
-                                data-height="220"
-                                data-min-value="10"
-                                data-max-value="105"
-                                data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80,90, 105"
-                                data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}"
-                                data-min-value="0"
-                                data-max-value="60"
-                                data-highlights='[{"from":32.22,"to":40.56,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Pressure</p>
-                            <canvas
-                                data-type="radial-gauge"
-                                data-width="180"
-                                data-height="180"
-                                data-value="{{ data.cond_pressure if data and data.cond_pressure is not none else 0 }}"
-                                data-units="psi"
-                                data-min-value="0"
-                                data-max-value="1000"
-                                data-major-ticks="0, 100, 200, 300, 400, 500, 600,700,800,900, 1000"
-                                data-highlights='[{"from":723.9,"to":930.8,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
+                <div class="data-card-grid">
+                    {% set cond_lwt_min = 32.22 %} {% set cond_lwt_max = 35.55 %} {% set
+                    cond_lwt_value = data.cond_lwt if data and data.cond_lwt is not none
+                    else none %}
+                    <div class="data-card">
+                        <p class="label">LWT</p>
+                        <p class="value {% if cond_lwt_value is not none and cond_lwt_min is not none and cond_lwt_max is not none %}{% if cond_lwt_value >= cond_lwt_min and cond_lwt_value <= cond_lwt_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ cond_lwt_value if cond_lwt_value is not none else '' }}">
+                            {{ cond_lwt_value if cond_lwt_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if cond_lwt_min is not none and cond_lwt_max is not none %}
+                            Min: {{ cond_lwt_min }} °C, Max: {{ cond_lwt_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
                     </div>
-                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
-                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Kondensor</h3>
-                        <table class="parameter-table min-w-full">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Parameter</th>
-                                    <th scope="col">Safe Range</th>
-                                    <th scope="col">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="hover:bg-gray-700" data-param-key="cond_lwt">
-                                    <td class="font-medium">LWT</td>
-                                    <td data-safe-range-celsius-min="32.22" data-safe-range-celsius-max="35.55">32.22 - 35.55</td>
-                                    <td data-temp-celsius="{{ data.cond_lwt if data and data.cond_lwt is not none else '' }}">{{ data.cond_lwt if data and data.cond_lwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="cond_rwt">
-                                    <td class="font-medium">RWT</td>
-                                    <td data-safe-range-celsius-min="26.67" data-safe-range-celsius-max="30.0">26.67 - 30.00</td>
-                                    <td data-temp-celsius="{{ data.cond_rwt if data and data.cond_rwt is not none else '' }}">{{ data.cond_rwt if data and data.cond_rwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="cond_satur_temp">
-                                    <td class="font-medium">Satur Temp</td>
-                                    <td data-safe-range-celsius-min="32.22" data-safe-range-celsius-max="40.56">32.22 - 40.56</td>
-                                    <td data-temp-celsius="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '' }}">{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Pressure</td>
-                                    <td>723.9 - 930.8</td>
-                                    <td>{{ data.cond_pressure if data and data.cond_pressure is not none else '-' }} psi</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    {% set cond_rwt_min = 26.67 %} {% set cond_rwt_max = 30.0 %} {% set
+                    cond_rwt_value = data.cond_rwt if data and data.cond_rwt is not none
+                    else none %}
+                    <div class="data-card">
+                        <p class="label">RWT</p>
+                        <p class="value {% if cond_rwt_value is not none and cond_rwt_min is not none and cond_rwt_max is not none %}{% if cond_rwt_value >= cond_rwt_min and cond_rwt_value <= cond_rwt_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ cond_rwt_value if cond_rwt_value is not none else '' }}">
+                            {{ cond_rwt_value if cond_rwt_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if cond_rwt_min is not none and cond_rwt_max is not none %}
+                            Min: {{ cond_rwt_min }} °C, Max: {{ cond_rwt_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    {% set cond_satur_temp_min = 32.22 %} {% set cond_satur_temp_max =
+                    40.56 %} {% set cond_satur_temp_value = data.cond_satur_temp if data
+                    and data.cond_satur_temp is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Satur Temp</p>
+                        <p class="value {% if cond_satur_temp_value is not none and cond_satur_temp_min is not none and cond_satur_temp_max is not none %}{% if cond_satur_temp_value >= cond_satur_temp_min and cond_satur_temp_value <= cond_satur_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ cond_satur_temp_value if cond_satur_temp_value is not none else '' }}">
+                            {{ cond_satur_temp_value if cond_satur_temp_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if cond_satur_temp_min is not none and cond_satur_temp_max is
+                            not none %} Min: {{ cond_satur_temp_min }} °C, Max: {{ cond_satur_temp_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    {% set cond_pressure_min = 723.9 %} {% set cond_pressure_max = 930.8
+                    %} {% set cond_pressure_value = data.cond_pressure if data and
+                    data.cond_pressure is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Pressure</p>
+                        <p class="value {% if cond_pressure_value is not none and cond_pressure_min is not none and cond_pressure_max is not none %}{% if cond_pressure_value >= cond_pressure_min and cond_pressure_value <= cond_pressure_max %}safe{% else %}unsafe{% endif %}{% endif %}">
+                            {{ cond_pressure_value if cond_pressure_value is not none else '-' }} psi
+                        </p>
+                        <p class="safe-range">
+                            {% if cond_pressure_min is not none and cond_pressure_max is not
+                            none %} Min: {{ cond_pressure_min }} psi, Max: {{ cond_pressure_max }} psi {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    <div class="data-card">
+                        <p class="label">STD</p>
+                        <p class="value">
+                            {{ data.cond_std if data and data.cond_std is not none else '-' }}
+                        </p>
+                        <p class="safe-range">no defined range</p>
+                    </div>
+
+                    <div class="data-card">
+                        <p class="label">Refri Lvl</p>
+                        <p class="value">
+                            {{ data.cond_refri_lvl_sp if data and data.cond_refri_lvl_sp is
+                            not none else '-' }} %
+                        </p>
+                        <p class="safe-range">no defined range</p>
                     </div>
                 </div>
             </div>
@@ -298,112 +299,71 @@
         <div class="oil-discharge-section">
             <div class="section-card">
                 <p class="mb-4">Oil & Discharge</p>
-                <div class="flex flex-row space-x-4">
-                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Oil Pressure Diff</p>
-                            <canvas
-                                data-type="radial-gauge"
-                                data-min-value="-5"
-                                data-max-value="300"
-                                data-major-ticks="-5, 30, 65, 100, 135, 170, 205, 240, 275, 300"
-                                data-width="180"
-                                data-height="180"
-                                data-value="{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else 0 }}"
-                                data-units="psi"
-                                data-highlights='[{"from":227.5,"to":275.8,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Oil Pump Pressure</p>
-                            <canvas
-                                data-type="radial-gauge"
-                                min-value="0"
-                                data-max-value="1000"
-                                data-major-ticks="0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000"
-                                data-width="180"
-                                data-height="180"
-                                data-value="{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else 0 }}"
-                                data-units="psi"
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Oil Sump Temp</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-min-value="0"
-                                data-max-value="125"
-                                data-major-ticks="0, 15, 30, 45, 60, 75, 90, 105, 120, 125"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}"
-                                data-highlights='[{"from":40.56,"to":53.89,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Discharge Temp</p>
-                            <canvas
-                                data-type="linear-gauge"
-                                data-min-value="0"
-                                data-max-value="120"
-                                data-major-ticks="0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120"
-                                data-width="120"
-                                data-height="220"
-                                data-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}"
-                                data-units="°C"
-                                data-original-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}"
-                                data-min-value="0"
-                                data-max-value="120"
-                                data-highlights='[{"from":40.56,"to":53.89,"color":"rgba(46,204,113,0.75)"}]'
-                            ></canvas>
-                        </div>
+                <div class="data-card-grid">
+                    {% set oil_pressure_diff_min = 227.5 %} {% set oil_pressure_diff_max =
+                    275.8 %} {% set oil_pressure_diff_value = data.oil_pressure_diff if
+                    data and data.oil_pressure_diff is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Oil Pressure Diff</p>
+                        <p class="value {% if oil_pressure_diff_value is not none and oil_pressure_diff_min is not none and oil_pressure_diff_max is not none %}{% if oil_pressure_diff_value >= oil_pressure_diff_min and oil_pressure_diff_value <= oil_pressure_diff_max %}safe{% else %}unsafe{% endif %}{% endif %}">
+                            {{ oil_pressure_diff_value if oil_pressure_diff_value is not none
+                            else '-' }} psi
+                        </p>
+                        <p class="safe-range">
+                            {% if oil_pressure_diff_min is not none and oil_pressure_diff_max
+                            is not none %} Min: {{ oil_pressure_diff_min }} psi, Max: {{
+                            oil_pressure_diff_max }} psi {% else %} no defined range {% endif
+                            %}
+                        </p>
                     </div>
-                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
-                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Oli & Discharge</h3>
-                        <table class="parameter-table min-w-full">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Parameter</th>
-                                    <th scope="col">Safe Range</th>
-                                    <th scope="col">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Oil Pressure Diff</td>
-                                    <td>227.5 - 275.8</td>
-                                    <td>{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else '-' }} psi</td>
-                                </tr>
-                                 <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Oil Pump Pressure</td>
-                                    <td>-</td>
-                                    <td>{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else '-' }} psi</td>
-                                </tr>
-                                 <tr class="hover:bg-gray-700" data-param-key="oil_sump_temp">
-                                    <td class="font-medium">Oil Sump Temp</td>
-                                    <td data-safe-range-celsius-min="40.56" data-safe-range-celsius-max="53.89">40.56 - 53.89</td>
-                                    <td data-temp-celsius="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '' }}">{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '-' }} °C</td>
-                                </tr>
-                                 <tr class="hover:bg-gray-700" data-param-key="discharge_temp">
-                                    <td class="font-medium">Discharge Temp</td>
-                                    <td data-safe-range-celsius-min="40.56" data-safe-range-celsius-max="53.89">40.56 - 53.89</td>
-                                    <td data-temp-celsius="{{ data.discharge_temp if data and data.discharge_temp is not none else '' }}">{{ data.discharge_temp if data and data.discharge_temp is not none else '-' }} °C</td>
-                                </tr>
-                            </tbody>
-                        </table>
+
+                    <div class="data-card">
+                        <p class="label">Oil Pump Pressure</p>
+                        <p class="value">
+                            {{ data.oil_pump_pressure if data and data.oil_pump_pressure is
+                            not none else '-' }} psi
+                        </p>
+                        <p class="safe-range">no defined range</p>
+                    </div>
+
+                    {% set oil_sump_temp_min = 40.56 %} {% set oil_sump_temp_max = 53.89
+                    %} {% set oil_sump_temp_value = data.oil_sump_temp if data and
+                    data.oil_sump_temp is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Oil Sump Temp</p>
+                        <p class="value {% if oil_sump_temp_value is not none and oil_sump_temp_min is not none and oil_sump_temp_max is not none %}{% if oil_sump_temp_value >= oil_sump_temp_min and oil_sump_temp_value <= oil_sump_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ oil_sump_temp_value if oil_sump_temp_value is not none else '' }}">
+                            {{ oil_sump_temp_value if oil_sump_temp_value is not none else '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if oil_sump_temp_min is not none and oil_sump_temp_max is not
+                            none %} Min: {{ oil_sump_temp_min }} °C, Max: {{ oil_sump_temp_max }} °C {% else %}
+                            no defined range {% endif %}
+                        </p>
+                    </div>
+
+                    {% set discharge_temp_min = 40.56 %} {% set discharge_temp_max = 53.89
+                    %} {% set discharge_temp_value = data.discharge_temp if data and
+                    data.discharge_temp is not none else none %}
+                    <div class="data-card">
+                        <p class="label">Discharge Temp</p>
+                        <p class="value {% if discharge_temp_value is not none and discharge_temp_min is not none and discharge_temp_max is not none %}{% if discharge_temp_value >= discharge_temp_min and discharge_temp_value <= discharge_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}" data-temp-celsius="{{ discharge_temp_value if discharge_temp_value is not none else '' }}">
+                            {{ discharge_temp_value if discharge_temp_value is not none else
+                            '-' }} °C
+                        </p>
+                        <p class="safe-range">
+                            {% if discharge_temp_min is not none and discharge_temp_max is not
+                            none %} Min: {{ discharge_temp_min }} °C, Max: {{
+                            discharge_temp_max }} °C {% else %} no defined range {% endif %}
+                        </p>
                     </div>
                 </div>
             </div>
         </div>
-<!-- Analysis Modal -->
 <div id="analysis-modal" class="modal" style="display: none; z-index: 1060;">
     <div class="modal-content" style="width: 80%; max-width: 800px; text-align: left;">
         <span class="close-analysis-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
         <h2 id="analysis-modal-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Warning Analysis</h2>
         <div id="analysis-modal-body" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
-            <!-- Analysis will be loaded here -->
             <p>Loading analysis...</p>
         </div>
     </div>
@@ -421,21 +381,32 @@
 
             <div id="preview-chiller-details" style="margin-bottom: 20px;">
                 <h5 style="font-weight: bold; text-align: center;">Chiller Details</h5>
-                <!-- Details will be populated here -->
-            </div>
+                </div>
 
             <div id="preview-charts-and-notes">
-                <!-- Charts and notes textareas will be populated here -->
-            </div>
+                </div>
         </div>
 
         <form id="pdf-report-form" method="POST" action="" target="_blank" style="margin-top: 20px;">
             <input type="hidden" name="unit" id="report-unit-input">
-            <!-- The notes will be collected from the textareas in the preview area -->
             <div id="hidden-notes-inputs"></div>
-            <div style="text-align: right;">
-                 <button type="submit" id="print-pdf-btn" class="modal-buttons" style="background-color: #38a169; color: white; padding: 10px 20px; border: none; border-radius: 5px; cursor: pointer;">Generate and Print PDF</button>
-            </div>
+            <div style="text-align: right">
+            <button
+              type="submit"
+              id="print-pdf-btn"
+              class="modal-buttons"
+              style="
+                background-color: #38a169;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+              "
+            >
+              Generate and Print PDF
+            </button>
+          </div>
         </form>
     </div>
 </div>
@@ -454,7 +425,7 @@
                         <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}">
                     </div>
                     <button type="submit">Tampilkan</button>
-                    <button type="button" id="report-button" style="margin-left: 1rem;">Export PDF</button>
+                    <button type="button" id="export-button" style="margin-left: 1rem;">Export</button>
                 </div>
             </form>
             {% if historical_data %}
@@ -908,6 +879,24 @@
             
             renderPreview();
             previewModal.style.display = 'block';
+        }
+
+        const exportButton = document.getElementById('export-button');
+        if (exportButton) {
+            exportButton.onclick = function() {
+                const chillerId = document.querySelector('input[name="chiller_id"]').value;
+                const startDate = document.getElementById('start_date').value;
+                const endDate = document.getElementById('end_date').value;
+                const unit = tempUnitSelect.value;
+
+                let exportUrl = `/export/pdf/${chillerId}`;
+                const params = new URLSearchParams();
+                if (startDate) { params.append('start_date', startDate); }
+                if (endDate) { params.append('end_date', endDate); }
+                if (unit) { params.append('unit', unit); }
+                
+                window.open(exportUrl + '?' + params.toString(), '_blank');
+            }
         }
 
         pdfReportForm.addEventListener('submit', function() {

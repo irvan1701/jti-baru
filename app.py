@@ -24,31 +24,44 @@ app.config['MYSQL_HOST'] = os.environ.get('MYSQL_HOST', '127.0.0.1')
 app.config['MYSQL_USER'] = os.environ.get('MYSQL_USER', 'root')
 app.config['MYSQL_PASSWORD'] = os.environ.get('MYSQL_PASSWORD', '')
 app.config['MYSQL_DB'] = os.environ.get('MYSQL_DB', 'jti-new2')
+app.config['MYSQL_PORT'] = os.environ.get('MYSQL_PORT', '3306')
 
 bcrypt = Bcrypt(app)
 app.register_blueprint(auth_bp)
 
 
 class PDFWithMargins(FPDF):
-    def __init__(self, orientation='P', unit='mm', format='A4', top_margin=15, bottom_margin=15, left_margin=10, right_margin=10, generation_time=""):
+    def __init__(self, orientation='P', unit='mm', format='A4', top_margin=20, bottom_margin=10, left_margin=10, right_margin=10, generation_time="", with_template_background=False, header_align_left=True):
         super().__init__(orientation, unit, format)
         self.set_top_margin(top_margin)
         self.set_left_margin(left_margin)
         self.set_right_margin(right_margin)
         self.set_auto_page_break(auto=True, margin=bottom_margin)
         self.generation_time = generation_time
+        self.with_template_background = with_template_background
+        self.header_align_left = header_align_left
 
     def header(self):
+        # Add background only to portrait content pages
+        is_portrait = self.w < self.h
+        if self.with_template_background and self.page_no() > 1 and is_portrait:
+            template_image_path = os.path.join(app.static_folder, 'images', 'template.png')
+            if os.path.exists(template_image_path):
+                self.image(template_image_path, x=0, y=0, w=self.w, h=self.h)
+
         # Set font for header
         self.set_font('helvetica', 'I', 8)
-        # Get page width
-        page_width = self.w - self.l_margin - self.r_margin
-        # Calculate width of the text
-        text_width = self.get_string_width(f'Generated at: {self.generation_time}')
-        # Set position to the top right
-        self.set_x(page_width - text_width + self.l_margin)
-        # Add the cell
-        self.cell(text_width, 10, f'Generated at: {self.generation_time}', 0, 0, 'R')
+        
+        if self.header_align_left:
+            # Add the cell, aligned to the left
+            self.cell(0, 9, f'Generated at: {self.generation_time}', 0, 0, 'L')
+        else:
+            # Align right
+            page_width = self.w - self.l_margin - self.r_margin
+            text_width = self.get_string_width(f'Generated at: {self.generation_time}')
+            self.set_x(page_width - text_width + self.l_margin)
+            self.cell(text_width, 10, f'Generated at: {self.generation_time}', 0, 0, 'R')
+
         # Move down to start content below header
         self.ln(15)
 
@@ -373,7 +386,8 @@ def get_db_connection():
             host=app.config['MYSQL_HOST'],
             user=app.config['MYSQL_USER'],
             password=app.config['MYSQL_PASSWORD'],
-            database=app.config['MYSQL_DB']
+            database=app.config['MYSQL_DB'],
+            port=int(app.config['MYSQL_PORT'])
         )
         return conn
     except mysql.connector.Error as err:
@@ -699,12 +713,51 @@ def test():
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
     
     template_to_render = 'default_type.html'
+    chart_parameters = [
+        { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+        { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+        { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+        { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+        { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+        { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+        { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+        { "key": "fla", "label": "FLA", "unit": "%" },
+        { "key": "input_power", "label": "Input Power", "unit": "kW" },
+        { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+        { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+        { "key": "number_of_start", "label": "Starts", "unit": "" }
+    ]
     if chiller_details and chiller_details.get('chiller_type'):
-        specific_template = f"{chiller_details['chiller_type'].lower()}_type.html"
+        chiller_type = chiller_details['chiller_type'].lower()
+        specific_template = f"{chiller_type}_type.html"
         if os.path.exists(os.path.join(app.template_folder, specific_template)):
             template_to_render = specific_template
+            if chiller_type == 'btpn':
+                chart_parameters = [
+                    { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
+                    { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
+                    { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+                    { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
+                    { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
+                    { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
+                    { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
+                    { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
+                    { "key": "fla", "label": "FLA", "unit": "%" },
+                    { "key": "VSD_Input_Power", "label": "Input Power", "unit": "kW" },
+                    { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
+                    { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
+                    { "key": "efficiency", "label": "efficiency", "unit": "STD" }
+                ]
         else:
             print(f"Warning: Template {specific_template} not found. Falling back to default_type.html.")
+
+    safe_ranges = {
+        "evap_lwt": {"min": 5.5, "max": 8.8}, "evap_rwt": {"min": 11.11, "max": 14.44},
+        "evap_satur_temp": {"min": 3.33, "max": 6.67}, "cond_lwt": {"min": 32.22, "max": 35.55},
+        "cond_rwt": {"min": 26.67, "max": 30.0}, "cond_satur_temp": {"min": 32.22, "max": 40.56},
+        "oil_sump_temp": {"min": 40.56, "max": 53.89}, "discharge_temp": {"min": 40.56, "max": 53.89},
+    }
 
     return render_template(
         template_to_render, 
@@ -715,7 +768,9 @@ def test():
         historical_data=historical_data,
         start_date=start_date,
         end_date=end_date,
-        last_updated_timestamp=last_updated_timestamp
+        last_updated_timestamp=last_updated_timestamp,
+        chart_parameters=chart_parameters,
+        safe_ranges=safe_ranges
     )
 
 # Rute untuk halaman debug data
@@ -824,6 +879,15 @@ def report():
 
     current_time = datetime.now().strftime("%A, %d %B %Y, %H:%M:%S")
     return render_template('report.html', current_time=current_time)
+
+
+@app.route('/customer_on_call')
+def customer_on_call():
+    if 'logged_in' not in session or not session['logged_in']:
+        flash('Silakan login untuk mengakses halaman ini.', 'warning')
+        return redirect(url_for('auth.login'))
+    return render_template('customer_on_call.html')
+
 
 
 @app.route('/manage_users')
@@ -1484,6 +1548,9 @@ def celsius_to_fahrenheit(celsius):
 
 @app.route('/report/pdf/<string:chiller_id>', methods=['GET', 'POST'])
 def report_pdf(chiller_id):
+    """
+    Menghasilkan laporan PDF untuk chiller.
+    """
     if 'logged_in' not in session:
         flash('Anda harus login untuk mengakses laporan.', 'warning')
         return redirect(url_for('auth.login'))
@@ -1496,7 +1563,6 @@ def report_pdf(chiller_id):
         unit = request.form.get('unit', 'celsius')
     else:
         unit = request.args.get('unit', 'celsius')
-
 
     conn = get_db_connection()
     if not conn:
@@ -1540,13 +1606,28 @@ def report_pdf(chiller_id):
             response_history.raise_for_status()
             historical_data = response_history.json()
         except requests.exceptions.RequestException as e:
-            print(f"API request failed: {e}")
+            print(f"Permintaan API gagal: {e}")
             flash(f'Gagal mengambil data dari API untuk laporan: {e}', 'danger')
             return redirect(url_for('test', chiller_id=chiller_id))
 
         if not historical_data:
             flash('Tidak ada data historis untuk periode yang dipilih.', 'warning')
             return redirect(url_for('test', chiller_id=chiller_id, start_date=start_date.strftime('%Y-%m-%dT%H:%M'), end_date=end_date.strftime('%Y-%m-%dT%H:%M')))
+
+        interval_hours = request.args.get('interval', 1, type=int)
+        if historical_data and interval_hours > 0:
+            sampled_data = []
+            last_timestamp = None
+            
+            historical_data.sort(key=lambda x: x['timestamp'])
+
+            for data_point in historical_data:
+                current_timestamp = datetime.fromisoformat(data_point['timestamp'])
+                
+                if last_timestamp is None or (current_timestamp - last_timestamp) >= timedelta(hours=interval_hours):
+                    sampled_data.append(data_point)
+                    last_timestamp = current_timestamp
+            historical_data = sampled_data
 
         safe_ranges = {
             "evap_lwt": {"min": 5.5, "max": 8.8}, "evap_rwt": {"min": 11.11, "max": 14.44},
@@ -1579,9 +1660,86 @@ def report_pdf(chiller_id):
                     safe_ranges[key]['min'] = celsius_to_fahrenheit(safe_ranges[key]['min'])
                     safe_ranges[key]['max'] = celsius_to_fahrenheit(safe_ranges[key]['max'])
 
+        # --- Data "Customer On Call" (kosong) ---
+        on_call_data = []
+        # --- End ---
+
         generation_time = datetime.now().strftime("%d-%m-%Y %H:%M:%S")
-        pdf = PDFWithMargins(generation_time=generation_time)
+        pdf = PDFWithMargins(generation_time=generation_time, with_template_background=True, header_align_left=False)
         pdf.set_auto_page_break(auto=True, margin=25)
+
+        # Halaman Judul
+        pdf.add_page()
+        title_image_path = os.path.join(app.static_folder, 'images', 'judul.png')
+        if os.path.exists(title_image_path):
+            pdf.image(title_image_path, x=0, y=0, w=pdf.w, h=pdf.h)
+
+        # Tambahkan judul laporan di kiri bawah
+        site_name = session.get('current_site_name', 'Unknown Site')
+        month_map = {
+            1: "JANUARI", 2: "FEBRUARI", 3: "MARET", 4: "APRIL", 5: "MEI", 6: "JUNI",
+            7: "JULI", 8: "AGUSTUS", 9: "SEPTEMBER", 10: "OKTOBER", 11: "NOVEMBER", 12: "DESEMBER"
+        }
+        bulan_awal = month_map.get(start_date.month, "")
+        tahun_awal = start_date.year
+        bulan_akhir = month_map.get(end_date.month, "")
+        tahun_akhir = end_date.year
+
+        if bulan_awal == bulan_akhir and tahun_awal == tahun_akhir:
+            periode = f"{bulan_awal} {tahun_awal}"
+        elif tahun_awal != tahun_akhir:
+            periode = f"{bulan_awal} {tahun_awal} - {bulan_akhir} {tahun_akhir}"
+        else:
+            periode = f"{bulan_awal} - {bulan_akhir} {tahun_awal}"
+
+        line1 = "LAPORAN PEMELIHARAAN"
+        line2 = f"{site_name.upper()} "
+        line3 = f"PERIODE {periode}"
+
+        pdf.set_y(-95) # 80 mm from bottom
+
+        # Line 1
+        pdf.set_font('helvetica', 'B', 28) # Bigger font
+        pdf.cell(0, 10, line1, 0, 1, 'L') # ln=1 to move to next line, align Left
+
+        # Line 2
+        pdf.set_font('helvetica', 'B', 22) # Smaller font
+        pdf.cell(0, 10, line2, 0, 1, 'L')
+
+        # Line 3
+        pdf.set_font('helvetica', 'B', 22)
+        pdf.cell(0, 10, line3, 0, 0, 'L')
+
+        # Halaman Surat
+        pdf.add_page()
+        pdf.set_font('helvetica', '', 12)
+        
+        pdf.cell(0, 10, '[bulan tahun]', 0, 1, 'L')
+        pdf.cell(0, 10, '[site]', 0, 1, 'L')
+        pdf.ln(10)
+
+        pdf.cell(0, 10, 'Dear Bapak [nama cus],', 0, 1, 'L')
+        pdf.ln(5)
+
+        body_text = """Terima kasih atas kepercayaannya menggunakan PT Jaya Teknik Indonesia Untuk melakukan pemeliharaan chiller di [site].
+
+Bersama ini kami sampaikan review laporan bulanan untuk periode januari 2024. dalam laporan ini kami sampaikan rekomendasi dan hasil pemeliharaan chiller di [site].
+
+Kami bersedia untuk melakukan diskusi lanjutan untuk membahas laporan ini sehingga kami bisa mensupport kegiatan bisnis di [site]."""
+        pdf.multi_cell(0, 5, body_text)
+        pdf.ln(10)
+
+        pdf.cell(0, 10, 'Hormat Kami,', 0, 1, 'L')
+        pdf.ln(15)
+
+        signature_text = """Penanggung jawab
+PT Jaya Teknik Indonesia
+Service Manager /jabatan penanggung jawab
+Arif.Imran@jayateknik.com / email
++62 83887"""
+        pdf.multi_cell(0, 7, signature_text)
+
+        # Halaman Konten Laporan - Chiller Details
         pdf.add_page()
 
         pdf.set_font('helvetica', 'B', 16)
@@ -1615,13 +1773,353 @@ def report_pdf(chiller_id):
             pdf.cell(col_width_value, 10, str(value), 1, 1)
         pdf.ln(10)
 
+        # --- Penambahan Halaman Customer On Call ---
+        pdf.add_page()
+
+        # Header block yang lebih kecil dengan latar belakang biru
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(0, 123, 255)
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(block_width, block_height, 'Customer On Call', 0, 0, 'L', 1)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        # Tentukan lebar kolom dan header
+        headers = ['No.', 'Date', 'Problem Reported', 'Initiation', 'Call in\nTime', 'Time Taken to\nComplete', 'Action Complete', 'Downtime\n(hours)', 'Remarks']
+
+        # Atur lebar kolom secara manual dalam mm. Total harus 190mm untuk A4 portrait (w=210, margin 10x2)
+        col_widths = [10, 20, 35, 20, 20, 25, 25, 15, 20]
+
+        # Cetak header tabel dengan gaya dari gambar
+        pdf.set_font('helvetica', 'B', 7)
+        pdf.set_fill_color(0, 86, 179)
+        pdf.set_text_color(255, 255, 255)
+
+        # Cetak setiap sel header
+        current_y = pdf.get_y()
+        current_x = pdf.get_x()
+
+        for i, header in enumerate(headers):
+            pdf.set_xy(current_x, current_y)
+            # Draw background and border
+            pdf.cell(col_widths[i], block_height, '', 1, 0, 'C', True)
+            
+            # Calculate y position for vertically centered text
+            line_height = 4 
+            num_lines = header.count('\n') + 1
+            text_height = num_lines * line_height
+            y_text = current_y + (block_height - text_height) / 2
+            
+            # Set position and draw multi-line text
+            pdf.set_xy(current_x, y_text)
+            pdf.multi_cell(col_widths[i], line_height, header, 0, 'C')
+            
+            # Move to next cell's x position for the next iteration
+            current_x += col_widths[i]
+
+        pdf.set_y(current_y + block_height)  # Move position down below the header
+
+        # Cetak grid kosong untuk diisi manual
+        pdf.set_text_color(0, 0, 0)
+        row_height = 10
+        for i in range(1, 11):
+            fill_color = 240 if i % 2 == 0 else 255
+            pdf.set_fill_color(fill_color, fill_color, fill_color)
+            
+            if pdf.get_y() + row_height > pdf.page_break_trigger:
+                pdf.add_page()
+                pdf.set_fill_color(0, 86, 179)
+                pdf.set_text_color(255, 255, 255)
+                current_y_new_page = pdf.get_y()
+                current_x_new_page = pdf.get_x()
+                for i_h, header_h in enumerate(headers):
+                    pdf.set_xy(current_x_new_page, current_y_new_page)
+                    pdf.cell(col_widths[i_h], block_height, header_h, 1, 'C', True)
+                    current_x_new_page += col_widths[i_h]
+                pdf.ln(block_height)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_fill_color(255, 255, 255)
+
+            pdf.cell(col_widths[0], row_height, str(i), 1, 0, 'C', True)
+            
+            for col_width in col_widths[1:]:
+                pdf.cell(col_width, row_height, '', 1, 0, 'C', True)
+            pdf.ln()
+
+        pdf.ln(10)
+        # --- Penambahan Halaman Work Order ---
+        pdf.add_page()
+
+        # Header block untuk Work Order
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(0, 123, 255)
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(block_width, block_height, 'Work Order', 0, 0, 'L', True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        # Konten teks Work Order
+        pdf.set_font('helvetica', '', 10)
+        work_order_text = f"""Pada bagian ini kami menyampaikan list work order terhadap chiller di {site_name}, high priority work order adalah work order yang kami sarankan untuk segera dilakukan untuk mencegah kerusakan lebih lanjut. Open work order adalah work order yang perlu dilakukan action sehingga bisa closed. Closed work order adalah list work order yang telah dilakukan sehingga bisa dilakukan analisa terhadap chiller tersebut"""
+        pdf.multi_cell(0, 5, work_order_text)
+        pdf.ln(10)
+        # --- Penambahan High Priority WO ---
+
+        # Header block untuk High Priority WO
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(255, 0, 0) # Red color
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(block_width, block_height, 'High Priority WO', 0, 0, 'L', True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        # Tabel High Priority WO
+        wo_headers = ['WO NUMBER', 'DATE CREATED', 'DESCRIPTION', 'COMMENTS']
+        wo_col_widths = [30, 30, 80, 50] # Total 190mm
+
+        # Cetak header tabel
+        pdf.set_font('helvetica', 'B', 7)
+        pdf.set_fill_color(0, 123, 255) # Red background for header
+        pdf.set_text_color(255, 255, 255)
+
+        current_y = pdf.get_y()
+        current_x = pdf.get_x()
+
+        for i, header in enumerate(wo_headers):
+            pdf.set_xy(current_x, current_y)
+            # Draw background and border
+            pdf.cell(wo_col_widths[i], block_height, '', 1, 0, 'C', True)
+            
+            # Calculate y position for vertically centered text
+            line_height = 4 
+            num_lines = header.count('\n') + 1
+            text_height = num_lines * line_height
+            y_text = current_y + (block_height - text_height) / 2
+            
+            # Set position and draw multi-line text
+            pdf.set_xy(current_x, y_text)
+            pdf.multi_cell(wo_col_widths[i], line_height, header, 0, 'C')
+            
+            # Move to next cell's x position
+            current_x += wo_col_widths[i]
+
+        pdf.set_y(current_y + block_height) # Move position down below the header
+
+        # Cetak grid kosong untuk diisi manual (contoh 3 baris)
+        pdf.set_text_color(0, 0, 0)
+        row_height = 10
+        for i in range(3): # Example 3 empty rows
+            fill_color = 240 if i % 2 == 0 else 255
+            pdf.set_fill_color(fill_color, fill_color, fill_color)
+            
+            if pdf.get_y() + row_height > pdf.page_break_trigger:
+                pdf.add_page()
+                # Re-print header on new page if it breaks
+                pdf.set_font('helvetica', 'B', 7)
+                pdf.set_fill_color(255, 0, 0)
+                pdf.set_text_color(255, 255, 255)
+                current_y_new_page = pdf.get_y()
+                current_x_new_page = pdf.get_x()
+                for i_h, header_h in enumerate(wo_headers):
+                    pdf.set_xy(current_x_new_page, current_y_new_page)
+                    pdf.cell(wo_col_widths[i_h], block_height, '', 1, 0, 'C', True)
+                    pdf.set_xy(current_x_new_page, current_y_new_page + (block_height - (header_h.count('\n') + 1) * line_height) / 2)
+                    pdf.multi_cell(wo_col_widths[i_h], line_height, header_h, 0, 'C')
+                    current_x_new_page += wo_col_widths[i_h]
+                pdf.set_y(current_y_new_page + block_height)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_fill_color(255, 255, 255)
+
+            for col_width in wo_col_widths:
+                pdf.cell(col_width, row_height, '', 1, 0, 'C', True)
+            pdf.ln()
+        pdf.ln(10)
+        # --- Penambahan Open Work Order ---
+
+        # Header block untuk Open Work Order
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(0, 123, 255) # Blue color
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(block_width, block_height, 'Open Work Order', 0, 0, 'L', True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        # Tabel Open Work Order
+        wo_headers = ['No', 'WO NUMBER', 'DATE CREATED', 'DESCRIPTION', 'COMMENTS']
+        wo_col_widths = [10, 30, 30, 80, 40] # Total 190mm
+
+        # Cetak header tabel
+        pdf.set_font('helvetica', 'B', 7)
+        pdf.set_fill_color(0, 123, 255) # Blue background for header
+        pdf.set_text_color(255, 255, 255)
+
+        current_y = pdf.get_y()
+        current_x = pdf.get_x()
+
+        for i, header in enumerate(wo_headers):
+            pdf.set_xy(current_x, current_y)
+            # Draw background and border
+            pdf.cell(wo_col_widths[i], block_height, '', 1, 0, 'C', True)
+            
+            # Calculate y position for vertically centered text
+            line_height = 4 
+            num_lines = header.count('\n') + 1
+            text_height = num_lines * line_height
+            y_text = current_y + (block_height - text_height) / 2
+            
+            # Set position and draw multi-line text
+            pdf.set_xy(current_x, y_text)
+            pdf.multi_cell(wo_col_widths[i], line_height, header, 0, 'C')
+            
+            # Move to next cell's x position
+            current_x += wo_col_widths[i]
+
+        pdf.set_y(current_y + block_height) # Move position down below the header
+
+        # Cetak grid kosong untuk diisi manual (contoh 3 baris)
+        pdf.set_text_color(0, 0, 0)
+        row_height = 10
+        for i in range(3): # Example 3 empty rows
+            fill_color = 240 if i % 2 == 0 else 255
+            pdf.set_fill_color(fill_color, fill_color, fill_color)
+            
+            if pdf.get_y() + row_height > pdf.page_break_trigger:
+                pdf.add_page()
+                # Re-print header on new page if it breaks
+                pdf.set_font('helvetica', 'B', 7)
+                pdf.set_fill_color(0, 123, 255)
+                pdf.set_text_color(255, 255, 255)
+                current_y_new_page = pdf.get_y()
+                current_x_new_page = pdf.get_x()
+                for i_h, header_h in enumerate(wo_headers):
+                    pdf.set_xy(current_x_new_page, current_y_new_page)
+                    pdf.cell(wo_col_widths[i_h], block_height, '', 1, 0, 'C', True)
+                    pdf.set_xy(current_x_new_page, current_y_new_page + (block_height - (header_h.count('\n') + 1) * line_height) / 2)
+                    pdf.multi_cell(wo_col_widths[i_h], line_height, header_h, 0, 'C')
+                    current_x_new_page += wo_col_widths[i_h]
+                pdf.set_y(current_y_new_page + block_height)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_fill_color(255, 255, 255)
+
+            for col_width in wo_col_widths:
+                pdf.cell(col_width, row_height, '', 1, 0, 'C', True)
+            pdf.ln()
+        pdf.ln(10)
+        # --- Akhir Penambahan Open Work Order ---
+
+        # --- Penambahan Closed Work Order ---
+
+        # Header block untuk Closed Work Order
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(0, 123, 255) # Blue color
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(block_width, block_height, 'Closed Work Order', 0, 0, 'L', True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        # Tabel Closed Work Order
+        wo_headers = ['No', 'WO NUMBER', 'DATE CREATED', 'DATE CLOSED', 'DESCRIPTION', 'COMMENTS']
+        wo_col_widths = [10, 30, 30, 30, 50, 40] # Total 190mm
+
+        # Cetak header tabel
+        pdf.set_font('helvetica', 'B', 7)
+        pdf.set_fill_color(0, 123, 255) # Blue background for header
+        pdf.set_text_color(255, 255, 255)
+
+        current_y = pdf.get_y()
+        current_x = pdf.get_x()
+
+        for i, header in enumerate(wo_headers):
+            pdf.set_xy(current_x, current_y)
+            # Draw background and border
+            pdf.cell(wo_col_widths[i], block_height, '', 1, 0, 'C', True)
+            
+            line_height = 4 
+            num_lines = header.count('\n') + 1
+            text_height = num_lines * line_height
+            y_text = current_y + (block_height - text_height) / 2
+            
+            # Set position and draw multi-line text
+            pdf.set_xy(current_x, y_text)
+            pdf.multi_cell(wo_col_widths[i], line_height, header, 0, 'C')
+            
+            # Move to next cell's x position
+            current_x += wo_col_widths[i]
+
+        pdf.set_y(current_y + block_height) # Move position down below the header
+
+        # Cetak grid kosong untuk diisi manual (contoh 3 baris)
+        pdf.set_text_color(0, 0, 0)
+        row_height = 10
+        for i in range(3): # Example 3 empty rows
+            fill_color = 240 if i % 2 == 0 else 255
+            pdf.set_fill_color(fill_color, fill_color, fill_color)
+            
+            if pdf.get_y() + row_height > pdf.page_break_trigger:
+                pdf.add_page()
+                # Re-print header on new page if it breaks
+                pdf.set_font('helvetica', 'B', 7)
+                pdf.set_fill_color(0, 123, 255)
+                pdf.set_text_color(255, 255, 255)
+                current_y_new_page = pdf.get_y()
+                current_x_new_page = pdf.get_x()
+                for i_h, header_h in enumerate(wo_headers):
+                    pdf.set_xy(current_x_new_page, current_y_new_page)
+                    pdf.cell(wo_col_widths[i_h], block_height, '', 1, 0, 'C', True)
+                    pdf.set_xy(current_x_new_page, current_y_new_page + (block_height - (header_h.count('\n') + 1) * line_height) / 2)
+                    pdf.multi_cell(wo_col_widths[i_h], line_height, header_h, 0, 'C')
+                    current_x_new_page += wo_col_widths[i_h]
+                pdf.set_y(current_y_new_page + block_height)
+                pdf.set_text_color(0, 0, 0)
+                pdf.set_fill_color(255, 255, 255)
+
+            for col_width in wo_col_widths:
+                pdf.cell(col_width, row_height, '', 1, 0, 'C', True)
+            pdf.ln()
+        pdf.ln(10)
+        # --- Akhir Penambahan Closed Work Order ---
+
+        # --- Penambahan Halaman Chiller Overview ---
+        pdf.add_page()
+        # Header block untuk Chiller Overview
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(0, 123, 255) # Blue color
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        chiller_num = chiller_details.get('chiller_num', chiller_id)
+        pdf.cell(block_width, block_height, f'Chiller {chiller_num} Overview', 0, 0, 'L', True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        image_path = os.path.join(app.static_folder, 'images', 'chiller_page.png')
+        if os.path.exists(image_path):
+            pdf.image(image_path, x='C', y=pdf.get_y(), w=150) # Adjust width as needed
+            pdf.ln(85) # Adjust line break after image
+        # --- Akhir Penambahan Halaman Chiller Overview ---
+        pdf.ln(10)
+        # --- Akhir Penambahan High Priority WO ---
+        # --- Akhir Penambahan Halaman Work Order ---
+# --- Akhir Penambahan Halaman Customer On Call ---
+
+
         timestamps = [datetime.fromisoformat(d['timestamp']) for d in historical_data]
         for section_title, parameters_in_section in chart_sections.items():
             if not any(p['key'] in historical_data[0] for p in parameters_in_section):
                 continue
             pdf.add_page()
             pdf.set_font('helvetica', 'B', 14)
-            pdf.cell(0, 10, section_title, 0, 1, 'L')
+            pdf.cell(0, 9, section_title, 0, 1, 'L')
             pdf.ln(2)
             for param in parameters_in_section:
                 if param['key'] in historical_data[0] and historical_data[0][param['key']] is not None:
@@ -1667,7 +2165,7 @@ def report_pdf(chiller_id):
             for section_params in chart_sections.values():
                 parameters_to_plot.extend(section_params)
             valid_parameters = [p for p in parameters_to_plot if p['key'] in historical_data[0] and any(d.get(p['key']) is not None for d in historical_data)]
-            data_points_per_table =10
+            data_points_per_table =9
             data_chunks = [historical_data[i:i + data_points_per_table] for i in range(0, len(historical_data), data_points_per_table)]
             header_height = 8
             row_height = 5
@@ -1685,26 +2183,59 @@ def report_pdf(chiller_id):
                 if not is_first_table_on_page:
                     pdf.ln(2)
                 timestamps = [datetime.fromisoformat(d['timestamp']).strftime('%H:%M %d-%m-%y') for d in table_data]
-                header_labels = ['Parameter'] + timestamps
+                header_labels = ['Parameter', 'Safe Range'] + timestamps # Added 'Safe Range'
+                
                 param_col_width = 55
+                safe_range_col_width = 30 # New column width
                 num_data_cols = len(table_data)
-                data_col_width = (pdf.w - 20 - param_col_width) / num_data_cols if num_data_cols > 0 else 0
-                col_widths = [param_col_width] + [data_col_width] * num_data_cols
+                remaining_width = pdf.w - 20 - param_col_width - safe_range_col_width # Adjusted remaining width
+                data_col_width = remaining_width / num_data_cols if num_data_cols > 0 else 0
+                col_widths = [param_col_width, safe_range_col_width] + [data_col_width] * num_data_cols # Adjusted col_widths
+                
                 pdf.set_font('helvetica', 'B', 8)
                 y_start = pdf.get_y()
                 x_start = pdf.get_x()
-                pdf.multi_cell(col_widths[0], header_height, header_labels[0], border=1, align='C')
-                current_x = x_start + col_widths[0]
-                for i, header in enumerate(header_labels[1:]):
-                    pdf.set_xy(current_x, y_start)
-                    pdf.multi_cell(col_widths[i+1], header_height, header, border=1, align='C')
-                    current_x += col_widths[i+1]
+                
+                current_x_header = x_start
+                for i, header_text in enumerate(header_labels): # Loop through all headers
+                    pdf.set_xy(current_x_header, y_start)
+                    # Draw background and border
+                    pdf.cell(col_widths[i], header_height, '', 1, 0, 'C', True)
+                    
+                    # Calculate y position for vertically centered text
+                    line_height = 4 
+                    num_lines = header_text.count('\n') + 1
+                    text_height = num_lines * line_height
+                    y_text = y_start + (header_height - text_height) / 2
+                    
+                    # Set position and draw multi-line text
+                    pdf.set_xy(current_x_header, y_text)
+                    pdf.multi_cell(col_widths[i], line_height, header_text, 0, 'C')
+                    
+                    current_x_header += col_widths[i]
+                
                 pdf.set_y(y_start + header_height)
                 pdf.set_font('helvetica', '', 9)
                 for param_info in valid_parameters:
                     param_key = param_info['key']
                     param_label = param_info['label']
+                    
+                    # Print Parameter label
                     pdf.cell(col_widths[0], row_height, param_label, 1)
+                    
+                    # Print Safe Range
+                    safe_range_str = '-'
+                    if param_key in safe_ranges:
+                        s_range = safe_ranges[param_key]
+                        if s_range['min'] is not None and s_range['max'] is not None:
+                            safe_range_str = f"{s_range['min']:.2f} - {s_range['max']:.2f}"
+                        elif s_range['min'] is not None:
+                            safe_range_str = f"> {s_range['min']:.2f}"
+                        elif s_range['max'] is not None:
+                            safe_range_str = f"< {s_range['max']:.2f}"
+                    pdf.cell(col_widths[1], row_height, safe_range_str, 1, align='C') # col_widths[1] for safe range
+                    
+                    # Print data values
                     for data_point in table_data:
                         value = data_point.get(param_key)
                         if value is None:
@@ -1717,6 +2248,138 @@ def report_pdf(chiller_id):
                     pdf.ln()
                 is_first_table_on_page = False
 
+        # --- Penambahan Halaman Checklist ---
+        pdf.add_page()
+        # Header block untuk Checklist
+        block_height = 10
+        block_width = 60
+        pdf.set_fill_color(0, 123, 255) # Blue color
+        pdf.set_font('helvetica', 'B', 16)
+        pdf.set_text_color(255, 255, 255)
+        pdf.cell(block_width, block_height, 'Checklist', 0, 0, 'L', True)
+        pdf.set_text_color(0, 0, 0)
+        pdf.ln(block_height + 5)
+
+        image_path = os.path.join(app.static_folder, 'images', 'floor_layout.png')
+        if os.path.exists(image_path):
+            pdf.image(image_path, x='C', y=pdf.get_y(), w=200) # Adjust width as needed
+            pdf.ln(85) # Adjust line break after image
+        # --- Akhir Penambahan Halaman Checklist ---
+        # --- Tambahkan Tabel Checklist seperti di gambar ---
+        pdf.ln(10)  # Spasi dari gambar sebelumnya
+        
+        # Header tabel
+        pdf.set_font('helvetica', 'B', 12)
+        pdf.set_fill_color(0, 123, 255)
+        pdf.set_text_color(255, 255, 255)
+
+        header_widths = [10, 60, 40, 40, 40]
+        header_texts = ['NO', 'Description', 'Range', 'Remarks', 'Note']
+
+        for i, header_text in enumerate(header_texts):
+            pdf.cell(header_widths[i], 10, header_text, 1, 0, 'C', True)
+        pdf.ln()
+
+        # Data untuk tabel dari gambar
+        checklist_sections = [
+            {'title': 'Evaporator', 'items': [
+                ('LWT Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Sensor Well', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('RWT Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Sensor Well', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('Inlet Pressure Gauge', ''),
+                ('Cek Pressure Gauge', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Valve', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Pipa', 'Baik / Tidak'),
+                ('Outlet Pressure Gauge', ''),
+                ('Cek Pressure Gauge', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Valve', 'Baik / Tidak'),
+                ('Cek Pressure Gauge Pipa', 'Baik / Tidak'),
+                ('Flow Switch', ''),
+                ('Cek kondisi Flow Switch', 'Baik / Tidak'),
+                ('Flow Meter', ''),
+                ('Cek Kondisi Flow meter', 'Baik / Tidak'),
+                ('Water box', ''),
+                ('Cek Kondisi Water Box', 'Baik / Tidak'),
+                ('Cek Kanal Gasket', 'Baik / Tidak'),
+                ('Cek Kondisi Endsheet', 'Baik / Tidak'),
+                ('Evaporator Pressure Transducer', ''),
+                ('Cek Kondisi Transducer', 'Baik / Tidak'),
+                ('Cek Kondisi Socket Transducer', 'Baik / Tidak'),
+                ('Evap Refrigerant Temp Sensor', ''),
+                ('Cek Sensor', 'Baik / Tidak'),
+                ('Cek Sensor Well', 'Baik / Tidak'),
+                ('Cek Socket Sensor', 'Baik / Tidak'),
+                ('Sight Glass', ''),
+                ('Cek Kondisi Sight Glass', 'Baik / Tidak'),
+                ('Cek Kondisi Koneksi Sight Glass', 'Baik / Tidak'),
+                ('Evaporator Body', ''),
+                ('Cek Kondisi Insulasi', 'Baik / Tidak'),
+                ('Cek visual dari kebocoran', 'Baik / Tidak'),
+            ]},
+            # Tambahkan section lain jika ada
+        ]
+
+        row_height = 8
+        no_counter = 1
+        
+        pdf.set_font('helvetica', '', 10)
+        pdf.set_text_color(0, 0, 0)
+        pdf.set_fill_color(255, 255, 255)
+
+        for section in checklist_sections:
+            # Print the main section row
+            pdf.set_font('helvetica', 'B', 10)
+            pdf.cell(header_widths[0], row_height, str(no_counter), 1, 0, 'C')
+            pdf.cell(header_widths[1], row_height, section['title'], 1, 0, 'L')
+            pdf.cell(header_widths[2] + header_widths[3] + header_widths[4], row_height, '', 1, 1, 'L')
+            pdf.set_font('helvetica', '', 10)
+            
+            no_counter += 1
+            
+            # Print the sub-items
+            for i, (description, range_val) in enumerate(section['items']):
+                # Check for page break
+                if pdf.get_y() + row_height > pdf.page_break_trigger:
+                    pdf.add_page()
+                    # Re-print header on new page
+                    pdf.set_font('helvetica', 'B', 12)
+                    pdf.set_fill_color(0, 123, 255)
+                    pdf.set_text_color(255, 255, 255)
+                    for h_i, h_text in enumerate(header_texts):
+                        pdf.cell(header_widths[h_i], 10, h_text, 1, 0, 'C', True)
+                    pdf.ln()
+                    pdf.set_font('helvetica', '', 10)
+                    pdf.set_text_color(0, 0, 0)
+                    pdf.set_fill_color(255, 255, 255)
+
+                # Use bold font for sub-headers like "LWT Sensor"
+                if range_val == '':
+                    pdf.set_font('helvetica', 'B', 10)
+                    pdf.set_fill_color(240, 240, 240)
+                else:
+                    pdf.set_font('helvetica', '', 10)
+                    pdf.set_fill_color(255, 255, 255)
+
+                pdf.cell(header_widths[0], row_height, '', 1, 0, 'C', True)
+                pdf.cell(header_widths[1], row_height, description, 1, 0, 'L', True)
+                pdf.cell(header_widths[2], row_height, range_val, 1, 0, 'C', True)
+                pdf.cell(header_widths[3], row_height, '', 1, 0, 'C', True)
+                pdf.cell(header_widths[4], row_height, '', 1, 1, 'C', True)
+
+        # Baris "Recommendation"
+        pdf.ln(2) # Spasi kecil
+        pdf.set_font('helvetica', 'B', 10)
+        pdf.cell(header_widths[0] + header_widths[1], row_height, 'Recommendation:', 1, 0, 'L')
+        pdf.cell(header_widths[2] + header_widths[3] + header_widths[4], row_height, '', 1, 1, 'C')
+        pdf.ln(5) # Spasi setelah tabel
+
+        # --- Akhir Tabel Checklist ---
+
         pdf_output = bytes(pdf.output())
         return Response(pdf_output, mimetype='application/pdf', headers={'Content-Disposition': f'inline; filename=report_{chiller_id}_{start_date.strftime("%Y%m%d")}.pdf'})
 
@@ -1727,10 +2390,9 @@ def report_pdf(chiller_id):
         flash(f"Gagal membuat laporan PDF karena kesalahan internal: {e}", "danger")
         return redirect(url_for('test', chiller_id=chiller_id))
     finally:
-        if conn.is_connected():
+        if conn and conn.is_connected():
             cursor.close()
             conn.close()
-
 
 @app.route('/yvaa_type')
 def yvaa_type():
@@ -2005,17 +2667,64 @@ def yk_vsd_type():
     return render_template('yk-vsd_type.html', data=dummy_data, chiller=dummy_chiller, historical_data=[], start_date=start_date, end_date=end_date, last_updated_timestamp=now, chart_parameters=chart_parameters)
 
 
-@app.route('/analyze_warning/<int:warning_code>')
-def analyze_warning(warning_code):
-    groq_api_key = os.environ.get('GROQ_API_KEY', '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')
-    if not groq_api_key:
-        return jsonify({"error": "GROQ_API_KEY not set."}), 500
-
+@app.route('/analyze_warning/<string:chiller_id>/<int:warning_code>')
+def analyze_warning(chiller_id, warning_code):
+    # Dapatkan deskripsi peringatan dari kode
     warning_description = warning_codes.get(warning_code, "Unknown Warning")
 
-    prompt = f"Berikan analisis mendalam untuk peringatan chiller berikut: '{warning_description}' (Kode: {warning_code}). Jelaskan kemungkinan penyebabnya dan berikan panduan langkah demi langkah untuk mengatasi masalah tersebut untuk engineer. Gunakan bahasa Indonesia."
+    # Dapatkan data chiller terbaru
+    chiller_data = None
+    try:
+        response = requests.get(f'http://127.0.0.1:8000/chillers/{chiller_id}/latest_data')
+        response.raise_for_status()
+        chiller_data = response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Could not fetch chiller data for analysis: {e}")
+        # Lanjutkan tanpa data chiller, atau kembalikan error
+        pass # Lanjutkan tanpa data chiller
+
+    # Dapatkan kunci API Groq dari variabel lingkungan
+    groq_api_key = "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"
+    if not groq_api_key:
+        return jsonify({"error": "GROQ_API_KEY not set."})
+
+    # Filter out null values from chiller_data
+    if chiller_data:
+        filtered_chiller_data = {k: v for k, v in chiller_data.items() if v is not None}
+        chiller_data_str = json.dumps(filtered_chiller_data, indent=2)
+    else:
+        chiller_data_str = "No additional chiller data available."
+
+    # Buat prompt untuk Groq AI
+    prompt = f"""
+    Analyze the following chiller warning and provide a detailed explanation and potential causes.
+    The analysis should be in Indonesian.
+
+    Warning: "{warning_description}" (Code: {warning_code})
+
+    Here is the current data from the chiller for context:
+    {chiller_data_str}
+
+    Provide the analysis in the following format:
+    ### Deskripsi Peringatan
+    [Detailed description of the warning based on the code and data]
+
+    ### Analisis Data Chiller
+    [Analyze the provided chiller data and how it might relate to the warning]
+
+    ### Kemungkinan Penyebab
+    * [Cause 1 based on warning and data]
+    * [Cause 2 based on warning and data]
+    * [Cause 3 based on warning and data]
+
+    ### Langkah-langkah yang Disarankan
+    * [Step 1]
+    * [Step 2]
+    * [Step 3]
+    """
 
     try:
+        # Panggil Groq API
         response = requests.post(
             "https://api.groq.com/openai/v1/chat/completions",
             headers={
@@ -2024,24 +2733,18 @@ def analyze_warning(warning_code):
             },
             json={
                 "model": "llama3-8b-8192",
-                "messages": [
-                    {
-                        "role": "system",
-                        "content": "Anda adalah teknisi HVAC ahli yang berspesialisasi dalam chiller. Berikan jawaban dalam bahasa Indonesia."
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt,
-                    }
-                ],
+                "messages": [{"role": "user", "content": prompt}],
+                "temperature": 0.7,
             },
         )
-        
         response.raise_for_status()
-        analysis = response.json()['choices'][0]['message']['content']
-        return jsonify({"analysis": analysis})
+        analysis_result = response.json()['choices'][0]['message']['content']
+        return jsonify({"analysis": analysis_result})
+
     except requests.exceptions.RequestException as e:
-        return jsonify({"error": str(e)}), 500
+        return jsonify({"error": f"Failed to call Groq API: {e}"})
+    except Exception as e:
+        return jsonify({"error": f"An error occurred: {e}"})
 
 if __name__ == '__main__':
     try:
@@ -2051,4 +2754,5 @@ if __name__ == '__main__':
             locale.setlocale(locale.LC_ALL, 'Indonesian_Indonesia.1252')
         except locale.Error:
             print("Warning: Indonesian locale not found. Date/time may not be formatted correctly.")
-    app.run(debug=True, host='0.0.0.0')
+    
+    app.run(debug=True, host='0.0.0.0', port="7500")

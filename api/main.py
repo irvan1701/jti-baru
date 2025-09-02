@@ -6,7 +6,7 @@ from datetime import datetime
 from typing import Optional
 
 # Ganti dengan kredensial database Anda
-DATABASE_URL = "mysql+mysqlconnector://root:@localhost:3306/jti-new2"
+DATABASE_URL = "mysql+mysqlconnector://root:@127.0.0.1:3306/jti-new2"
 
 engine = create_engine(DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

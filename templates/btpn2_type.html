@@ -1,11 +1,10 @@
-{% extends 'sidebar.html' %}
-
-{% block title %}{{ chiller_name or 'Chiller Dashboard' }} - JTI BAS Dashboard{% endblock %}
-
-{% block header_title %}{{ chiller_name or 'Chiller Dashboard' }}{% endblock %}
-
-{% block content %}
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+{% extends 'sidebar.html' %} {% block title %}{{ chiller_name or 'Chiller
+Dashboard' }} - JTI BAS Dashboard{% endblock %} {% block header_title %}{{
+chiller_name or 'Chiller Dashboard' }}{% endblock %} {% block content %}
+<link
+  rel="stylesheet"
+  href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css"
+/>
 <style>
   .value-cell.safe {
     color: #2ecc71; /* Green */
@@ -19,736 +18,1187 @@
     font-size: 24px;
     color: #fff;
   }
-  .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; overflow: auto; background-color: rgba(0,0,0,0.6); }
-  .modal-content { background-color: #2d3748; color: #e2e8f0; margin: 15% auto; padding: 25px; border: 1px solid #888; width: 90%; max-width: 500px; border-radius: 8px; text-align: center; position: relative; }
-  .close-button { color: #aaa; position: absolute; top: 10px; right: 20px; font-size: 28px; font-weight: bold; }
-  .close-button:hover, .close-button:focus { color: #fff; text-decoration: none; cursor: pointer; }
-  .modal-buttons button { background-color: #4a5568; color: white; padding: 12px 24px; margin: 10px; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; }
-  .modal-buttons button:hover { background-color: #5a6578; }
+  .modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.6);
+  }
+  .modal-content {
+    background-color: #2d3748;
+    color: #e2e8f0;
+    margin: 15% auto;
+    padding: 25px;
+    border: 1px solid #888;
+    width: 90%;
+    max-width: 500px;
+    border-radius: 8px;
+    text-align: center;
+    position: relative;
+  }
+  .close-button {
+    color: #aaa;
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 28px;
+    font-weight: bold;
+  }
+  .close-button:hover,
+  .close-button:focus {
+    color: #fff;
+    text-decoration: none;
+    cursor: pointer;
+  }
+  .modal-buttons button {
+    background-color: #4a5568;
+    color: white;
+    padding: 12px 24px;
+    margin: 10px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 16px;
+  }
+  .modal-buttons button:hover {
+    background-color: #5a6578;
+  }
+  .data-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    width: 100%;
+  }
+  .data-card {
+    background-color: #4a5568;
+    border-radius: 8px;
+    padding: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+  }
+  .data-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.2);
+  }
+  .data-card .label {
+    font-size: 0.9em;
+    color: #cbd5e0;
+    margin-bottom: 5px;
+    font-weight: 500;
+  }
+  .data-card .value {
+    font-size: 1.75rem;
+    font-weight: bold;
+    color: #fff;
+    line-height: 1.2;
+  }
+  .data-card .safe-range {
+    font-size: 0.75em;
+    color: #a0aec0;
+    margin-top: 3px;
+  }
+  .data-card .value.safe {
+    color: #2ecc71;
+  }
+  .data-card .value.unsafe {
+    color: #e74c3c;
+  }
 </style>
 <div class="chiller-content-wrapper">
-    <div class="dashboard-grid">
-        <div class="last-updated-info">
-            <p>Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if last_updated_timestamp else 'N/A' }}</p>
-            <div class="unit-selection">
-                <label for="temp_unit">Temperature Unit:</label>
-                <select id="temp_unit">
-                    <option value="celsius">Celsius (°C)</option>
-                    <option value="fahrenheit">Fahrenheit (°F)</option>
-                </select>
-            </div>
-        </div>
-        
-        <div class="faults-section">
-            
-            <div class="fault-card {% if data.safety_fault and data.safety_fault > 0 %}blink-red{% endif %}">
-                <div class="icon-circle"><i class="fas fa-shield-alt"></i></div>
-                <div class="fault-details"><p class="fault-type">Safety Fault</p><p class="fault-value">{{ data.safety_fault_desc if data and data.safety_fault_desc is not none else '-' }}</p></div>
-            </div>
-            <div class="fault-card {% if data.cycling_fault and data.cycling_fault > 0 %}blink-yellow{% endif %}">
-                <div class="icon-circle"><i class="fas fa-sync-alt"></i></div>
-                <div class="fault-details"><p class="fault-type">Cycling Fault</p><p class="fault-value">{{ data.cycling_fault_desc if data and data.cycling_fault_desc is not none else '-' }}</p></div>
-            </div>
-            <div class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}" data-warning-code="{{ data.warning_fault if data else '' }}">
-                <div class="icon-circle"><i class="fas fa-bell"></i></div>
-                <div class="fault-details"><p class="fault-type">Warning Fault</p><p class="fault-value">{{ data.warning_fault_desc if data and data.warning_fault_desc is not none else '-' }}</p></div>
-            </div>
-            
-        </div>
-
-        <div class="chiller-details-section">
-            <div class="chiller-image">
-                {% if data and data.fla is not none and data.fla > 5 %}
-                <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
-                {% else %}
-                <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
-                {% endif %}
-            </div>
-            <div class="chiller-info-grid">
-                <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data and data.fla is not none and data.fla > 5 else "Stopped" }}</p></div>
-                <div class="info-card"><p class="label">FLA</p><p class="value">{{ data.fla if data and data.fla is not none else '-' }} %</p></div>
-                <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ data.operating_hour if data and data.operating_hour is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data and data.input_power is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data and data.input_kwh is not none else '-' }}</p></div>
-   
-                <div class="info-card"><p class="label">VSD PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '0' }}</p></div>
-                <div class="info-card"><p class="label">VSD PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '0' }}</p></div>
-                <div class="info-card"><p class="label">VSD PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data and data.vsd_ph_c_current is not none else '0' }}</p></div>
-                <div class="info-card"><p class="label">Approach Evap</p><p class="value">{{ data.Approach_Evap if data and data.Approach_Evap is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Approach Cond</p><p class="value">{{ data.Approach_Cond if data and data.Approach_Cond is not none else '-' }}</p></div>
-
-                <div class="info-card"><p class="label">Evap ΔT</p><p class="value">{{ data.Evap_DT if data and data.Evap_DT is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Cond ΔT</p><p class="value">{{ data.Cond_DT if data and data.Cond_DT is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Cooling Capacity</p><p class="value">{{ data.Cooling_Capacity if data and data.Cooling_Capacity is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">Efficiency</p><p class="value">{{ data.efficiency if data and data.efficiency is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">COP</p><p class="value">{{ data.COP if data and data.COP is not none else '-' }}</p></div>
-                <div class="info-card"><p class="label">EER</p><p class="value">{{ data.EER if data and data.EER is not none else '-' }}</p></div>
-            </div>
-        </div>
-
-        
-
-        <div class="evap-cond-section">
-            <div class="section-card">
-                <p class="mb-4">Evap</p>
-                <div class="flex flex-row space-x-4">
-                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">LWT</p>
-                            <canvas data-type="linear-gauge" data-min-value="10" data-max-value="80" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80" data-width="120" data-height="220" data-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_lwt if data and data.evap_lwt is not none else 0 }}"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">RWT</p>
-                            <canvas data-type="linear-gauge" data-min-value="10" data-max-value="80" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80" data-width="120" data-height="220" data-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_rwt if data and data.evap_rwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="100" data-major-ticks="0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100" data-width="120" data-height="220" data-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else 0 }}"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Pressure</p>
-                            <canvas data-type="radial-gauge" data-min-value="230" data-max-value="520" data-major-ticks="230, 250, 280, 330, 380, 430, 480, 520" data-width="180" data-height="180" data-value="{{ data.evap_pressure if data and data.evap_pressure is not none else 0 }}" data-units="psi"></canvas>
-                        </div>
-                    </div>
-                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
-                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Evaporator</h3>
-                        <table class="parameter-table min-w-full">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Parameter</th>
-                                    <th scope="col">Safe Range</th>
-                                    <th scope="col">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="hover:bg-gray-700" data-param-key="evap_lwt">
-                                    <td class="font-medium">LWT</td>
-                                    <td data-safe-range-celsius-min="5.5" data-safe-range-celsius-max="8.8">5.50 - 8.80</td>
-                                    <td data-temp-celsius="{{ data.evap_lwt if data and data.evap_lwt is not none else '' }}">{{ data.evap_lwt if data and data.evap_lwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="evap_rwt">
-                                    <td class="font-medium">RWT</td>
-                                    <td data-safe-range-celsius-min="11.11" data-safe-range-celsius-max="14.44">11.11 - 14.44</td>
-                                    <td data-temp-celsius="{{ data.evap_rwt if data and data.evap_rwt is not none else '' }}">{{ data.evap_rwt if data and data.evap_rwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="evap_satur_temp">
-                                    <td class="font-medium">Satur Temp</td>
-                                    <td data-safe-range-celsius-min="3.33" data-safe-range-celsius-max="6.67">3.33 - 6.67</td>
-                                    <td data-temp-celsius="{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '' }}">{{ data.evap_satur_temp if data and data.evap_satur_temp is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Pressure</td>
-                                    <td>220.64 - 275.8</td>
-                                    <td>{{ data.evap_pressure if data and data.evap_pressure is not none else '-' }} psi</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="section-card">
-                <p class="mb-4">Condenser</p>
-                <div class="flex flex-row space-x-4">
-                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">LWT</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_lwt if data and data.cond_lwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">RWT</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_rwt if data and data.cond_rwt is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Satur Temp</p>
-                            <canvas data-type="linear-gauge" data-width="120" data-height="220" data-min-value="10" data-max-value="105" data-major-ticks="10, 20, 30, 40, 50, 60, 70, 80,90, 105" data-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else 0 }}" data-min-value="0" data-max-value="60"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Pressure</p>
-                            <canvas data-type="radial-gauge" data-width="180" data-height="180" data-value="{{ data.cond_pressure if data and data.cond_pressure is not none else 0 }}" data-units="psi" data-min-value="0" data-max-value="400"></canvas>
-                        </div>
-                    </div>
-                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
-                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Kondensor</h3>
-                        <table class="parameter-table min-w-full">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Parameter</th>
-                                    <th scope="col">Safe Range</th>
-                                    <th scope="col">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="hover:bg-gray-700" data-param-key="cond_lwt">
-                                    <td class="font-medium">LWT</td>
-                                    <td data-safe-range-celsius-min="32.22" data-safe-range-celsius-max="35.55">32.22 - 35.55</td>
-                                    <td data-temp-celsius="{{ data.cond_lwt if data and data.cond_lwt is not none else '' }}">{{ data.cond_lwt if data and data.cond_lwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="cond_rwt">
-                                    <td class="font-medium">RWT</td>
-                                    <td data-safe-range-celsius-min="26.67" data-safe-range-celsius-max="30.0">26.67 - 30.00</td>
-                                    <td data-temp-celsius="{{ data.cond_rwt if data and data.cond_rwt is not none else '' }}">{{ data.cond_rwt if data and data.cond_rwt is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700" data-param-key="cond_satur_temp">
-                                    <td class="font-medium">Satur Temp</td>
-                                    <td data-safe-range-celsius-min="32.22" data-safe-range-celsius-max="40.56">32.22 - 40.56</td>
-                                    <td data-temp-celsius="{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '' }}">{{ data.cond_satur_temp if data and data.cond_satur_temp is not none else '-' }} °C</td>
-                                </tr>
-                                <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Pressure</td>
-                                    <td>723.9 - 930.8</td>
-                                    <td>{{ data.cond_pressure if data and data.cond_pressure is not none else '-' }} psi</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="oil-discharge-section">
-            <div class="section-card">
-                <p class="mb-4">Oil & Discharge</p>
-                <div class="flex flex-row space-x-4">
-                    <div class="thermometer-group flex-1 flex flex-row space-x-4">
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Oil Pressure Diff</p>
-                            <canvas data-type="radial-gauge" data-min-value="-5" data-max-value="300" data-major-ticks="-5, 30, 65, 100, 135, 170, 205, 240, 275, 300" data-width="180" data-height="180" data-value="{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else 0 }}" data-units="psi"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Oil Pump Pressure</p>
-                            <canvas data-type="radial-gauge" min-value="0" data-max-value="1000" data-major-ticks="0, 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000" data-width="180" data-height="180" data-value="{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else 0 }}" data-units="psi"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Oil Sump Temp</p>
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="125" data-major-ticks="0, 15, 30, 45, 60, 75, 90, 105, 120, 125" data-width="120" data-height="220" data-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else 0 }}"></canvas>
-                        </div>
-                        <div class="single-thermometer">
-                            <p class="thermometer-label">Discharge Temp</p>
-                            
-                            <canvas data-type="linear-gauge" data-min-value="0" data-max-value="120" data-major-ticks="0, 12, 24, 36, 48, 60, 72, 84, 96, 108, 120" data-width="120" data-height="220" data-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}" data-units="°C" data-original-value="{{ data.discharge_temp if data and data.discharge_temp is not none else 0 }}" data-min-value="0" data-max-value="120"></canvas>
-                        </div>
-                    </div>
-                    <div class="data-table-container flex-1 p-4 rounded-md shadow-sm">
-                        <h3 class="text-lg font-semibold mb-2 text-center">Detail Oli & Discharge</h3>
-                        <table class="parameter-table min-w-full">
-                            <thead>
-                                <tr>
-                                    <th scope="col">Parameter</th>
-                                    <th scope="col">Safe Range</th>
-                                    <th scope="col">Value</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Oil Pressure Diff</td>
-                                    <td>227.5 - 275.8</td>
-                                    <td>{{ data.oil_pressure_diff if data and data.oil_pressure_diff is not none else '-' }} psi</td>
-                                </tr>
-                                 <tr class="hover:bg-gray-700">
-                                    <td class="font-medium">Oil Pump Pressure</td>
-                                    <td>-</td>
-                                    <td>{{ data.oil_pump_pressure if data and data.oil_pump_pressure is not none else '-' }} psi</td>
-                                </tr>
-                                 <tr class="hover:bg-gray-700" data-param-key="oil_sump_temp">
-                                    <td class="font-medium">Oil Sump Temp</td>
-                                    <td data-safe-range-celsius-min="40.56" data-safe-range-celsius-max="53.89">40.56 - 53.89</td>
-                                    <td data-temp-celsius="{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '' }}">{{ data.oil_sump_temp if data and data.oil_sump_temp is not none else '-' }} °C</td>
-                                </tr>
-                                 <tr class="hover:bg-gray-700" data-param-key="discharge_temp">
-                                    <td class="font-medium">Discharge Temp</td>
-                                    <td data-safe-range-celsius-min="40.56" data-safe-range-celsius-max="53.89">40.56 - 53.89</td>
-                                    <td data-temp-celsius="{{ data.discharge_temp if data and data.discharge_temp is not none else '' }}">{{ data.discharge_temp if data and data.discharge_temp is not none else '-' }} °C</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-<!-- Analysis Modal -->
-<div id="analysis-modal" class="modal" style="display: none; z-index: 1060;">
-    <div class="modal-content" style="width: 80%; max-width: 800px; text-align: left;">
-        <span class="close-analysis-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
-        <h2 id="analysis-modal-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Warning Analysis</h2>
-        <div id="analysis-modal-body" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
-            <!-- Analysis will be loaded here -->
-            <p>Loading analysis...</p>
-        </div>
+  <div class="dashboard-grid">
+    <div class="last-updated-info">
+      <p>
+        Last Updated: {{ last_updated_timestamp.strftime("%Y-%m-%d %H:%M:%S") if
+        last_updated_timestamp else 'N/A' }}
+      </p>
+      <div class="unit-selection">
+        <label for="temp_unit">Temperature Unit:</label>
+        <select id="temp_unit">
+          <option value="celsius">Celsius (°C)</option>
+          <option value="fahrenheit">Fahrenheit (°F)</option>
+        </select>
+      </div>
     </div>
-</div>
-<!-- Analysis Modal -->
-<div id="analysis-modal" class="modal" style="display: none; z-index: 1060;">
-    <div class="modal-content" style="width: 80%; max-width: 800px; text-align: left;">
-        <span class="close-analysis-modal" style="float: right; cursor: pointer; font-size: 28px;">&times;</span>
-        <h2 id="analysis-modal-title" style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem; text-align: center;">Warning Analysis</h2>
-        <div id="analysis-modal-body" style="height: 60vh; overflow-y: auto; background: #f8f9fa; color: black; padding: 20px; border: 1px solid #ccc; border-radius: 5px;">
-            <!-- Analysis will be loaded here -->
-            <p>Loading analysis...</p>
+
+    <div class="faults-section">
+      <div
+        class="fault-card {% if data.safety_fault and data.safety_fault > 0 %}blink-red{% endif %}"
+      >
+        <div class="icon-circle"><i class="fas fa-shield-alt"></i></div>
+        <div class="fault-details">
+          <p class="fault-type">Safety Fault</p>
+          <p class="fault-value">
+            {{ data.safety_fault_desc if data and data.safety_fault_desc is not
+            none else '-' }}
+          </p>
         </div>
+      </div>
+      <div
+        class="fault-card {% if data.cycling_fault and data.cycling_fault > 0 %}blink-yellow{% endif %}"
+      >
+        <div class="icon-circle"><i class="fas fa-sync-alt"></i></div>
+        <div class="fault-details">
+          <p class="fault-type">Cycling Fault</p>
+          <p class="fault-value">
+            {{ data.cycling_fault_desc if data and data.cycling_fault_desc is
+            not none else '-' }}
+          </p>
+        </div>
+      </div>
+      <div
+        class="fault-card {% if data.warning_fault and data.warning_fault > 0 %}blink-yellow{% endif %}"
+        data-warning-code="{{ data.warning_fault if data else '' }}"
+      >
+        <div class="icon-circle"><i class="fas fa-bell"></i></div>
+        <div class="fault-details">
+          <p class="fault-type">Warning Fault</p>
+          <p class="fault-value">
+            {{ data.warning_fault_desc if data and data.warning_fault_desc is
+            not none else '-' }}
+          </p>
+        </div>
+      </div>
     </div>
-</div>
 
-        <div id="export-modal" class="modal">
-            <div class="modal-content">
-                <span class="close-button">&times;</span>
-                <h2 style="font-size: 1.5rem; font-weight: bold; margin-bottom: 1rem;">Pilih Unit Laporan</h2>
-                <p style="margin-bottom: 1.5rem;">Pilih unit temperatur untuk laporan PDF Anda.</p>
-                <div class="modal-buttons">
-                    <button id="export-celsius-btn">Export (°C)</button>
-                    <button id="export-fahrenheit-btn">Export (°F)</button>
-                </div>
-            </div>
+    <div class="chiller-details-section">
+      <div class="chiller-image">
+          {% if data and data.fla is not none and data.fla > 5 %}
+          <img src="{{ url_for('static', filename='images/chiller-active.gif') }}" alt="Chiller Unit">
+          {% else %}
+          <img src="{{ url_for('static', filename='images/chiller.png') }}" alt="Chiller Unit">
+          {% endif %}
+      </div>
+      <div class="chiller-info-grid">
+          <div class="info-card"><p class="label">Status</p><p class="value running">{{ "Running" if data and data.fla is not none and data.fla > 5 else "Stopped" }}</p></div>
+          <div class="info-card"><p class="label">FLA</p><p class="value">{{ data.fla if data and data.fla is not none else '-' }} %</p></div>
+          <div class="info-card"><p class="label">Operating Hour</p><p class="value">{{ data.operating_hour if data and data.operating_hour is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">Input Power</p><p class="value">{{ data.input_power if data and data.input_power is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">Input KWh</p><p class="value">{{ data.input_kwh if data and data.input_kwh is not none else '-' }}</p></div>
+
+          <div class="info-card"><p class="label">VSD PH A Current</p><p class="value">{{ data.vsd_ph_a_current if data and data.vsd_ph_a_current is not none else '0' }}</p></div>
+          <div class="info-card"><p class="label">VSD PH B Current</p><p class="value">{{ data.vsd_ph_b_current if data and data.vsd_ph_b_current is not none else '0' }}</p></div>
+          <div class="info-card"><p class="label">VSD PH C Current</p><p class="value">{{ data.vsd_ph_c_current if data and data.vsd_ph_c_current is not none else '0' }}</p></div>
+          <div class="info-card"><p class="label">Approach Evap</p><p class="value">{{ data.Approach_Evap if data and data.Approach_Evap is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">Approach Cond</p><p class="value">{{ data.Approach_Cond if data and data.Approach_Cond is not none else '-' }}</p></div>
+
+          <div class="info-card"><p class="label">Evap ΔT</p><p class="value">{{ data.Evap_DT if data and data.Evap_DT is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">Cond ΔT</p><p class="value">{{ data.Cond_DT if data and data.Cond_DT is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">Cooling Capacity</p><p class="value">{{ data.Cooling_Capacity if data and data.Cooling_Capacity is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">Efficiency</p><p class="value">{{ data.efficiency if data and data.efficiency is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">COP</p><p class="value">{{ data.COP if data and data.COP is not none else '-' }}</p></div>
+          <div class="info-card"><p class="label">EER</p><p class="value">{{ data.EER if data and data.EER is not none else '-' }}</p></div>
+      </div>
+  </div>
+
+    <div class="evap-cond-section">
+      <div class="section-card">
+        <p class="mb-4">Evap</p>
+        <div class="data-card-grid">
+          {% set evap_lwt_min = 5.5 %} {% set evap_lwt_max = 8.8 %} {% set
+          evap_lwt_value = data.evap_lwt if data and data.evap_lwt is not none
+          else none %}
+          <div class="data-card">
+            <p class="label">LWT</p>
+            <p
+              class="value {% if evap_lwt_value is not none and evap_lwt_min is not none and evap_lwt_max is not none %}{% if evap_lwt_value >= evap_lwt_min and evap_lwt_value <= evap_lwt_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ evap_lwt_value if evap_lwt_value is not none else '' }}"
+            >
+              {{ evap_lwt_value if evap_lwt_value is not none else '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if evap_lwt_min is not none and evap_lwt_max is not none %}
+              Min: {{ evap_lwt_min }} °C, Max: {{ evap_lwt_max }} °C {% else %}
+              no defined range {% endif %}
+            </p>
+          </div>
+
+          {% set evap_rwt_min = 11.11 %} {% set evap_rwt_max = 14.44 %} {% set
+          evap_rwt_value = data.evap_rwt if data and data.evap_rwt is not none
+          else none %}
+          <div class="data-card">
+            <p class="label">RWT</p>
+            <p
+              class="value {% if evap_rwt_value is not none and evap_rwt_min is not none and evap_rwt_max is not none %}{% if evap_rwt_value >= evap_rwt_min and evap_rwt_value <= evap_rwt_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ evap_rwt_value if evap_rwt_value is not none else '' }}"
+            >
+              {{ evap_rwt_value if evap_rwt_value is not none else '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if evap_rwt_min is not none and evap_rwt_max is not none %}
+              Min: {{ evap_rwt_min }} °C, Max: {{ evap_rwt_max }} °C {% else %}
+              no defined range {% endif %}
+            </p>
+          </div>
+
+          {% set evap_satur_temp_min = 3.33 %} {% set evap_satur_temp_max = 6.67
+          %} {% set evap_satur_temp_value = data.evap_satur_temp if data and
+          data.evap_satur_temp is not none else none %}
+          <div class="data-card">
+            <p class="label">Satur Temp</p>
+            <p
+              class="value {% if evap_satur_temp_value is not none and evap_satur_temp_min is not none and evap_satur_temp_max is not none %}{% if evap_satur_temp_value >= evap_satur_temp_min and evap_satur_temp_value <= evap_satur_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ evap_satur_temp_value if evap_satur_temp_value is not none else '' }}"
+            >
+              {{ evap_satur_temp_value if evap_satur_temp_value is not none else
+              '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if evap_satur_temp_min is not none and evap_satur_temp_max is
+              not none %} Min: {{ evap_satur_temp_min }} °C, Max: {{
+              evap_satur_temp_max }} °C {% else %} no defined range {% endif %}
+            </p>
+          </div>
+
+          {% set evap_pressure_min = 220.64 %} {% set evap_pressure_max = 275.8
+          %} {% set evap_pressure_value = data.evap_pressure if data and
+          data.evap_pressure is not none else none %}
+          <div class="data-card">
+            <p class="label">Pressure</p>
+            <p
+              class="value {% if evap_pressure_value is not none and evap_pressure_min is not none and evap_pressure_max is not none %}{% if evap_pressure_value >= evap_pressure_min and evap_pressure_value <= evap_pressure_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+            >
+              {{ evap_pressure_value if evap_pressure_value is not none else '-'
+              }} psi
+            </p>
+            <p class="safe-range">
+              {% if evap_pressure_min is not none and evap_pressure_max is not
+              none %} Min: {{ evap_pressure_min }} psi, Max: {{
+              evap_pressure_max }} psi {% else %} no defined range {% endif %}
+            </p>
+          </div>
+
+          <div class="data-card">
+            <p class="label">STD</p>
+            <p class="value">
+              {{ data.evap_std if data and data.evap_std is not none else '-' }}
+            </p>
+            <p class="safe-range">no defined range</p>
+          </div>
+          <div class="data-card">
+            <p class="label">Refri lvl</p>
+            <p class="value">
+              {{ data.evap_refri_lvl if data and data.evap_refri_lvl is not none
+              else '-' }}
+            </p>
+            <p class="safe-range">no defined range</p>
+          </div>
         </div>
+      </div>
 
-        <div class="chart-section">
-            <h2 class="text-2xl font-bold text-white mb-4 text-center">Analisis Data Historis</h2>
-            
-            <form action="{{ url_for('test') }}" method="get">
-                <input type="hidden" name="chiller_id" value="{{ chiller.id }}">
-                <div class="filter-form">
-                    <div>
-                        <label for="start_date">Dari Tanggal & Jam</label>
-                        <input type="datetime-local" id="start_date" name="start_date" value="{{ start_date or '' }}">
-                    </div>
-                    <div>
-                        <label for="end_date">Sampai Tanggal & Jam</label>
-                        <input type="datetime-local" id="end_date" name="end_date" value="{{ end_date or '' }}">
-                    </div>
-                    <button type="submit">Tampilkan</button>
-                    <button type="button" id="report-button" style="margin-left: 1rem;">Export PDF</button>
-                </div>
-            </form>
+      <div class="section-card">
+        <p class="mb-4">Condenser</p>
+        <div class="data-card-grid">
+          {% set cond_lwt_min = 32.22 %} {% set cond_lwt_max = 35.55 %} {% set
+          cond_lwt_value = data.cond_lwt if data and data.cond_lwt is not none
+          else none %}
+          <div class="data-card">
+            <p class="label">LWT</p>
+            <p
+              class="value {% if cond_lwt_value is not none and cond_lwt_min is not none and cond_lwt_max is not none %}{% if cond_lwt_value >= cond_lwt_min and cond_lwt_value <= cond_lwt_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ cond_lwt_value if cond_lwt_value is not none else '' }}"
+            >
+              {{ cond_lwt_value if cond_lwt_value is not none else '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if cond_lwt_min is not none and cond_lwt_max is not none %}
+              Min: {{ cond_lwt_min }} °C, Max: {{ cond_lwt_max }} °C {% else %}
+              no defined range {% endif %}
+            </p>
+          </div>
 
-            {% if historical_data %}
-            <div class="charts-grid">
-                {% set parameters = [
-                    { "key": "evap_lwt", "label": "Evap LWT", "unit": "°C" },
-                    { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C" },
-                    { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
-                    { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" },
-                    { "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" },
-                    { "key": "cond_rwt", "label": "Cond RWT", "unit": "°C" },
-                    { "key": "cond_pressure", "label": "Cond Pressure", "unit": "kPa" },
-                    { "key": "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" },
-                    { "key": "fla", "label": "FLA", "unit": "%" },
-                    { "key": "input_power", "label": "Input Power", "unit": "kW" },
-                    { "key": "oil_sump_temp", "label": "Oil Sump Temp", "unit": "°C" },
-                    { "key": "discharge_temp", "label": "Discharge Temp", "unit": "°C" },
-                    { "key": "number_of_start", "label": "Starts", "unit": "" }
-                ] %}
+          {% set cond_rwt_min = 26.67 %} {% set cond_rwt_max = 30.0 %} {% set
+          cond_rwt_value = data.cond_rwt if data and data.cond_rwt is not none
+          else none %}
+          <div class="data-card">
+            <p class="label">RWT</p>
+            <p
+              class="value {% if cond_rwt_value is not none and cond_rwt_min is not none and cond_rwt_max is not none %}{% if cond_rwt_value >= cond_rwt_min and cond_rwt_value <= cond_rwt_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ cond_rwt_value if cond_rwt_value is not none else '' }}"
+            >
+              {{ cond_rwt_value if cond_rwt_value is not none else '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if cond_rwt_min is not none and cond_rwt_max is not none %}
+              Min: {{ cond_rwt_min }} °C, Max: {{ cond_rwt_max }} °C {% else %}
+              no defined range {% endif %}
+            </p>
+          </div>
 
-                {% for param in parameters %}
-                <div class="chart-card-wrapper">
-                    <div class="chart-card">
-                        <h3 class="chart-card-title">{{ param.label }}</h3>
-                        <div class="chart-canvas-container">
-                            <canvas id="chart-{{ param.key }}"></canvas>
-                        </div>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            {% else %}
-            <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
-                <h3 class="text-xl font-semibold text-white">Data Grafik Tidak Tersedia</h3>
-                <p class="text-gray-400 mt-2">Tidak ada data historis yang ditemukan untuk rentang waktu ini.</p>
-            </div>
-            {% endif %}
+          {% set cond_satur_temp_min = 32.22 %} {% set cond_satur_temp_max =
+          40.56 %} {% set cond_satur_temp_value = data.cond_satur_temp if data
+          and data.cond_satur_temp is not none else none %}
+          <div class="data-card">
+            <p class="label">Satur Temp</p>
+            <p
+              class="value {% if cond_satur_temp_value is not none and cond_satur_temp_min is not none and cond_satur_temp_max is not none %}{% if cond_satur_temp_value >= cond_satur_temp_min and cond_satur_temp_value <= cond_satur_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ cond_satur_temp_value if cond_satur_temp_value is not none else '' }}"
+            >
+              {{ cond_satur_temp_value if cond_satur_temp_value is not none else
+              '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if cond_satur_temp_min is not none and cond_satur_temp_max is
+              not none %} Min: {{ cond_satur_temp_min }} °C, Max: {{
+              cond_satur_temp_max }} °C {% else %} no defined range {% endif %}
+            </p>
+          </div>
+
+          {% set cond_pressure_min = 723.9 %} {% set cond_pressure_max = 930.8
+          %} {% set cond_pressure_value = data.cond_pressure if data and
+          data.cond_pressure is not none else none %}
+          <div class="data-card">
+            <p class="label">Pressure</p>
+            <p
+              class="value {% if cond_pressure_value is not none and cond_pressure_min is not none and cond_pressure_max is not none %}{% if cond_pressure_value >= cond_pressure_min and cond_pressure_value <= cond_pressure_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+            >
+              {{ cond_pressure_value if cond_pressure_value is not none else '-'
+              }} psi
+            </p>
+            <p class="safe-range">
+              {% if cond_pressure_min is not none and cond_pressure_max is not
+              none %} Min: {{ cond_pressure_min }} psi, Max: {{
+              cond_pressure_max }} psi {% else %} no defined range {% endif %}
+            </p>
+          </div>
+
+          <div class="data-card">
+            <p class="label">STD</p>
+            <p class="value">
+              {{ data.cond_std if data and data.cond_std is not none else '-' }}
+            </p>
+            <p class="safe-range">no defined range</p>
+          </div>
+
+          <div class="data-card">
+            <p class="label">Refri Lvl</p>
+            <p class="value">
+              {{ data.cond_refri_lvl_sp if data and data.cond_refri_lvl_sp is
+              not none else '-' }} %
+            </p>
+            <p class="safe-range">no defined range</p>
+          </div>
         </div>
-
+      </div>
     </div>
+
+    <div class="oil-discharge-section">
+      <div class="section-card">
+        <p class="mb-4">Oil & Discharge</p>
+        <div class="data-card-grid">
+          {% set oil_pressure_diff_min = 227.5 %} {% set oil_pressure_diff_max =
+          275.8 %} {% set oil_pressure_diff_value = data.oil_pressure_diff if
+          data and data.oil_pressure_diff is not none else none %}
+          <div class="data-card">
+            <p class="label">Oil Pressure Diff</p>
+            <p
+              class="value {% if oil_pressure_diff_value is not none and oil_pressure_diff_min is not none and oil_pressure_diff_max is not none %}{% if oil_pressure_diff_value >= oil_pressure_diff_min and oil_pressure_diff_value <= oil_pressure_diff_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+            >
+              {{ oil_pressure_diff_value if oil_pressure_diff_value is not none
+              else '-' }} psi
+            </p>
+            <p class="safe-range">
+              {% if oil_pressure_diff_min is not none and oil_pressure_diff_max
+              is not none %} Min: {{ oil_pressure_diff_min }} psi, Max: {{
+              oil_pressure_diff_max }} psi {% else %} no defined range {% endif
+              %}
+            </p>
+          </div>
+
+          <div class="data-card">
+            <p class="label">Oil Pump Pressure</p>
+            <p class="value">
+              {{ data.oil_pump_pressure if data and data.oil_pump_pressure is
+              not none else '-' }} psi
+            </p>
+            <p class="safe-range">no defined range</p>
+          </div>
+
+          {% set oil_sump_temp_min = 40.56 %} {% set oil_sump_temp_max = 53.89
+          %} {% set oil_sump_temp_value = data.oil_sump_temp if data and
+          data.oil_sump_temp is not none else none %}
+          <div class="data-card">
+            <p class="label">Oil Sump Temp</p>
+            <p
+              class="value {% if oil_sump_temp_value is not none and oil_sump_temp_min is not none and oil_sump_temp_max is not none %}{% if oil_sump_temp_value >= oil_sump_temp_min and oil_sump_temp_value <= oil_sump_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ oil_sump_temp_value if oil_sump_temp_value is not none else '' }}"
+            >
+              {{ oil_sump_temp_value if oil_sump_temp_value is not none else '-'
+              }} °C
+            </p>
+            <p class="safe-range">
+              {% if oil_sump_temp_min is not none and oil_sump_temp_max is not
+              none %} Min: {{ oil_sump_temp_min }} °C, Max: {{ oil_sump_temp_max
+              }} °C {% else %} no defined range {% endif %}
+            </p>
+          </div>
+
+          {% set discharge_temp_min = 40.56 %} {% set discharge_temp_max = 53.89
+          %} {% set discharge_temp_value = data.discharge_temp if data and
+          data.discharge_temp is not none else none %}
+          <div class="data-card">
+            <p class="label">Discharge Temp</p>
+            <p
+              class="value {% if discharge_temp_value is not none and discharge_temp_min is not none and discharge_temp_max is not none %}{% if discharge_temp_value >= discharge_temp_min and discharge_temp_value <= discharge_temp_max %}safe{% else %}unsafe{% endif %}{% endif %}"
+              data-temp-celsius="{{ discharge_temp_value if discharge_temp_value is not none else '' }}"
+            >
+              {{ discharge_temp_value if discharge_temp_value is not none else
+              '-' }} °C
+            </p>
+            <p class="safe-range">
+              {% if discharge_temp_min is not none and discharge_temp_max is not
+              none %} Min: {{ discharge_temp_min }} °C, Max: {{
+              discharge_temp_max }} °C {% else %} no defined range {% endif %}
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="analysis-modal" class="modal" style="display: none; z-index: 1060">
+      <div
+        class="modal-content"
+        style="width: 80%; max-width: 800px; text-align: left"
+      >
+        <span
+          class="close-analysis-modal"
+          style="float: right; cursor: pointer; font-size: 28px"
+          >&times;</span
+        >
+        <h2
+          id="analysis-modal-title"
+          style="
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+          "
+        >
+          Warning Analysis
+        </h2>
+        <div
+          id="analysis-modal-body"
+          style="
+            height: 60vh;
+            overflow-y: auto;
+            background: #f8f9fa;
+            color: black;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+          "
+        >
+          <p>Loading analysis...</p>
+        </div>
+      </div>
+    </div>
+    <div
+      id="report-preview-modal"
+      class="modal"
+      style="display: none; z-index: 1050; text-align: left"
+    >
+      <div class="modal-content" style="width: 90%; max-width: 1200px">
+        <span
+          class="close-preview-modal"
+          style="float: right; cursor: pointer; font-size: 28px"
+          >&times;</span
+        >
+        <h2
+          style="
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            text-align: center;
+          "
+        >
+          Report Preview & Notes
+        </h2>
+
+        <div
+          id="pdf-preview-area"
+          style="
+            height: 60vh;
+            overflow-y: auto;
+            background: #f8f9fa;
+            color: black;
+            padding: 20px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+          "
+        >
+          <div
+            id="preview-header"
+            style="text-align: center; margin-bottom: 20px"
+          >
+            <h3 style="font-size: 1.2rem; font-weight: bold">
+              Laporan Chiller - {{ session.current_site_name }}
+            </h3>
+            <h4 style="font-size: 1.1rem">
+              Chiller: {{ chiller.chiller_num }}
+            </h4>
+          </div>
+
+          <div id="preview-chiller-details" style="margin-bottom: 20px">
+            <h5 style="font-weight: bold; text-align: center">
+              Chiller Details
+            </h5>
+            </div>
+
+          <div id="preview-charts-and-notes">
+            </div>
+        </div>
+
+        <form
+          id="pdf-report-form"
+          method="POST"
+          action=""
+          target="_blank"
+          style="margin-top: 20px"
+        >
+          <input type="hidden" name="unit" id="report-unit-input" />
+          <div id="hidden-notes-inputs"></div>
+          <div style="text-align: right">
+            <button
+              type="submit"
+              id="print-pdf-btn"
+              class="modal-buttons"
+              style="
+                background-color: #38a169;
+                color: white;
+                padding: 10px 20px;
+                border: none;
+                border-radius: 5px;
+                cursor: pointer;
+              "
+            >
+              Generate and Print PDF
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="chart-section">
+      <h2 class="text-2xl font-bold text-white mb-4 text-center">
+        Analisis Data Historis
+      </h2>
+      <form action="{{ url_for('test') }}" method="get">
+        <input type="hidden" name="chiller_id" value="{{ chiller.id }}" />
+        <div class="filter-form">
+          <div>
+            <label for="start_date">Dari Tanggal & Jam</label>
+            <input
+              type="datetime-local"
+              id="start_date"
+              name="start_date"
+              value="{{ start_date or '' }}"
+            />
+          </div>
+          <div>
+            <label for="end_date">Sampai Tanggal & Jam</label>
+            <input
+              type="datetime-local"
+              id="end_date"
+              name="end_date"
+              value="{{ end_date or '' }}"
+            />
+          </div>
+          <button type="submit">Tampilkan</button>
+          <button type="button" id="export-button" style="margin-left: 1rem">
+            Export
+          </button>
+        </div>
+      </form>
+      {% if historical_data %}
+      <div class="charts-grid">
+        {% set chart_parameters = [ { "key": "evap_lwt", "label": "Evap LWT",
+        "unit": "°C" }, { "key": "evap_rwt", "label": "Evap RWT", "unit": "°C"
+        }, { "key": "evap_pressure", "label": "Evap Pressure", "unit": "kPa" },
+        { "key": "evap_satur_temp", "label": "Evap Sat. Temp", "unit": "°C" }, {
+        "key": "cond_lwt", "label": "Cond LWT", "unit": "°C" }, { "key":
+        "cond_rwt", "label": "Cond RWT", "unit": "°C" }, { "key":
+        "cond_pressure", "label": "Cond Pressure", "unit": "kPa" }, { "key":
+        "cond_satur_temp", "label": "Cond Sat. Temp", "unit": "°C" }, { "key":
+        "fla", "label": "FLA", "unit": "%" }, { "key": "input_power", "label":
+        "Input Power", "unit": "kW" }, { "key": "oil_sump_temp", "label": "Oil
+        Sump Temp", "unit": "°C" }, { "key": "discharge_temp", "label":
+        "Discharge Temp", "unit": "°C" }, { "key": "number_of_start"} ] %} {%
+        for param in chart_parameters %}
+        <div class="chart-card-wrapper">
+          <div class="chart-card">
+            <h3 class="chart-card-title">{{ param.label }}</h3>
+            <div class="chart-canvas-container">
+              <canvas id="chart-{{ param.key }}"></canvas>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="bg-gray-800 p-6 rounded-xl shadow-lg text-center">
+        <h3 class="text-xl font-semibold text-white">
+          Data Grafik Tidak Tersedia
+        </h3>
+        <p class="text-gray-400 mt-2">
+          Tidak ada data historis yang ditemukan untuk rentang waktu ini.
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-annotation/2.2.1/chartjs-plugin-annotation.min.js"></script>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const historicalData = {{ historical_data|tojson }};
-        const parameters = {{ parameters | tojson }};
-        let currentCharts = {}; // To store chart instances for destruction
+  window.currentCharts = {};
+  document.addEventListener('DOMContentLoaded', function () {
+      const historicalData = {{ historical_data|tojson }};
+      const chartParameters = {{ chart_parameters | tojson }};
 
-        const tempUnitSelect = document.getElementById('temp_unit');
-        
-        let currentUnit = localStorage.getItem('temperatureUnit') || 'celsius';
-        tempUnitSelect.value = currentUnit;
+      const tempUnitSelect = document.getElementById('temp_unit');
 
-        function getSafeRanges() {
-            const ranges = {};
-            document.querySelectorAll('tr[data-param-key]').forEach(row => {
-                const key = row.dataset.paramKey;
-                const rangeCell = row.children[1];
-                
-                if (key && rangeCell) {
-                    const min = rangeCell.dataset.safeRangeCelsiusMin;
-                    const max = rangeCell.dataset.safeRangeCelsiusMax;
-                    if (min && max) {
-                        ranges[key] = {
-                            min: parseFloat(min),
-                            max: parseFloat(max)
-                        };
-                    }
-                }
-            });
-            return ranges;
-        }
+      let currentUnit = localStorage.getItem('temperatureUnit') || 'celsius';
+      tempUnitSelect.value = currentUnit;
 
-        const safeRanges = getSafeRanges();
+      function getSafeRanges() {
+          const ranges = {};
+          document.querySelectorAll('tr[data-param-key]').forEach(row => {
+              const key = row.dataset.paramKey;
+              const rangeCell = row.children[1];
 
-        function celsiusToFahrenheit(celsius) {
-            if (celsius === null || celsius === undefined || isNaN(celsius)) {
-                return null;
-            }
-            return (celsius * 9/5) + 32;
-        }
+              if (key && rangeCell) {
+                  const min = rangeCell.dataset.safeRangeCelsiusMin;
+                  const max = rangeCell.dataset.safeRangeCelsiusMax;
+                  if (min && max) {
+                      ranges[key] = {
+                          min: parseFloat(min),
+                          max: parseFloat(max)
+                      };
+                  }
+              }
+          });
+          return ranges;
+      }
 
-        function updateSafeRangesDisplay(unit) {
-            document.querySelectorAll('td[data-safe-range-celsius-min]').forEach(rangeCell => {
-                const minCelsius = parseFloat(rangeCell.dataset.safeRangeCelsiusMin);
-                const maxCelsius = parseFloat(rangeCell.dataset.safeRangeCelsiusMax);
+      // const safeRanges = getSafeRanges(); // Not used in this template
 
-                if (isNaN(minCelsius) || isNaN(maxCelsius)) return;
+      function celsiusToFahrenheit(celsius) {
+          if (celsius === null || celsius === undefined || isNaN(celsius)) {
+              return null;
+          }
+          return (celsius * 9/5) + 32;
+      }
 
-                if (unit === 'fahrenheit') {
-                    const minF = celsiusToFahrenheit(minCelsius).toFixed(2);
-                    const maxF = celsiusToFahrenheit(maxCelsius).toFixed(2);
-                    rangeCell.textContent = `${minF} - ${maxF}`;
-                } else {
-                    rangeCell.textContent = `${minCelsius.toFixed(2)} - ${maxCelsius.toFixed(2)}`;
-                }
-            });
-        }
+      function updateSafeRangesDisplay(unit) {
+          document.querySelectorAll('td[data-safe-range-celsius-min]').forEach(rangeCell => {
+              const minCelsius = parseFloat(rangeCell.dataset.safeRangeCelsiusMin);
+              const maxCelsius = parseFloat(rangeCell.dataset.safeRangeCelsiusMax);
 
-        function checkSafeRanges() {
-            const currentUnit = localStorage.getItem('temperatureUnit') || 'celsius';
+              if (isNaN(minCelsius) || isNaN(maxCelsius)) return;
 
-            document.querySelectorAll('.parameter-table tbody tr').forEach(row => {
-                const rangeCell = row.children[1];
-                const valueCell = row.children[2];
+              if (unit === 'fahrenheit') {
+                  const minF = celsiusToFahrenheit(minCelsius).toFixed(2);
+                  const maxF = celsiusToFahrenheit(maxCelsius).toFixed(2);
+                  rangeCell.textContent = `${minF} - ${maxF}`;
+              } else {
+                  rangeCell.textContent = `${minCelsius.toFixed(2)} - ${maxCelsius.toFixed(2)}`;
+              }
+          });
+      }
 
-                if (!rangeCell || !valueCell) return;
+      function checkSafeRanges() {
+          const currentUnit = localStorage.getItem('temperatureUnit') || 'celsius';
 
-                const valueText = valueCell.textContent.trim();
-                const value = parseFloat(valueText);
+          document.querySelectorAll('.parameter-table tbody tr').forEach(row => {
+              const rangeCell = row.children[1];
+              const valueCell = row.children[2];
 
-                valueCell.classList.remove('safe', 'unsafe', 'value-cell');
+              if (!rangeCell || !valueCell) return;
 
-                if (isNaN(value)) {
-                    return;
-                }
-                
-                const isTemp = valueCell.hasAttribute('data-temp-celsius');
-                let min, max;
+              const valueText = valueCell.textContent.trim();
+              const value = parseFloat(valueText);
 
-                if (isTemp) {
-                    const minCelsius = rangeCell.dataset.safeRangeCelsiusMin;
-                    const maxCelsius = rangeCell.dataset.safeRangeCelsiusMax;
-                    if (!minCelsius || !maxCelsius) return;
+              valueCell.classList.remove('safe', 'unsafe', 'value-cell');
 
-                    min = parseFloat(minCelsius);
-                    max = parseFloat(maxCelsius);
+              if (isNaN(value)) {
+                  return;
+              }
 
-                    if (currentUnit === 'fahrenheit') {
-                        min = celsiusToFahrenheit(min);
-                        max = celsiusToFahrenheit(max);
-                    }
-                } else {
-                    const rangeText = rangeCell.textContent.trim();
-                    if (rangeText === '-') return;
-                    [min, max] = rangeText.split('-').map(s => parseFloat(s.trim()));
-                }
+              const isTemp = valueCell.hasAttribute('data-temp-celsius');
+              let min, max;
 
-                if (isNaN(min) || isNaN(max)) return;
+              if (isTemp) {
+                  const minCelsius = rangeCell.dataset.safeRangeCelsiusMin;
+                  const maxCelsius = rangeCell.dataset.safeRangeCelsiusMax;
+                  if (!minCelsius || !maxCelsius) return;
 
-                valueCell.classList.add('value-cell');
+                  min = parseFloat(minCelsius);
+                  max = parseFloat(maxCelsius);
 
-                if (value >= min && value <= max) {
-                    valueCell.classList.add('safe');
-                } else {
-                    valueCell.classList.add('unsafe');
-                }
-            });
-        }
+                  if (currentUnit === 'fahrenheit') {
+                      min = celsiusToFahrenheit(min);
+                      max = celsiusToFahrenheit(max);
+                  }
+              } else {
+                  const rangeText = rangeCell.textContent.trim();
+                  if (rangeText === '-') return;
+                  [min, max] = rangeText.split('-').map(s => parseFloat(s.trim()));
+              }
 
-        function updateTemperatureDisplays(unit) {
-            const tempElements = document.querySelectorAll('[data-temp-celsius]');
-            tempElements.forEach(el => {
-                const celsiusValue = parseFloat(el.dataset.tempCelsius);
-                let displayValue = '-';
-                let displayUnit = '';
+              if (isNaN(min) || isNaN(max)) return;
 
-                if (!isNaN(celsiusValue)) {
-                    if (unit === 'fahrenheit') {
-                        displayValue = celsiusToFahrenheit(celsiusValue).toFixed(2);
-                        displayUnit = '°F';
-                    } else {
-                        displayValue = celsiusValue.toFixed(2);
-                        displayUnit = '°C';
-                    }
-                }
-                el.textContent = `${displayValue} ${displayUnit}`;
-            });
+              valueCell.classList.add('value-cell');
 
-            updateSafeRangesDisplay(unit);
+              if (value >= min && value <= max) {
+                  valueCell.classList.add('safe');
+              } else {
+                  valueCell.classList.add('unsafe');
+              }
+          });
+      }
 
-            const gaugeCanvases = document.querySelectorAll('canvas[data-type="linear-gauge"]');
-            gaugeCanvases.forEach(canvas => {
-                const originalValue = parseFloat(canvas.dataset.originalValue);
-                let newValue = originalValue;
-                let newUnit = '°C';
+      function updateTemperatureDisplays(unit) {
+          const tempElements = document.querySelectorAll('[data-temp-celsius]');
+          tempElements.forEach(el => {
+              const celsiusValue = parseFloat(el.dataset.tempCelsius);
+              let displayValue = '-';
+              let displayUnit = '';
 
-                if (unit === 'fahrenheit') {
-                    newValue = celsiusToFahrenheit(originalValue);
-                    newUnit = '°F';
-                }
-                
-                canvas.dataset.value = newValue !== null ? newValue.toFixed(2) : 0;
-                canvas.dataset.units = newUnit;
-            });
+              if (!isNaN(celsiusValue)) {
+                  if (unit === 'fahrenheit') {
+                      displayValue = celsiusToFahrenheit(celsiusValue).toFixed(2);
+                      displayUnit = '°F';
+                  } else {
+                      displayValue = celsiusValue.toFixed(2);
+                      displayUnit = '°C';
+                  }
+              }
+              el.textContent = `${displayValue} ${displayUnit}`;
+          });
 
-            if (window.drawAllGauges) {
-                window.drawAllGauges();
-            }
+          updateSafeRangesDisplay(unit);
 
-            checkSafeRanges();
-        }
+          const gaugeCanvases = document.querySelectorAll('canvas[data-type="linear-gauge"]');
+          gaugeCanvases.forEach(canvas => {
+              const originalValue = parseFloat(canvas.dataset.originalValue);
+              let newValue = originalValue;
+              let newUnit = '°C';
 
-        function renderCharts() {
-            for (const chartId in currentCharts) {
-                if (currentCharts[chartId]) {
-                    currentCharts[chartId].destroy();
-                }
-            }
-            currentCharts = {};
+              if (unit === 'fahrenheit') {
+                  newValue = celsiusToFahrenheit(originalValue);
+                  newUnit = '°F';
+              }
 
-            if (historicalData && historicalData.length > 0) {
-                const labels = historicalData.map(d => new Date(d.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }));
-                
-                parameters.forEach(param => {
-                    const ctx = document.getElementById(`chart-${param.key}`)?.getContext('2d');
-                    if (!ctx) return;
+              canvas.dataset.value = newValue !== null ? newValue.toFixed(2) : 0;
+              canvas.dataset.units = newUnit;
+          });
 
-                    const safeRange = safeRanges[param.key];
-                    const annotations = {};
+          if (window.drawAllGauges) {
+              window.drawAllGauges();
+          }
 
-                    if (safeRange) {
-                        let yMin = safeRange.min;
-                        let yMax = safeRange.max;
+          checkSafeRanges();
+      }
 
-                        const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
+      function renderCharts() {
+          for (const chartId in window.currentCharts) {
+              if (window.currentCharts[chartId]) {
+                  window.currentCharts[chartId].destroy();
+              }
+          }
+          window.currentCharts = {};
 
-                        if (isTemperature && currentUnit === 'fahrenheit') {
-                            yMin = celsiusToFahrenheit(yMin);
-                            yMax = celsiusToFahrenheit(yMax);
-                        }
+          const safeRanges = {
+            "evap_lwt": {"min": 5.5, "max": 8.8},
+            "evap_rwt": {"min": 11.11, "max": 14.44},
+            "evap_satur_temp": {"min": 3.33, "max": 6.67},
+            "evap_pressure": {"min": 220.64, "max": 275.8},
+            "cond_lwt": {"min": 32.22, "max": 35.55},
+            "cond_rwt": {"min": 26.67, "max": 30.0},
+            "cond_satur_temp": {"min": 32.22, "max": 40.56},
+            "cond_pressure": {"min": 723.9, "max": 930.8},
+            "oil_pressure_diff": {"min": 227.5, "max": 275.8},
+            "oil_sump_temp": {"min": 40.56, "max": 53.89},
+            "discharge_temp": {"min": 40.56, "max": 53.89}
+          };
 
-                        annotations.safeRangeBox = {
-                            type: 'box',
-                            yMin: yMin,
-                            yMax: yMax,
-                            backgroundColor: 'rgba(46, 204, 113, 0.2)',
-                            borderColor: '#2ecc71',
-                            borderWidth: 1
-                        };
-                    }
+          if (historicalData && historicalData.length > 0) {
+              const labels = historicalData.map(d => new Date(d.timestamp).toLocaleString('id-ID', { dateStyle: 'short', timeStyle: 'medium' }));
 
-                    let datasets;
-                    const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
-                    let displayUnit = param.unit;
+              chartParameters.forEach(param => {
+                  const ctx = document.getElementById(`chart-${param.key}`)?.getContext('2d');
+                  if (!ctx) return;
 
-                    if (isTemperature && currentUnit === 'fahrenheit') {
-                        displayUnit = '°F';
-                    } else if (isTemperature && currentUnit === 'celsius') {
-                        displayUnit = '°C';
-                    }
+                  const safeRange = safeRanges[param.key];
+                  const annotations = {};
 
-                    if (param.datasets) {
-                        datasets = param.datasets.map((ds) => {
-                            const r = parseInt(ds.borderColor.slice(1, 3), 16);
-                            const g = parseInt(ds.borderColor.slice(3, 5), 16);
-                            const b = parseInt(ds.borderColor.slice(5, 7), 16);
-                            const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-                            gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);
-                            gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+                  if (safeRange) {
+                      let yMin = safeRange.min;
+                      let yMax = safeRange.max;
 
-                            return {
-                                label: `${ds.label}`,
-                                data: historicalData.map(d => {
-                                    const value = d[ds.key];
-                                    return isTemperature && currentUnit === 'fahrenheit' ? celsiusToFahrenheit(value) : value;
-                                }),
-                                borderColor: ds.borderColor,
-                                backgroundColor: gradient,
-                                borderWidth: 2,
-                                pointRadius: 2,
-                                pointHoverRadius: 5,
-                                pointBackgroundColor: ds.borderColor,
-                                fill: true,
-                                tension: 0.4
-                            };
-                        });
-                    } else {
-                        const gradient = ctx.createLinearGradient(0, 0, 0, 250);
-                        gradient.addColorStop(0, 'rgba(234, 179, 8, 0.4)');
-                        gradient.addColorStop(1, 'rgba(234, 179, 8, 0)');
-                        
-                        datasets = [{
-                            label: param.label,
-                            data: historicalData.map(d => {
-                                const value = d[param.key];
-                                return isTemperature && currentUnit === 'fahrenheit' ? celsiusToFahrenheit(value) : value;
-                            }),
-                            borderColor: '#eab308',
-                            backgroundColor: gradient,
-                            borderWidth: 2,
-                            pointRadius: 2,
-                            pointHoverRadius: 5,
-                            pointBackgroundColor: '#eab308',
-                            fill: true,
-                            tension: 0.4
-                        }];
-                    }
+                      const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
 
-                    currentCharts[param.key] = new Chart(ctx, {
-                        type: 'line',
-                        data: {
-                            labels: labels,
-                            datasets: datasets
-                        },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            plugins: {
-                                legend: { 
-                                    display: !!param.datasets,
-                                    position: 'top',
-                                    labels: {
-                                        color: '#d1d5db',
-                                        boxWidth: 12,
-                                        padding: 20,
-                                        font: {
-                                            size: 14
-                                        }
-                                    }
-                                },
-                                tooltip: {
-                                    mode: 'index',
-                                    intersect: false,
-                                    backgroundColor: '#1f2937',
-                                    titleColor: '#d1d5db',
-                                    bodyColor: '#d1d5db',
-                                    cornerRadius: 8,
-                                    padding: 12,
-                                    titleFont: { weight: 'bold' },
-                                    bodyFont: { size: 14 },
-                                    callbacks: {
-                                        label: function(context) {
-                                            let label = context.dataset.label || '';
-                                            if (label) {
-                                                label += ': ';
-                                            }
-                                            if (context.parsed.y !== null) {
-                                                label += context.parsed.y.toFixed(2) + ' ' + displayUnit;
-                                            }
-                                            return label;
-                                        }
-                                    }
-                                },
-                                annotation: {
-                                    annotations: annotations
-                                }
-                            },
-                            scales: {
-                                x: { 
-                                    ticks: { 
-                                        display: true, 
-                                        autoSkip: true,
-                                        maxTicksLimit: 7,
-                                        color: '#9ca3af'
-                                    },
-                                    grid: { display: false }
-                                },
-                                y: {
-                                    beginAtZero: false,
-                                    grid: { color: 'rgba(255, 255, 255, 0.05)' },
-                                    ticks: { 
-                                        color: '#9ca3af',
-                                        maxTicksLimit: 5,
-                                        callback: function(value) {
-                                            return value.toFixed(2) + ' ' + displayUnit;
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    });
-                });
-            }
-        }
+                      if (isTemperature && currentUnit === 'fahrenheit') {
+                          yMin = celsiusToFahrenheit(yMin);
+                          yMax = celsiusToFahrenheit(yMax);
+                      }
 
-        renderCharts();
-        updateTemperatureDisplays(currentUnit);
+                      annotations.safeRangeBox = {
+                          type: 'box',
+                          yMin: yMin,
+                          yMax: yMax,
+                          backgroundColor: 'rgba(46, 204, 113, 0.2)',
+                          borderColor: 'transparent',
+                          borderWidth: 0
+                      };
+                  }
 
-        tempUnitSelect.addEventListener('change', function() {
-            currentUnit = this.value;
-            localStorage.setItem('temperatureUnit', currentUnit);
-            updateTemperatureDisplays(currentUnit);
-            renderCharts();
-        });
+                  let datasets;
+                  const isTemperature = ["evap_lwt", "evap_rwt", "evap_satur_temp", "cond_lwt", "cond_rwt", "cond_satur_temp", "oil_sump_temp", "discharge_temp"].includes(param.key);
+                  let displayUnit = param.unit;
 
-        const modal = document.getElementById('export-modal');
-        const btn = document.getElementById('report-button');
-        const span = document.getElementsByClassName('close-button')[0];
-        const exportCelsiusBtn = document.getElementById('export-celsius-btn');
-        const exportFahrenheitBtn = document.getElementById('export-fahrenheit-btn');
+                  if (isTemperature && currentUnit === 'fahrenheit') {
+                      displayUnit = '°F';
+                  } else if (isTemperature && currentUnit === 'celsius') {
+                      displayUnit = '°C';
+                  }
 
-        function exportPdfWithUnit(unit) {
+                  if (param.datasets) {
+                      datasets = param.datasets.map((ds) => {
+                          const r = parseInt(ds.borderColor.slice(1, 3), 16);
+                          const g = parseInt(ds.borderColor.slice(3, 5), 16);
+                          const b = parseInt(ds.borderColor.slice(5, 7), 16);
+                          const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+                          gradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.4)`);
+                          gradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0)`);
+
+                          return {
+                              label: `${ds.label}`,
+                              data: historicalData.map(d => {
+                                  const value = d[ds.key];
+                                  return isTemperature && currentUnit === 'fahrenheit' ? celsiusToFahrenheit(value) : value;
+                              }),
+                              borderColor: ds.borderColor,
+                              backgroundColor: gradient,
+                              borderWidth: 2,
+                              pointRadius: 2,
+                              pointHoverRadius: 5,
+                              pointBackgroundColor: ds.borderColor,
+                              fill: true,
+                              tension: 0.4
+                          };
+                      });
+                  } else {
+                      const gradient = ctx.createLinearGradient(0, 0, 0, 250);
+                      gradient.addColorStop(0, 'rgba(234, 179, 8, 0.4)');
+                      gradient.addColorStop(1, 'rgba(234, 179, 8, 0)');
+
+                      datasets = [{
+                          label: param.label,
+                          data: historicalData.map(d => {
+                              const value = d[param.key];
+                              return isTemperature && currentUnit === 'fahrenheit' ? celsiusToFahrenheit(value) : value;
+                          }),
+                          borderColor: '#eab308',
+                          backgroundColor: gradient,
+                          borderWidth: 2,
+                          pointRadius: 2,
+                          pointHoverRadius: 5,
+                          pointBackgroundColor: '#eab308',
+                          fill: true,
+                          tension: 0.4
+                      }];
+                  }
+
+                  window.currentCharts[param.key] = new Chart(ctx, {
+                      type: 'line',
+                      data: {
+                          labels: labels,
+                          datasets: datasets
+                      },
+                      options: {
+                          responsive: true,
+                          maintainAspectRatio: false,
+                          plugins: {
+                              legend: {
+                                  display: !!param.datasets,
+                                  position: 'top',
+                                  labels: {
+                                      color: '#d1d5db',
+                                      boxWidth: 12,
+                                      padding: 20,
+                                      font: {
+                                          size: 14
+                                      }
+                                  }
+                              },
+                              tooltip: {
+                                  mode: 'index',
+                                  intersect: false,
+                                  backgroundColor: '#1f2937',
+                                  titleColor: '#d1d5db',
+                                  bodyColor: '#d1d5db',
+                                  cornerRadius: 8,
+                                  padding: 12,
+                                  titleFont: { weight: 'bold' },
+                                  bodyFont: { size: 14 },
+                                  callbacks: {
+                                      label: function(context) {
+                                          let label = context.dataset.label || '';
+                                          if (label) {
+                                              label += ': ';
+                                          }
+                                          if (context.parsed.y !== null) {
+                                              label += context.parsed.y.toFixed(2) + ' ' + displayUnit;
+                                          }
+                                          return label;
+                                      }
+                                  }
+                              },
+                              annotation: {
+                                  annotations: annotations
+                              }
+                          },
+                          scales: {
+                              x: {
+                                  ticks: {
+                                      display: true,
+                                      autoSkip: true,
+                                      maxTicksLimit: 7,
+                                      color: '#9ca3af'
+                                  },
+                                  grid: { display: false }
+                              },
+                              y: {
+                                  beginAtZero: false,
+                                  grid: { color: 'rgba(255, 255, 255, 0.05)' },
+                                  ticks: {
+                                      color: '#9ca3af',
+                                      maxTicksLimit: 5,
+                                      callback: function(value) {
+                                          return value.toFixed(2) + ' ' + displayUnit;
+                                      }
+                                  }
+                              }
+                          }
+                      }
+                  });
+              });
+          }
+      }
+
+      renderCharts();
+      updateTemperatureDisplays(currentUnit);
+
+      tempUnitSelect.addEventListener('change', function() {
+          currentUnit = this.value;
+          localStorage.setItem('temperatureUnit', currentUnit);
+          updateTemperatureDisplays(currentUnit);
+          renderCharts();
+      });
+
+      const reportButton = document.getElementById('report-button');
+      const previewModal = document.getElementById('report-preview-modal');
+      const closePreviewModal = document.querySelector('.close-preview-modal');
+      const pdfReportForm = document.getElementById('pdf-report-form');
+      const previewChartsAndNotes = document.getElementById('preview-charts-and-notes');
+      const hiddenNotesInputs = document.getElementById('hidden-notes-inputs');
+
+      function renderPreview() {
+          // Clear previous preview
+          previewChartsAndNotes.innerHTML = '';
+          hiddenNotesInputs.innerHTML = '';
+
+          // 1. Render Chiller Details
+          const previewChillerDetails = document.getElementById('preview-chiller-details');
+          previewChillerDetails.innerHTML = ''; // clear
+
+
+          // 2. Render Charts and Notes Textareas
+          const chartCards = document.querySelectorAll('.chart-card-wrapper');
+          chartCards.forEach(card => {
+              const canvas = card.querySelector('canvas');
+              if (!canvas) return;
+              const chartKey = canvas.id.replace('chart-', '');
+              const chartTitle = card.querySelector('.chart-card-title').textContent;
+
+              const previewGroup = document.createElement('div');
+              previewGroup.style.marginBottom = '20px';
+              previewGroup.style.border = '1px solid #eee';
+              previewGroup.style.padding = '10px';
+              previewGroup.style.borderRadius = '5px';
+
+
+              const title = document.createElement('h5');
+              title.textContent = chartTitle;
+              title.style.fontWeight = 'bold';
+              previewGroup.appendChild(title);
+
+              const chartCanvas = document.createElement('canvas');
+              chartCanvas.style.maxHeight = '150px';
+              previewGroup.appendChild(chartCanvas);
+
+              const noteTextarea = document.createElement('textarea');
+              noteTextarea.name = `notes_${chartKey}`;
+              noteTextarea.placeholder = `Add notes for ${chartTitle}...`;
+              noteTextarea.style.width = '100%';
+              noteTextarea.style.marginTop = '10px';
+              noteTextarea.style.padding = '8px';
+              noteTextarea.style.borderRadius = '4px';
+              noteTextarea.style.border = '1px solid #ccc';
+              previewGroup.appendChild(noteTextarea);
+
+              previewChartsAndNotes.appendChild(previewGroup);
+
+              // Re-render chart in modal
+              if (window.currentCharts[chartKey]) {
+                  const chartConfig = window.currentCharts[chartKey].config;
+                  chartConfig.options.maintainAspectRatio = false;
+                  new Chart(chartCanvas.getContext('2d'), chartConfig);
+              }
+          });
+      }
+
+      reportButton.onclick = function() {
+          const chillerId = document.querySelector('input[name="chiller_id"]').value;
+          const startDate = document.getElementById('start_date').value;
+          const endDate = document.getElementById('end_date').value;
+          const unit = tempUnitSelect.value;
+
+          let reportUrl = `/report/pdf/${chillerId}`;
+          const params = new URLSearchParams();
+          if (startDate) { params.append('start_date', startDate); }
+          if (endDate) { params.append('end_date', endDate); }
+
+          pdfReportForm.action = reportUrl + '?' + params.toString();
+          document.getElementById('report-unit-input').value = unit;
+
+          renderPreview();
+          previewModal.style.display = 'block';
+      }
+
+      const exportButton = document.getElementById('export-button');
+      if (exportButton) {
+        exportButton.onclick = function() {
             const chillerId = document.querySelector('input[name="chiller_id"]').value;
             const startDate = document.getElementById('start_date').value;
             const endDate = document.getElementById('end_date').value;
-            let alarm = 'none';
-            {% if data %}
-                {% if data.safety_fault and data.safety_fault > 0 %}
-                    alarm = 'safety_fault';
-                {% elif data.cycling_fault and data.cycling_fault > 0 %}
-                    alarm = 'cycling_fault';
-                {% elif data.warning_fault and data.warning_fault > 0 %}
-                    alarm = 'warning_fault';
-                {% endif %}
-            {% endif %}
-            let reportUrl = `/report/pdf/${chillerId}`;
+            const unit = tempUnitSelect.value;
+
+            let exportUrl = `/export/pdf/${chillerId}`;
             const params = new URLSearchParams();
             if (startDate) { params.append('start_date', startDate); }
             if (endDate) { params.append('end_date', endDate); }
-            params.append('unit', unit);
-            if (alarm) { params.append('alarm', alarm); }
-            if (params.toString()) { reportUrl += `?${params.toString()}`; }
-            const win = window.open(reportUrl, '_blank');
-            if (win) { win.onload = function() { win.print(); }; }
+            if (unit) { params.append('unit', unit); }
+            
+            window.open(exportUrl + '?' + params.toString(), '_blank');
         }
+      }
 
-        btn.onclick = function() {
-            modal.style.display = "block";
-        }
-        span.onclick = function() {
-            modal.style.display = "none";
-        }
-        window.onclick = function(event) {
-            if (event.target == modal) {
-                modal.style.display = "none";
-            }
-        }
-        exportCelsiusBtn.onclick = function() {
-            exportPdfWithUnit('celsius');
-            modal.style.display = "none";
-        }
-        exportFahrenheitBtn.onclick = function() {
-            exportPdfWithUnit('fahrenheit');
-            modal.style.display = "none";
-        }
+      const exportButton = document.getElementById('export-button');
+      if (exportButton) {
+        exportButton.onclick = function() {
+            const chillerId = document.querySelector('input[name="chiller_id"]').value;
+            const startDate = document.getElementById('start_date').value;
+            const endDate = document.getElementById('end_date').value;
+            const unit = tempUnitSelect.value;
 
-        setTimeout(function() {
-            location.reload();
-        }, 60000); // 60000 milliseconds = 1 minute
-    });
+            let exportUrl = `/export/pdf/${chillerId}`;
+            const params = new URLSearchParams();
+            if (startDate) { params.append('start_date', startDate); }
+            if (endDate) { params.append('end_date', endDate); }
+            if (unit) { params.append('unit', unit); }
+            
+            window.open(exportUrl + '?' + params.toString(), '_blank');
+        }
+      }
+
+      pdfReportForm.addEventListener('submit', function() {
+          const textareas = previewChartsAndNotes.querySelectorAll('textarea');
+          hiddenNotesInputs.innerHTML = '';
+          textareas.forEach(ta => {
+              const hiddenInput = document.createElement('input');
+              hiddenInput.type = 'hidden';
+              hiddenInput.name = ta.name;
+              hiddenInput.value = ta.value;
+              hiddenNotesInputs.appendChild(hiddenInput);
+          });
+      });
+
+      closePreviewModal.onclick = function() {
+          previewModal.style.display = 'none';
+      }
+
+      window.onclick = function(event) {
+          if (event.target == previewModal) {
+              previewModal.style.display = 'none';
+          }
+      }
+
+      const warningCard = document.querySelector('[data-warning-code]');
+      const analysisModal = document.getElementById('analysis-modal');
+      const closeAnalysisModal = document.querySelector('.close-analysis-modal');
+      const analysisModalBody = document.getElementById('analysis-modal-body');
+      const analysisModalTitle = document.getElementById('analysis-modal-title');
+
+      if (warningCard) {
+          warningCard.addEventListener('click', function() {
+              const warningCode = this.dataset.warningCode;
+              if (!warningCode || warningCode == '0') return;
+
+              const warningDescription = this.querySelector('.fault-value').textContent;
+              analysisModalTitle.textContent = `Analysis for: ${warningDescription}`;
+              analysisModalBody.innerHTML = '<p>Loading analysis...</p>';
+              analysisModal.style.display = 'block';
+
+              const chillerId = '{{ chiller.id }}';
+              fetch(`/analyze_warning/${chillerId}/${warningCode}`)
+                  .then(response => response.json())
+                  .then(data => {
+                      if (data.error) {
+                          analysisModalBody.innerHTML = `<p style="color: red;">Error: ${data.error}</p>`;
+                      } else {
+                          let formatted_analysis = data.analysis;
+                          // ### to h3
+                          formatted_analysis = formatted_analysis.replace(/### (.*)/g, '<h3>$1</h3>');
+                          // **text** to <strong>text</strong>
+                          formatted_analysis = formatted_analysis.replace(/\*\*(.*)\*\*/g, '<strong>$1</strong>');
+                          // * list item to <li>
+                          formatted_analysis = formatted_analysis.replace(/^\* (.*)/gm, '<li>$1</li>');
+                          // newlines to <br>
+                          formatted_analysis = formatted_analysis.replace(/\n/g, '<br>');
+                          // wrap li in ul
+                          if(formatted_analysis.includes('<li>')) {
+                              formatted_analysis = '<ul>' + formatted_analysis.replace(/<br><li>/g, '<li>') + '</ul>';
+                              // clean up extra <br> inside ul
+                              formatted_analysis = formatted_analysis.replace(/<\/li><br>/g, '<\/li>');
+                          }
+                          analysisModalBody.innerHTML = formatted_analysis;
+                      }
+                  })
+                  .catch(error => {
+                      analysisModalBody.innerHTML = `<p style="color: red;">An error occurred: ${error}</p>`;
+                  });
+          });
+      }
+
+      if(closeAnalysisModal) {
+          closeAnalysisModal.onclick = function() {
+              analysisModal.style.display = 'none';
+          }
+      }
+
+      window.addEventListener('click', function(event) {
+          if (event.target == analysisModal) {
+              analysisModal.style.display = 'none';
+          }
+      });
+  });
 </script>
 {% endblock %}

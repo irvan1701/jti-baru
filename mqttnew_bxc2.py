@@ -15,7 +15,7 @@ MYSQL_HOST = "127.0.0.1"
 MYSQL_USER = "root"
 MYSQL_PASSWORD = ""
 MYSQL_DATABASE = "jti-new2"
-MYSQL_PORT = 3306
+MYSQL_PORT = 3306   
 
 # Variabel global untuk koneksi database (akan diinisialisasi sekali)
 global_mysql_conn = None

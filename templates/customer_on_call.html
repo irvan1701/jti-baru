@@ -1,0 +1,35 @@
+{% extends "template.html" %}
+{% block title %}Customer On Call{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <h1 class="h3 mb-4 text-gray-800">Customer On Call</h1>
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">On Call Records</h6>
+        </div>
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-bordered" id="dataTable" width="100%" cellspacing="0">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Data</th>
+                            <th>Problem Reported</th>
+                            <th>Initiation</th>
+                            <th>Call In Time</th>
+                            <th>Time Taken to Complete</th>
+                            <th>Action Complete</th>
+                            <th>Downtime (Hours)</th>
+                            <th>Remarks</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {# Add table body content here #}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

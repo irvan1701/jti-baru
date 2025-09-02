@@ -209,8 +209,8 @@
       }
 
       .submenu li a:before {
-        content: '\f10c';
-        font-family: 'Font Awesome 6 Free';
+        content: "\f10c";
+        font-family: "Font Awesome 6 Free";
         font-weight: 900;
         margin-right: 10px;
         font-size: 0.6em;
@@ -237,31 +237,53 @@
       }
 
       .alarm-submenu li::before {
-        content: '\f071';
-        font-family: 'Font Awesome 6 Free';
+        content: "\f071";
+        font-family: "Font Awesome 6 Free";
         font-weight: 900;
         position: absolute;
         left: 0;
         top: 5px;
       }
 
-      .alarm-item-safety { color: #ff8a80; }
-      .alarm-item-safety::before { color: #e53e3e; }
-      .alarm-item-warning { color: #ffd180; }
-      .alarm-item-warning::before { color: #dd6b20; }
+      .alarm-item-safety {
+        color: #ff8a80;
+      }
+      .alarm-item-safety::before {
+        color: #e53e3e;
+      }
+      .alarm-item-warning {
+        color: #ffd180;
+      }
+      .alarm-item-warning::before {
+        color: #dd6b20;
+      }
 
       @keyframes blink-red {
-        0%, 100% { background-color: rgba(231, 76, 60, 0.4); }
-        50% { background-color: transparent; }
+        0%,
+        100% {
+          background-color: rgba(231, 76, 60, 0.4);
+        }
+        50% {
+          background-color: transparent;
+        }
       }
 
       @keyframes blink-yellow {
-        0%, 100% { background-color: rgba(241, 196, 15, 0.4); }
-        50% { background-color: transparent; }
+        0%,
+        100% {
+          background-color: rgba(241, 196, 15, 0.4);
+        }
+        50% {
+          background-color: transparent;
+        }
       }
 
-      .submenu li.alarm-status-safety > a { animation: blink-red 1.5s infinite; }
-      .submenu li.alarm-status-warning > a { animation: blink-yellow 1.5s infinite; }
+      .submenu li.alarm-status-safety > a {
+        animation: blink-red 1.5s infinite;
+      }
+      .submenu li.alarm-status-warning > a {
+        animation: blink-yellow 1.5s infinite;
+      }
 
       .main-content {
         flex-grow: 1;
@@ -367,7 +389,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      
+
       .title-right-group {
         display: flex;
         align-items: center;
@@ -385,8 +407,12 @@
         letter-spacing: 0.5px;
       }
 
-      .chiller-status.stop { background-color: var(--chiller-stop-color); }
-      .chiller-status.running { background-color: var(--chiller-run-color); }
+      .chiller-status.stop {
+        background-color: var(--chiller-stop-color);
+      }
+      .chiller-status.running {
+        background-color: var(--chiller-run-color);
+      }
 
       .chiller-info-grid {
         display: grid;
@@ -447,13 +473,13 @@
         align-items: center;
         gap: 8px;
         transition: all 0.2s ease;
-        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
       }
 
       .monitor-btn:hover {
         background-color: var(--button-hover);
         transform: translateY(-2px);
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
       }
 
       .header-right .add-chiller-btn {
@@ -497,7 +523,7 @@
         max-width: 500px;
         border-radius: 8px;
         position: relative;
-        box-shadow: 0 5px 20px rgba(0,0,0,0.4);
+        box-shadow: 0 5px 20px rgba(0, 0, 0, 0.4);
       }
 
       .close-btn {
@@ -517,9 +543,18 @@
         cursor: pointer;
       }
 
-      .modal-content h2 { margin-bottom: 20px; text-align: center; }
-      .modal-content .form-group { margin-bottom: 15px; }
-      .modal-content .form-group label { display: block; margin-bottom: 5px; font-weight: 500; }
+      .modal-content h2 {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .modal-content .form-group {
+        margin-bottom: 15px;
+      }
+      .modal-content .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 500;
+      }
       .modal-content .form-group input,
       .modal-content .form-group select {
         width: 100%;
@@ -540,7 +575,9 @@
         font-size: 1em;
         margin-top: 10px;
       }
-      .modal-content .submit-btn:hover { background-color: var(--button-hover); }
+      .modal-content .submit-btn:hover {
+        background-color: var(--button-hover);
+      }
 
       .chiller-card-actions {
         position: relative;
@@ -576,7 +613,7 @@
         right: 0;
         border-radius: 6px;
         overflow: hidden;
-        border: 1px solid rgba(255,255,255,0.1);
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
 
       .chiller-card-actions-content a,
@@ -609,20 +646,50 @@
       }
 
       @media (max-width: 1200px) {
-        .dashboard-cards { grid-template-columns: 1fr; }
+        .dashboard-cards {
+          grid-template-columns: 1fr;
+        }
       }
 
       @media (max-width: 768px) {
-        .sidebar { width: 60px; }
-        .sidebar .logo span, .sidebar-nav ul li a span { display: none; }
-        .sidebar-header { padding: 0 10px 20px 10px; justify-content: center; }
-        .sidebar .logo img { margin-right: 0; }
-        .sidebar-nav ul li a { justify-content: center; padding: 12px 0; }
-        .sidebar-nav ul li a i { margin-right: 0; }
-        .menu-toggle { display: none; }
-        .header { flex-direction: column; align-items: flex-start; gap: 10px; padding: 15px 20px; }
-        .header-right { width: 100%; justify-content: space-between; }
-        .dashboard-cards { grid-template-columns: 1fr; padding: 15px; }
+        .sidebar {
+          width: 60px;
+        }
+        .sidebar .logo span,
+        .sidebar-nav ul li a span {
+          display: none;
+        }
+        .sidebar-header {
+          padding: 0 10px 20px 10px;
+          justify-content: center;
+        }
+        .sidebar .logo img {
+          margin-right: 0;
+        }
+        .sidebar-nav ul li a {
+          justify-content: center;
+          padding: 12px 0;
+        }
+        .sidebar-nav ul li a i {
+          margin-right: 0;
+        }
+        .menu-toggle {
+          display: none;
+        }
+        .header {
+          flex-direction: column;
+          align-items: flex-start;
+          gap: 10px;
+          padding: 15px 20px;
+        }
+        .header-right {
+          width: 100%;
+          justify-content: space-between;
+        }
+        .dashboard-cards {
+          grid-template-columns: 1fr;
+          padding: 15px;
+        }
       }
     </style>
   </head>
@@ -648,24 +715,33 @@
                 ><i class="fas fa-home"></i> <span>Home</span></a
               >
             </li>
-            <li class="has-submenu {% if request.path.startswith('/select_chiller') %}open active{% endif %}">
-                <a href="#" class="submenu-toggle"><i class="fas fa-project-diagram"></i> <span>Projects</span>
+            <li
+              class="has-submenu {% if request.path.startswith('/select_chiller') %}open active{% endif %}"
+            >
+              <a href="#" class="submenu-toggle"
+                ><i class="fas fa-project-diagram"></i> <span>Projects</span>
                 <i class="fas fa-chevron-down arrow"></i>
               </a>
               <ul class="submenu">
                 {% for site in all_sites_for_nav %}
-                  <li class="{% if session.get('current_site_id')|string == site.id|string %}active{% endif %} alarm-status-{{ site.alarm_status }}">
-                      <a href="{{ url_for('select_chiller', site_id=site.id) }}">{{ site.name }}</a>
-                      {% if site.alarms %}
-                      <ul class="alarm-submenu">
-                          {% for alarm in site.alarms %}
-                          <li class="alarm-item-{{ alarm.type }}">CH{{ alarm.chiller_num }} - {{ alarm.description }}</li>
-                          {% endfor %}
-                      </ul>
-                      {% endif %}
-                  </li>
+                <li
+                  class="{% if session.get('current_site_id')|string == site.id|string %}active{% endif %} alarm-status-{{ site.alarm_status }}"
+                >
+                  <a href="{{ url_for('select_chiller', site_id=site.id) }}"
+                    >{{ site.name }}</a
+                  >
+                  {% if site.alarms %}
+                  <ul class="alarm-submenu">
+                    {% for alarm in site.alarms %}
+                    <li class="alarm-item-{{ alarm.type }}">
+                      CH{{ alarm.chiller_num }} - {{ alarm.description }}
+                    </li>
+                    {% endfor %}
+                  </ul>
+                  {% endif %}
+                </li>
                 {% else %}
-                  <li><a>No sites available</a></li>
+                <li><a>No sites available</a></li>
                 {% endfor %}
               </ul>
             </li>
@@ -695,7 +771,9 @@
           </div>
           <div class="header-right">
             {% if session.role == 'Admin' %}
-            <button id="addChillerBtn" class="add-chiller-btn"><i class="fas fa-plus"></i> Tambah Chiller</button>
+            <button id="addChillerBtn" class="add-chiller-btn">
+              <i class="fas fa-plus"></i> Tambah Chiller
+            </button>
             {% endif %}
             <span id="realtime-clock">{{ current_time }}</span>
             <div class="user-profile">
@@ -719,50 +797,140 @@
               <div class="chiller-card-title">
                 <h2>{{ chiller.nama_chiller }}</h2>
                 <div class="title-right-group">
-                    <div class="chiller-status {{ chiller.fla_status }}">{{ chiller.fla_status | capitalize }}</div>
-                    {% if session.role == 'Admin' %}
-                    <div class="chiller-card-actions">
-                      <button class="dropbtn"><i class="fas fa-ellipsis-v"></i></button>
-                      <div class="chiller-card-actions-content">
-                        <a href="#" class="edit-chiller-btn" 
-                            data-chiller-id="{{ chiller.id }}"
-                            data-chiller-num="{{ chiller.nama_chiller }}"
-                            data-serial-number="{{ chiller.serial_number or '' }}"
-                            data-model-number="{{ chiller.model or '' }}"
-                            data-power-kw="{{ '%.2f' | format(chiller.power_kW) if chiller.power_kW is not none else '' }}"
-                            data-ton-tr="{{ '%.2f' | format(chiller.ton_of_refrigeration) if chiller.ton_of_refrigeration is not none else '' }}"
-                            data-chiller-type="{{ chiller.chiller_type or 'default' }}">
-                            <i class="fas fa-edit"></i> Edit
-                        </a>
-                        <form action="{{ url_for('delete_chiller', chiller_id=chiller.id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus chiller ini beserta semua datanya?');">
-                            <button type="submit"><i class="fas fa-trash-alt"></i> Delete</button>
-                        </form>
-                      </div>
+                  <div class="chiller-status {{ chiller.fla_status }}">
+                    {{ chiller.fla_status | capitalize }}
+                  </div>
+                  {% if session.role == 'Admin' %}
+                  <div class="chiller-card-actions">
+                    <button class="dropbtn">
+                      <i class="fas fa-ellipsis-v"></i>
+                    </button>
+                    <div class="chiller-card-actions-content">
+                      <a
+                        href="#"
+                        class="edit-chiller-btn"
+                        data-chiller-id="{{ chiller.id }}"
+                        data-chiller-num="{{ chiller.nama_chiller }}"
+                        data-serial-number="{{ chiller.serial_number or '' }}"
+                        data-model-number="{{ chiller.model or '' }}"
+                        data-power-kw="{{ '%.2f' | format(chiller.power_kW) if chiller.power_kW is not none else '' }}"
+                        data-ton-tr="{{ '%.2f' | format(chiller.ton_of_refrigeration) if chiller.ton_of_refrigeration is not none else '' }}"
+                        data-chiller-type="{{ chiller.chiller_type or 'default' }}"
+                      >
+                        <i class="fas fa-edit"></i> Edit
+                      </a>
+                      <form
+                        action="{{ url_for('delete_chiller', chiller_id=chiller.id) }}"
+                        method="POST"
+                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus chiller ini beserta semua datanya?');"
+                      >
+                        <button type="submit">
+                          <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                      </form>
                     </div>
-                    {% endif %}
+                  </div>
+                  {% endif %}
                 </div>
               </div>
               <div class="chiller-info-grid">
-                  <div class="info-item"><span class="info-label">Model:</span><span class="info-value">{{ chiller.model or 'N/A' }}</span></div>
-                  <div class="info-item"><span class="info-label">Serial:</span><span class="info-value">{{ chiller.serial_number or 'N/A' }}</span></div>
-                  <div class="info-item"><span class="info-label">Power:</span><span class="info-value">{{ "%.2f" | format(chiller.power_kW) if chiller.power_kW is not none else 'N/A' }} kW</span></div>
-                  <div class="info-item"><span class="info-label">Ton:</span><span class="info-value">{{ "%.2f" | format(chiller.ton_of_refrigeration) if chiller.ton_of_refrigeration is not none else 'N/A' }} TR</span></div>
+                <div class="info-item">
+                  <span class="info-label">Model:</span
+                  ><span class="info-value">{{ chiller.model or 'N/A' }}</span>
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Serial:</span
+                  ><span class="info-value"
+                    >{{ chiller.serial_number or 'N/A' }}</span
+                  >
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Power:</span
+                  ><span class="info-value"
+                    >{{ "%.2f" | format(chiller.power_kW) if chiller.power_kW is
+                    not none else 'N/A' }} kW</span
+                  >
+                </div>
+                <div class="info-item">
+                  <span class="info-label">Ton:</span
+                  ><span class="info-value"
+                    >{{ "%.2f" | format(chiller.ton_of_refrigeration) if
+                    chiller.ton_of_refrigeration is not none else 'N/A' }}
+                    TR</span
+                  >
+                </div>
               </div>
-              <div class="chiller-footer">
+              <div
+                class="chiller-footer"
+                style="justify-content: flex-start; gap: 10px"
+              >
                 <a
                   href="{{ url_for('monitor_chiller', chiller_id=chiller.id) }}"
                   class="monitor-btn"
                 >
                   Monitor <i class="fas fa-arrow-right"></i>
                 </a>
+                <button
+                  class="monitor-btn report-btn"
+                  style="background-color: #27ae60"
+                  data-chiller-id="{{ chiller.id }}"
+                >
+                  Report <i class="fas fa-file-alt"></i>
+                </button>
               </div>
             </div>
           </div>
           {% endfor %} {% else %}
-          <p style="color: black; text-align: center; width: 100%;">Tidak ada chiller yang tersedia untuk site ini.</p>
+          <p style="color: black; text-align: center; width: 100%">
+            Tidak ada chiller yang tersedia untuk site ini.
+          </p>
           {% endif %}
         </section>
       </main>
+    </div>
+
+    <!-- Report Parameters Modal -->
+    <div id="reportParamsModal" class="modal">
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Report Parameters</h2>
+        <form id="reportParamsForm">
+          <input type="hidden" id="reportChillerId" name="chiller_id" />
+          <div class="form-group">
+            <label for="report_start_date">Start Date & Time</label>
+            <input
+              type="datetime-local"
+              id="report_start_date"
+              name="start_date"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="report_end_date">End Date & Time</label>
+            <input
+              type="datetime-local"
+              id="report_end_date"
+              name="end_date"
+              class="form-control"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="report_interval">Data Interval (Jam)</label>
+            <input
+              type="number"
+              id="report_interval"
+              name="interval"
+              class="form-control"
+              min="1"
+              placeholder="Masukkan interval dalam jam"
+              required
+            />
+          </div>
+          <button type="submit" class="submit-btn">Generate Report</button>
+        </form>
+      </div>
     </div>
 
     {% if session.role == 'Admin' %}
@@ -770,109 +938,183 @@
       <div class="modal-content">
         <span class="close-btn">&times;</span>
         <h2>Tambah Chiller Baru</h2>
-        <form action="{{ url_for('add_chiller', site_id=site_id) }}" method="POST" enctype="multipart/form-data">
+        <form
+          action="{{ url_for('add_chiller', site_id=site_id) }}"
+          method="POST"
+          enctype="multipart/form-data"
+        >
           <div class="form-group">
             <label for="chiller_id">ID Chiller</label>
-            <input type="text" id="chiller_id" name="chiller_id" placeholder="e.g., btpn_chiller_1" required>
+            <input
+              type="text"
+              id="chiller_id"
+              name="chiller_id"
+              placeholder="e.g., btpn_chiller_1"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="chiller_num">Nomor Chiller</label>
-            <input type="text" id="chiller_num" name="chiller_num" placeholder="e.g., 1" required>
+            <input
+              type="text"
+              id="chiller_num"
+              name="chiller_num"
+              placeholder="e.g., 1"
+              required
+            />
           </div>
           <div class="form-group">
             <label for="serial_number">Serial Number</label>
-            <input type="text" id="serial_number" name="serial_number" placeholder="e.g., SN12345">
+            <input
+              type="text"
+              id="serial_number"
+              name="serial_number"
+              placeholder="e.g., SN12345"
+            />
           </div>
           <div class="form-group">
             <label for="model_number">Model Number</label>
-            <input type="text" id="model_number" name="model_number" placeholder="e.g., YK-SSS">
+            <input
+              type="text"
+              id="model_number"
+              name="model_number"
+              placeholder="e.g., YK-SSS"
+            />
           </div>
           <div class="form-group">
             <label for="power_kW">Power (kW)</label>
-            <input type="number" step="0.01" id="power_kW" name="power_kW" placeholder="e.g., 500">
+            <input
+              type="number"
+              step="0.01"
+              id="power_kW"
+              name="power_kW"
+              placeholder="e.g., 500"
+            />
           </div>
           <div class="form-group">
             <label for="ton_of_refrigeration">Ton Refrigeration (TR)</label>
-            <input type="number" step="0.01" id="ton_of_refrigeration" name="ton_of_refrigeration" placeholder="e.g., 150">
+            <input
+              type="number"
+              step="0.01"
+              id="ton_of_refrigeration"
+              name="ton_of_refrigeration"
+              placeholder="e.g., 150"
+            />
           </div>
           <div class="form-group">
             <label for="chiller_type">Tipe Chiller</label>
             <select id="chiller_type" name="chiller_type">
-                <option value="default">Default</option>
-                <option value="btpn">BTPN</option>
-                <option value="btpn2">BTPN 2</option>
-                <option value="bxc2">BXC2</option>
-                <option value="yk-sss">YK-SSS</option>
-                <option value="ys-vsd">YS-VSD</option>
-                <option value="ylaa">YLAA</option>
-                <option value="yr-sss">YR-SSS</option>
-                <option value="ys-sss">YS-SSS</option>
-                <option value="yvaa">YVAA</option>
-                <option value="yvwa1">YVWA1</option>
-                <option value="yvwa2">YVWA2</option>
+              <option value="default">Default</option>
+              <option value="btpn">BTPN</option>
+              <option value="btpn2">BTPN 2</option>
+              <option value="bxc2">BXC2</option>
+              <option value="yk-sss">YK-SSS</option>
+              <option value="ys-vsd">YS-VSD</option>
+              <option value="ylaa">YLAA</option>
+              <option value="yr-sss">YR-SSS</option>
+              <option value="ys-sss">YS-SSS</option>
+              <option value="yvaa">YVAA</option>
+              <option value="yvwa1">YVWA1</option>
+              <option value="yvwa2">YVWA2</option>
             </select>
           </div>
           <div class="form-group">
             <label for="image">Gambar Chiller</label>
-            <input type="file" id="image" name="image" accept="image/*" class="file-input">
+            <input
+              type="file"
+              id="image"
+              name="image"
+              accept="image/*"
+              class="file-input"
+            />
           </div>
           <button type="submit" class="submit-btn">Tambah Chiller</button>
         </form>
       </div>
     </div>
     <div id="editChillerModal" class="modal">
-        <div class="modal-content">
-            <span class="close-btn">&times;</span>
-            <h2>Edit Chiller</h2>
-            <form id="editChillerForm" method="POST" enctype="multipart/form-data">
-                <div class="form-group">
-                    <label for="edit_chiller_id">ID Chiller (Tidak Dapat Diubah)</label>
-                    <input type="text" id="edit_chiller_id" name="chiller_id" readonly>
-                </div>
-                <div class="form-group">
-                    <label for="edit_chiller_num">Nomor Chiller</label>
-                    <input type="text" id="edit_chiller_num" name="chiller_num" required>
-                </div>
-                <div class="form-group">
-                    <label for="edit_serial_number">Serial Number</label>
-                    <input type="text" id="edit_serial_number" name="serial_number">
-                </div>
-                <div class="form-group">
-                    <label for="edit_model_number">Model Number</label>
-                    <input type="text" id="edit_model_number" name="model_number">
-                </div>
-                <div class="form-group">
-                    <label for="edit_power_kW">Power (kW)</label>
-                    <input type="number" step="0.01" id="edit_power_kW" name="power_kW">
-                </div>
-                <div class="form-group">
-                    <label for="edit_ton_of_refrigeration">Ton Refrigeration (TR)</label>
-                    <input type="number" step="0.01" id="edit_ton_of_refrigeration" name="ton_of_refrigeration">
-                </div>
-                <div class="form-group">
-                    <label for="edit_chiller_type">Tipe Chiller</label>
-                    <select id="edit_chiller_type" name="chiller_type">
-                        <option value="default">Default</option>
-                        <option value="btpn">BTPN</option>
-                        <option value="btpn2">BTPN 2</option>
-                        <option value="bxc2">BXC2</option>
-                        <option value="yk-sss">YK-SSS</option>
-                        <option value="ys-vsd">YS-VSD</option>
-                        <option value="ylaa">YLAA</option>
-                        <option value="yr-sss">YR-SSS</option>
-                        <option value="ys-sss">YS-SSS</option>
-                        <option value="yvaa">YVAA</option>
-                        <option value="yvwa1">YVWA1</option>
-                        <option value="yvwa2">YVWA2</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label for="edit_image">Gambar Chiller (Biarkan kosong untuk tidak mengubah)</label>
-                    <input type="file" id="edit_image" name="image" accept="image/*" class="file-input">
-                </div>
-                <button type="submit" class="submit-btn">Simpan Perubahan</button>
-            </form>
-        </div>
+      <div class="modal-content">
+        <span class="close-btn">&times;</span>
+        <h2>Edit Chiller</h2>
+        <form id="editChillerForm" method="POST" enctype="multipart/form-data">
+          <div class="form-group">
+            <label for="edit_chiller_id">ID Chiller (Tidak Dapat Diubah)</label>
+            <input
+              type="text"
+              id="edit_chiller_id"
+              name="chiller_id"
+              readonly
+            />
+          </div>
+          <div class="form-group">
+            <label for="edit_chiller_num">Nomor Chiller</label>
+            <input
+              type="text"
+              id="edit_chiller_num"
+              name="chiller_num"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="edit_serial_number">Serial Number</label>
+            <input type="text" id="edit_serial_number" name="serial_number" />
+          </div>
+          <div class="form-group">
+            <label for="edit_model_number">Model Number</label>
+            <input type="text" id="edit_model_number" name="model_number" />
+          </div>
+          <div class="form-group">
+            <label for="edit_power_kW">Power (kW)</label>
+            <input
+              type="number"
+              step="0.01"
+              id="edit_power_kW"
+              name="power_kW"
+            />
+          </div>
+          <div class="form-group">
+            <label for="edit_ton_of_refrigeration"
+              >Ton Refrigeration (TR)</label
+            >
+            <input
+              type="number"
+              step="0.01"
+              id="edit_ton_of_refrigeration"
+              name="ton_of_refrigeration"
+            />
+          </div>
+          <div class="form-group">
+            <label for="edit_chiller_type">Tipe Chiller</label>
+            <select id="edit_chiller_type" name="chiller_type">
+              <option value="default">Default</option>
+              <option value="btpn">BTPN</option>
+              <option value="btpn2">BTPN 2</option>
+              <option value="bxc2">BXC2</option>
+              <option value="yk-sss">YK-SSS</option>
+              <option value="ys-vsd">YS-VSD</option>
+              <option value="ylaa">YLAA</option>
+              <option value="yr-sss">YR-SSS</option>
+              <option value="ys-sss">YS-SSS</option>
+              <option value="yvaa">YVAA</option>
+              <option value="yvwa1">YVWA1</option>
+              <option value="yvwa2">YVWA2</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="edit_image"
+              >Gambar Chiller (Biarkan kosong untuk tidak mengubah)</label
+            >
+            <input
+              type="file"
+              id="edit_image"
+              name="image"
+              accept="image/*"
+              class="file-input"
+            />
+          </div>
+          <button type="submit" class="submit-btn">Simpan Perubahan</button>
+        </form>
+      </div>
     </div>
     {% endif %}
     <script>
@@ -986,6 +1228,62 @@
         }
         setInterval(updateClock, 1000);
         updateClock();
+
+        // Report Parameters Modal Logic
+        const reportParamsModal = document.getElementById("reportParamsModal");
+        if (reportParamsModal) {
+            const reportParamsForm = document.getElementById("reportParamsForm");
+            const reportChillerIdInput = document.getElementById("reportChillerId");
+            const closeReportModalBtn = reportParamsModal.querySelector(".close-btn");
+
+            document.querySelectorAll('.report-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const chillerId = this.dataset.chillerId;
+                    reportChillerIdInput.value = chillerId;
+
+                    const now = new Date();
+                    const twelveHoursAgo = new Date(now.getTime() - 12 * 60 * 60 * 1000);
+
+                    const toISOStringWithTimezone = (date) => {
+                        const pad = (num) => (num < 10 ? '0' : '') + num;
+                        return date.getFullYear() + '-' + pad(date.getMonth() + 1) + '-' + pad(date.getDate()) + 'T' + pad(date.getHours()) + ':' + pad(date.getMinutes());
+                    };
+
+                    document.getElementById('report_start_date').value = toISOStringWithTimezone(twelveHoursAgo);
+                    document.getElementById('report_end_date').value = toISOStringWithTimezone(now);
+
+                    reportParamsModal.style.display = "block";
+                });
+            });
+
+            closeReportModalBtn.onclick = function() {
+                reportParamsModal.style.display = "none";
+            }
+
+            reportParamsForm.addEventListener('submit', function(event) {
+                event.preventDefault();
+                const chillerId = reportChillerIdInput.value;
+                const startDate = document.getElementById('report_start_date').value;
+                const endDate = document.getElementById('report_end_date').value;
+                const interval = document.getElementById('report_interval').value;
+
+                let reportUrl = `{{ url_for('report_pdf', chiller_id='placeholder') }}`.replace('placeholder', chillerId);
+
+                const params = new URLSearchParams();
+                params.append('start_date', startDate);
+                params.append('end_date', endDate);
+                params.append('interval', interval);
+
+                window.open(reportUrl + '?' + params.toString(), '_blank');
+                reportParamsModal.style.display = "none";
+            });
+
+            window.addEventListener('click', function(event) {
+                if (event.target == reportParamsModal) {
+                    reportParamsModal.style.display = "none";
+                }
+            });
+        }
       });
     </script>
   </body>

@@ -658,3 +658,61 @@
 .close-analysis-modal:hover {
     color: #1a202c;
 }
+
+/* New Parameter Card Styles */
+.parameter-card-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 15px;
+    width: 100%;
+}
+
+.parameter-card {
+    background-color: #4a5568; /* A slightly lighter shade from the info-card */
+    border-radius: 8px;
+    padding: 15px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.parameter-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+}
+
+.parameter-card .param-title {
+    font-size: 0.9em;
+    font-weight: 500;
+    color: #a0aec0; /* Light gray for the label */
+    margin-bottom: 10px;
+}
+
+.parameter-card .param-value {
+    font-size: 1.8em;
+    font-weight: 700;
+    margin-bottom: 10px;
+    line-height: 1.2;
+}
+
+.parameter-card .param-value.value-safe {
+    color: #48bb78; /* Green */
+}
+
+.parameter-card .param-value.value-unsafe {
+    color: #e53e3e; /* Red */
+}
+
+.parameter-card .param-safe-range {
+    font-size: 0.8em;
+    color: #cbd5e0; /* Lighter text for range */
+    background-color: #2d3748;
+    padding: 4px 8px;
+    border-radius: 4px;
+}
+
+.parameter-card .param-safe-range .range-label {
+    font-weight: 600;
+}
